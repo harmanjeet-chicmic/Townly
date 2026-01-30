@@ -1,0 +1,139 @@
+using Microsoft.EntityFrameworkCore;
+using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Domain.Entities;
+using RealEstateInvesting.Domain.Enums;
+using RealEstateInvesting.Application.Properties.Dtos;
+namespace RealEstateInvesting.Infrastructure.Persistence.Repositories;
+
+public class PropertyRepository : IPropertyRepository
+{
+    private readonly AppDbContext _context;
+
+    public PropertyRepository(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task AddAsync(Property property)
+    {
+        _context.Properties.Add(property);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<Property?> GetByIdAsync(Guid propertyId)
+    {
+        return await _context.Properties
+            .FirstOrDefaultAsync(p => p.Id == propertyId);
+    }
+
+    public async Task<IEnumerable<Property>> GetByOwnerIdAsync(Guid ownerUserId)
+    {
+        return await _context.Properties
+            .Where(p => p.OwnerUserId == ownerUserId)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Property>> GetByStatusAsync(PropertyStatus status)
+    {
+        return await _context.Properties
+            .Where(p => p.Status == status)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+    public async Task<(IEnumerable<MarketplacePropertyReadModel> Items, int TotalCount)>
+GetMarketplaceAsync(
+    int page,
+    int pageSize,
+    string? search,
+    string? propertyType)
+    {
+        var query = _context.Properties
+            .Where(p => p.Status == PropertyStatus.Active);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(p =>
+                p.Name.Contains(search) ||
+                p.Location.Contains(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(propertyType))
+        {
+            query = query.Where(p => p.PropertyType == propertyType);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new MarketplacePropertyReadModel
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Location = p.Location,
+                PropertyType = p.PropertyType,
+                ImageUrl = p.ImageUrl,
+                ApprovedValuation = p.ApprovedValuation,
+                AnnualYieldPercent = p.AnnualYieldPercent,
+                TotalUnits = p.TotalUnits,
+
+                SoldUnits = _context.Investments
+                    .Where(i => i.PropertyId == p.Id)
+                    .Sum(i => (int?)i.SharesPurchased) ?? 0
+            })
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<IEnumerable<Property>> GetFeaturedAsync(int limit)
+    {
+        return await _context.Properties
+            .Where(p => p.Status == PropertyStatus.Active)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    public async Task UpdateAsync(Property property)
+    {
+        _context.Properties.Update(property);
+        await _context.SaveChangesAsync();
+    }
+    public async Task<IEnumerable<Property>> GetByIdsAsync(IEnumerable<Guid> propertyIds)
+    {
+        return await _context.Properties
+            .Where(p => propertyIds.Contains(p.Id))
+            .ToListAsync();
+    }
+    public async Task<PropertyWithSoldUnits?> GetDetailsWithSoldUnitsAsync(Guid propertyId)
+    {
+        return await _context.Properties
+            .Where(p => p.Id == propertyId && p.Status == PropertyStatus.Active)
+            .Select(p => new PropertyWithSoldUnits
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Location = p.Location,
+                PropertyType = p.PropertyType,
+                ImageUrl = p.ImageUrl,
+
+                ApprovedValuation = p.ApprovedValuation,
+                TotalUnits = p.TotalUnits,
+                AnnualYieldPercent = p.AnnualYieldPercent,
+
+                SoldUnits = _context.Investments
+                    .Where(i => i.PropertyId == p.Id)
+                    .Sum(i => (int?)i.SharesPurchased) ?? 0
+            })
+            .FirstOrDefaultAsync();
+    }
+
+
+
+}
+

@@ -1,0 +1,16 @@
+src/RealEstateInvesting.API/appsettings.json
+src/RealEstateInvesting.API/bin
+src/RealEstateInvesting.API/obj
+src/RealEstateInvesting.Application/bin
+src/RealEstateInvesting.Application/obj
+src/RealEstateInvesting.Domain/bin
+src/RealEstateInvesting.Domain/obj
+src/RealEstateInvesting.Infrastructure/bin
+src/RealEstateInvesting.Infrastructure/obj
+tests/**/bin
+tests/**/obj
+**/bin/
+**/obj/
+**/appsettings.json
+**/appsettings.*.json
+

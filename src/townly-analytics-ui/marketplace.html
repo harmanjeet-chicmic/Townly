@@ -1,0 +1,2759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Townly - Marketplace</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        .navbar {
+            background-color: #fff;
+            padding: 1.2rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #3498db;
+        }
+
+        .nav-links a.active {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        /* Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-invest,
+        .btn-create,
+        .btn-wallet,
+        .btn-kyc {
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-invest {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-invest:hover {
+            background-color: #219653;
+        }
+
+        .btn-create {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-wallet {
+            background-color: #f1c40f;
+            color: #2c3e50;
+        }
+
+        .btn-wallet:hover {
+            background-color: #f39c12;
+        }
+
+        .btn-wallet.connected {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-kyc {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .btn-kyc:hover {
+            background-color: #8e44ad;
+        }
+
+        .btn-kyc.completed {
+            background-color: #27ae60;
+        }
+
+        .btn-kyc.pending {
+            background-color: #f39c12;
+        }
+
+        .btn-kyc.rejected {
+            background-color: #e74c3c;
+        }
+
+        /* KYC Status Badge */
+        .kyc-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .kyc-status.verified {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .kyc-status.pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .kyc-status.rejected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Wallet Info Dropdown */
+        .wallet-info {
+            position: relative;
+        }
+
+        .wallet-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            min-width: 300px;
+            margin-top: 10px;
+            z-index: 1001;
+            display: none;
+            overflow: hidden;
+        }
+
+        .wallet-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wallet-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .wallet-address {
+            font-family: monospace;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .wallet-balance {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+
+        .wallet-body {
+            padding: 1.5rem;
+        }
+
+        .wallet-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .wallet-info-label {
+            color: #7f8c8d;
+        }
+
+        .wallet-info-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .wallet-actions {
+            padding: 1.5rem;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .wallet-btn {
+            flex: 1;
+            padding: 0.7rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .wallet-btn-copy {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .wallet-btn-copy:hover {
+            background-color: #2980b9;
+        }
+
+        .wallet-btn-disconnect {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .wallet-btn-disconnect:hover {
+            background-color: #c0392b;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 300px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid #27ae60;
+        }
+
+        .toast.error {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #f39c12;
+        }
+
+        .toast.info {
+            border-left: 4px solid #3498db;
+        }
+
+        .toast-icon {
+            font-size: 1.5rem;
+        }
+
+        .toast.success .toast-icon {
+            color: #27ae60;
+        }
+
+        .toast.error .toast-icon {
+            color: #e74c3c;
+        }
+
+        .toast.warning .toast-icon {
+            color: #f39c12;
+        }
+
+        .toast.info .toast-icon {
+            color: #3498db;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .toast-message {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #95a5a6;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Search Section */
+        .search-section {
+            margin: 2rem 0 3rem;
+        }
+
+        .search-bar {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.2);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        /* Featured Section */
+        .featured-section {
+            margin-bottom: 2rem;
+        }
+
+        .featured-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .featured-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .tag {
+            padding: 0.6rem 1.2rem;
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tag:hover {
+            background-color: #f0f7ff;
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .tag.active {
+            background-color: #3498db;
+            border-color: #3498db;
+            color: white;
+        }
+
+        /* Properties Grid */
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .property-card {
+            background-color: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .property-image {
+            height: 200px;
+            width: 100%;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+
+        .property-content {
+            padding: 1.5rem;
+        }
+
+        .property-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .property-location {
+            display: flex;
+            align-items: center;
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .property-location i {
+            margin-right: 0.5rem;
+        }
+
+        /* Risk Score */
+        .risk-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding: 0.8rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .risk-label {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .risk-score {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .risk-low {
+            color: #27ae60;
+        }
+
+        .risk-moderate {
+            color: #f39c12;
+        }
+
+        .risk-high {
+            color: #e74c3c;
+        }
+
+        /* Price & Availability */
+        .price-section,
+        .availability-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .price-label,
+        .availability-label {
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .price-value,
+        .availability-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        /* Card Actions */
+        .card-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 1.2rem;
+        }
+
+        .view-details-btn,
+        .invest-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .view-details-btn {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .view-details-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .invest-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .invest-btn:hover {
+            background-color: #219653;
+        }
+
+        .invest-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Loading & Error States */
+        .loading,
+        .error,
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            grid-column: 1 / -1;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 2rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 2rem 2rem 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem 2rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 2rem 2rem;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .modal-btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .modal-btn-secondary {
+            background: #f8f9fa;
+            color: #555;
+            border: 1px solid #ddd;
+        }
+
+        /* KYC Modal Specific Styles */
+        .kyc-modal {
+            max-width: 600px;
+        }
+
+        .kyc-modal .modal-body {
+            padding: 1.5rem 2rem 0;
+        }
+
+        .kyc-step {
+            display: none;
+            padding-bottom: 1rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .kyc-step.active {
+            display: block;
+        }
+
+        .kyc-progress {
+            display: flex;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            max-width: 500px;
+            padding: 0 1rem;
+        }
+
+        .kyc-progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .kyc-progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 17px;
+            left: 50%;
+            right: -50%;
+            height: 2px;
+            background-color: #e0e0e0;
+            z-index: 1;
+        }
+
+        .kyc-progress-step.active:not(:last-child)::after {
+            background-color: #3498db;
+        }
+
+        .kyc-progress-step.completed:not(:last-child)::after {
+            background-color: #27ae60;
+        }
+
+        .kyc-progress-circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #fff;
+            border: 2px solid #e0e0e0;
+            color: #7f8c8d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            z-index: 2;
+            position: relative;
+            font-size: 0.9rem;
+        }
+
+        .kyc-progress-step.active .kyc-progress-circle {
+            background-color: #3498db;
+            border-color: #3498db;
+            color: white;
+        }
+
+        .kyc-progress-step.completed .kyc-progress-circle {
+            background-color: #27ae60;
+            border-color: #27ae60;
+            color: white;
+        }
+
+        .kyc-progress-label {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            text-align: center;
+            white-space: nowrap;
+            margin-top: 5px;
+        }
+
+        .kyc-progress-step.active .kyc-progress-label {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .kyc-progress-step.completed .kyc-progress-label {
+            color: #27ae60;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f8c8d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+            padding-right: 2.5rem;
+        }
+
+        .helper-text {
+            display: block;
+            margin-top: 0.3rem;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+
+        /* File Upload */
+        .file-upload-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #fafafa;
+            margin-top: 0.5rem;
+        }
+
+        .file-upload-area:hover {
+            border-color: #3498db;
+            background-color: #f0f7ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #27ae60;
+            background-color: #e8f8f0;
+        }
+
+        .file-upload-icon {
+            font-size: 2.5rem;
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-text {
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload-hint {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-preview-container {
+            margin-top: 1rem;
+        }
+
+        .file-preview {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-preview-icon {
+            margin-right: 0.8rem;
+            color: #3498db;
+        }
+
+        .file-preview-name {
+            flex: 1;
+            color: #2c3e50;
+        }
+
+        .file-preview-remove {
+            color: #e74c3c;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        /* Review Section */
+        .review-section {
+            margin-bottom: 2rem;
+        }
+
+        .review-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .review-item {
+            display: flex;
+            margin-bottom: 1rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .review-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 150px;
+        }
+
+        .review-value {
+            color: #2c3e50;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .review-value ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .review-value li {
+            margin-bottom: 0.3rem;
+        }
+
+        /* Required Field Indicator */
+        .required-field::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 3rem;
+            padding: 1rem;
+        }
+
+        .page-info {
+            color: #7f8c8d;
+        }
+
+        .pagination-btn {
+            padding: 0.7rem 1.5rem;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #f0f7ff;
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+                width: 100%;
+            }
+
+            .header-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-top: 1rem;
+                width: 100%;
+            }
+
+            .btn-invest,
+            .btn-create,
+            .btn-wallet,
+            .btn-kyc {
+                flex: 1;
+                min-width: 150px;
+                justify-content: center;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .properties-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .card-actions {
+                flex-direction: column;
+            }
+
+            .wallet-dropdown {
+                position: fixed;
+                top: 80px;
+                left: 1rem;
+                right: 1rem;
+                width: auto;
+            }
+
+            .kyc-progress-step:not(:last-child)::after {
+                right: -30%;
+            }
+
+            .review-item {
+                flex-direction: column;
+            }
+
+            .review-label {
+                min-width: auto;
+                margin-bottom: 0.3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .properties-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions {
+                flex-direction: column;
+            }
+
+            .btn-invest,
+            .btn-create,
+            .btn-wallet,
+            .btn-kyc {
+                width: 100%;
+            }
+
+            .kyc-progress-step:not(:last-child)::after {
+                right: -20%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Wallet Required Modal -->
+    <div class="modal-overlay" id="walletModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Wallet Required</h2>
+                <p>You need to connect your wallet to invest in properties.</p>
+            </div>
+            <div class="modal-body">
+                <p>Please connect your MetaMask wallet to continue with the investment.</p>
+                <p>If you don't have MetaMask installed, you can download it from the official website.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="hideWalletModal()">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="connectWallet()">Connect Wallet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KYC Submission Modal -->
+    <div class="modal-overlay" id="kycModal" style="display: none;">
+        <div class="kyc-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">KYC Verification</h2>
+                <p>Complete your Know Your Customer verification to unlock full platform access</p>
+            </div>
+
+            <div class="modal-body">
+                <!-- KYC Progress Steps -->
+                <div class="kyc-progress">
+                    <div class="kyc-progress-step active" id="kycStep1">
+                        <div class="kyc-progress-circle">1</div>
+                        <div class="kyc-progress-label">Personal Info</div>
+                    </div>
+                    <div class="kyc-progress-step" id="kycStep2">
+                        <div class="kyc-progress-circle">2</div>
+                        <div class="kyc-progress-label">Documents</div>
+                    </div>
+                    <div class="kyc-progress-step" id="kycStep3">
+                        <div class="kyc-progress-circle">3</div>
+                        <div class="kyc-progress-label">Review</div>
+                    </div>
+                </div>
+
+                <!-- Step 1: Personal Information -->
+                <div class="kyc-step active" id="kycFormStep1">
+                    <div class="form-group">
+                        <label for="kycFullName" class="required-field">Full Name</label>
+                        <input type="text" id="kycFullName" class="form-control"
+                            placeholder="Enter your full legal name" required>
+                        <span class="helper-text">As it appears on your government ID</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="kycDateOfBirth" class="required-field">Date of Birth</label>
+                        <input type="date" id="kycDateOfBirth" class="form-control" required>
+                        <span class="helper-text">You must be 18 years or older</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="kycAddress" class="required-field">Full Address</label>
+                        <textarea id="kycAddress" class="form-control"
+                            placeholder="Enter your complete residential address" rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="kycDocumentType" class="required-field">Document Type</label>
+                        <select id="kycDocumentType" class="form-control" required>
+                            <option value="">Select document type</option>
+                            <option value="Passport">Passport</option>
+                            <option value="DriverLicense">Driver's License</option>
+                            <option value="NationalID">National ID Card</option>
+                            <option value="ResidencePermit">Residence Permit</option>
+                        </select>
+                        <span class="helper-text">Choose the ID document you will upload</span>
+                    </div>
+                </div>
+
+                <!-- Step 2: Document Upload -->
+                <div class="kyc-step" id="kycFormStep2">
+                    <div class="form-group">
+                        <label class="required-field">Identity Document</label>
+                        <div class="file-upload-area" id="documentUploadArea">
+                            <div class="file-upload-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="file-upload-text">
+                                <strong>Click to upload or drag and drop</strong>
+                            </div>
+                            <div class="file-upload-hint">
+                                Supported formats: PDF, JPG, PNG (Max: 5MB)
+                            </div>
+                        </div>
+                        <input type="file" id="kycDocumentFile" class="file-input" accept=".pdf,.jpg,.jpeg,.png"
+                            required>
+
+                        <div class="image-preview" id="documentPreview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required-field">Selfie with Document</label>
+                        <div class="file-upload-area" id="selfieUploadArea">
+                            <div class="file-upload-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <div class="file-upload-text">
+                                <strong>Click to upload or drag and drop</strong>
+                            </div>
+                            <div class="file-upload-hint">
+                                JPG or PNG format, clearly showing your face and document (Max: 5MB)
+                            </div>
+                        </div>
+                        <input type="file" id="kycSelfieFile" class="file-input" accept=".jpg,.jpeg,.png" required>
+
+                        <div class="image-preview" id="selfiePreview"></div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Review -->
+                <div class="kyc-step" id="kycFormStep3">
+                    <div class="review-section">
+                        <h3 class="review-title">Personal Information</h3>
+
+                        <div class="review-item">
+                            <div class="review-label">Full Name:</div>
+                            <div class="review-value" id="reviewFullName">-</div>
+                        </div>
+
+                        <div class="review-item">
+                            <div class="review-label">Date of Birth:</div>
+                            <div class="review-value" id="reviewDOB">-</div>
+                        </div>
+
+                        <div class="review-item">
+                            <div class="review-label">Address:</div>
+                            <div class="review-value" id="reviewAddress">-</div>
+                        </div>
+
+                        <div class="review-item">
+                            <div class="review-label">Document Type:</div>
+                            <div class="review-value" id="reviewDocumentType">-</div>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <h3 class="review-title">Uploaded Documents</h3>
+
+                        <div class="review-item">
+                            <div class="review-label">ID Document:</div>
+                            <div class="review-value" id="reviewDocumentFile">Not uploaded</div>
+                        </div>
+
+                        <div class="review-item">
+                            <div class="review-label">Selfie with ID:</div>
+                            <div class="review-value" id="reviewSelfieFile">Not uploaded</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="kycConsent" required>
+                            I certify that all information provided is accurate and complete
+                        </label>
+                        <span class="helper-text">By submitting, you agree to our KYC verification process</span>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="kyc-step" id="kycLoading">
+                    <div class="loading" style="padding: 2rem;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <div class="message-text">Submitting KYC for verification...</div>
+                        <p>Please wait while we process your submission.</p>
+                    </div>
+                </div>
+
+                <!-- Success State -->
+                <div class="kyc-step" id="kycSuccess">
+                    <div class="success" style="padding: 2rem;">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="message-text">KYC Submitted Successfully!</div>
+                        <p>Your KYC application has been submitted for verification. You will be notified once the
+                            verification is complete.</p>
+                        <p class="helper-text">Typical verification time: 1-3 business days</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" id="kycPrevBtn" onclick="prevKycStep()"
+                    style="display: none;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="modal-btn modal-btn-secondary" id="kycCancelBtn" onclick="hideKycModal()">
+                    Cancel
+                </button>
+                <button class="modal-btn modal-btn-primary" id="kycNextBtn" onclick="nextKycStep()">
+                    Continue <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="modal-btn modal-btn-primary" id="kycSubmitBtn" onclick="submitKyc()"
+                    style="display: none;">
+                    <i class="fas fa-check"></i> Submit KYC
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="marketplace.html" class="logo">Townly</a>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#" class="active">Marketplace</a>
+            <a href="#">Portfolio</a>
+            <a href="#">Dashboard</a>
+            <div class="header-actions">
+                <button class="btn-invest" onclick="handleInvest()">
+                    <i class="fas fa-coins"></i> Invest
+                </button>
+                <button class="btn-create" onclick="handleCreateProperty()">
+                    <i class="fas fa-plus"></i> Create
+                </button>
+                <button class="btn-kyc" id="kycButton" onclick="showKycModal()">
+                    <i class="fas fa-id-card"></i>
+                    <span id="kycButtonText">KYC</span>
+                    <span class="kyc-status" id="kycStatusBadge" style="display: none;"></span>
+                </button>
+                <div class="wallet-info">
+                    <button class="btn-wallet" id="walletBtn" onclick="toggleWalletDropdown()">
+                        <i class="fas fa-wallet"></i>
+                        <span id="walletBtnText">Connect Wallet</span>
+                    </button>
+                    <div class="wallet-dropdown" id="walletDropdown">
+                        <div class="wallet-header">
+                            <div>Connected Wallet</div>
+                            <div class="wallet-address" id="walletAddressDisplay">Not connected</div>
+                            <div class="wallet-balance" id="walletBalance">0 ETH</div>
+                        </div>
+                        <div class="wallet-body">
+                            <div class="wallet-info-item">
+                                <span class="wallet-info-label">Network</span>
+                                <span class="wallet-info-value" id="walletNetwork">Unknown</span>
+                            </div>
+                            <div class="wallet-info-item">
+                                <span class="wallet-info-label">Account Type</span>
+                                <span class="wallet-info-value" id="walletAccountType">External</span>
+                            </div>
+                            <div class="wallet-info-item">
+                                <span class="wallet-info-label">Last Activity</span>
+                                <span class="wallet-info-value" id="walletLastActivity">Just now</span>
+                            </div>
+                        </div>
+                        <div class="wallet-actions">
+                            <button class="wallet-btn wallet-btn-copy" onclick="copyWalletAddress()">
+                                <i class="fas fa-copy"></i> Copy Address
+                            </button>
+                            <button class="wallet-btn wallet-btn-disconnect" onclick="disconnectWallet()">
+                                <i class="fas fa-sign-out-alt"></i> Disconnect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search by location or property name...">
+            </div>
+        </div>
+
+        <!-- Featured Section -->
+        <div class="featured-section">
+            <div class="featured-title">Featured</div>
+            <div class="featured-tags">
+                <div class="tag active" data-filter="all">All</div>
+                <div class="tag" data-filter="Fractional">Fractional</div>
+                <div class="tag" data-filter="Residential">Residential</div>
+                <div class="tag" data-filter="Commercial">Commercial</div>
+            </div>
+        </div>
+
+        <!-- Properties Grid -->
+        <div id="propertiesGrid" class="properties-grid">
+            <!-- Properties will be loaded here -->
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Loading properties...
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <button class="pagination-btn" id="prevPage" disabled>Previous</button>
+            <span class="page-info" id="pageInfo">Page 1</span>
+            <button class="pagination-btn" id="nextPage" disabled>Next</button>
+        </div>
+    </div>
+
+    <script>
+    // Configuration
+    const API_BASE_URL = 'http://localhost:5168'; // Update with your backend URL
+    const MARKETPLACE_API = `${API_BASE_URL}/api/properties/marketplace`;
+    
+    // State
+    let currentPage = 1;
+    const pageSize = 9;
+    let currentSearch = '';
+    let currentFilter = 'all';
+    let totalProperties = 0;
+    let hasMore = false;
+
+    // Wallet State
+    let walletConnected = false;
+    let walletAddress = null;
+    let walletBalance = '0';
+    let accessToken = null;
+
+    // KYC State
+    let currentKycStep = 1;
+    let kycDocumentFile = null;
+    let kycSelfieFile = null;
+
+    // DOM Elements
+    const propertiesGrid = document.getElementById('propertiesGrid');
+    const searchInput = document.getElementById('searchInput');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const pageInfo = document.getElementById('pageInfo');
+    const filterTags = document.querySelectorAll('.tag');
+    const walletBtn = document.getElementById('walletBtn');
+    const walletBtnText = document.getElementById('walletBtnText');
+    const walletDropdown = document.getElementById('walletDropdown');
+    const walletAddressDisplay = document.getElementById('walletAddressDisplay');
+    const walletBalanceDisplay = document.getElementById('walletBalance');
+    const walletNetworkDisplay = document.getElementById('walletNetwork');
+    const walletModal = document.getElementById('walletModal');
+    const kycModal = document.getElementById('kycModal');
+    const kycButton = document.getElementById('kycButton');
+
+    // Create SVG placeholder image
+    const createPlaceholderSVG = (width = 400, height = 200, text = 'Property Image') => {
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+                <rect width="100%" height="100%" fill="#f0f0f0"/>
+                <rect x="0" y="0" width="100%" height="100%" fill="url(#gradient)"/>
+                <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3498db" stop-opacity="0.1"/>
+                        <stop offset="100%" stop-color="#2c3e50" stop-opacity="0.1"/>
+                    </linearGradient>
+                </defs>
+                <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" fill="#7f8c8d" 
+                      text-anchor="middle" dy=".3em">${text}</text>
+            </svg>
+        `)}`;
+    };
+
+    // ==================== WALLET AUTHENTICATION ====================
+
+    // Check if MetaMask is installed
+    function isMetaMaskInstalled() {
+        if (typeof window.ethereum !== 'undefined') {
+            return window.ethereum.isMetaMask === true;
+        }
+        
+        if (typeof window.web3 !== 'undefined') {
+            return true;
+        }
+        
+        return false;
+    }
+
+    // Show toast notification
+    function showToast(type, title, message, duration = 5000) {
+        const toastContainer = document.getElementById('toastContainer');
+        const toastId = 'toast-' + Date.now();
+        
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.id = toastId;
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas ${icons[type]}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        if (duration > 0) {
+            setTimeout(() => {
+                if (document.getElementById(toastId)) {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+    }
+
+    // Format wallet address
+    function formatAddress(address) {
+        if (!address) return 'Not connected';
+        return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    }
+
+    // Update wallet UI
+    function updateWalletUI() {
+        if (walletConnected && walletAddress) {
+            walletBtn.classList.add('connected');
+            walletBtnText.textContent = formatAddress(walletAddress);
+            walletAddressDisplay.textContent = formatAddress(walletAddress);
+            walletBalanceDisplay.textContent = `${walletBalance} ETH`;
+        } else {
+            walletBtn.classList.remove('connected');
+            walletBtnText.textContent = 'Connect Wallet';
+            walletAddressDisplay.textContent = 'Not connected';
+            walletBalanceDisplay.textContent = '0 ETH';
+            walletNetworkDisplay.textContent = 'Unknown';
+        }
+    }
+
+    // Get wallet balance
+    async function getWalletBalance(address) {
+        if (!window.ethereum || !address) return '0';
+        
+        try {
+            const balanceWei = await window.ethereum.request({
+                method: 'eth_getBalance',
+                params: [address, 'latest']
+            });
+            
+            const balanceEth = parseInt(balanceWei, 16) / 1e18;
+            return balanceEth.toFixed(4);
+        } catch (error) {
+            console.error('Error getting balance:', error);
+            return '0';
+        }
+    }
+
+    // Get network name
+    function getNetworkName(chainId) {
+        const networks = {
+            '0x1': 'Ethereum Mainnet',
+            '0x5': 'Goerli Testnet',
+            '0xaa36a7': 'Sepolia Testnet',
+            '0x89': 'Polygon Mainnet',
+            '0x13881': 'Polygon Mumbai'
+        };
+        return networks[chainId] || `Unknown (${chainId})`;
+    }
+
+    // Get nonce from backend - FIXED VERSION
+    async function getWalletNonce(walletAddress) {
+        try {
+            console.log('Getting nonce for:', walletAddress);
+            
+            const response = await fetch(`${API_BASE_URL}/api/v1/auth/wallet/nonce`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ walletAddress: walletAddress })
+            });
+            
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log('API Response:', result);
+            
+            // Extract nonce from response - adjust based on your actual API structure
+            let nonce;
+            
+            if (result.success) {
+                // Success response
+                if (result.data) {
+                    if (typeof result.data === 'string') {
+                        // Data is the nonce string
+                        nonce = result.data;
+                    } else if (result.data.nonce) {
+                        // Data has nonce property
+                        nonce = result.data.nonce;
+                    } else if (typeof result.data === 'object') {
+                        // Try to find nonce in object
+                        nonce = result.data.nonce || JSON.stringify(result.data);
+                    }
+                } else {
+                    // No data property
+                    nonce = result.nonce || result.message;
+                }
+            } else {
+                // No success property or success: false
+                nonce = result.nonce || result.data || result.message;
+            }
+            
+            if (!nonce) {
+                throw new Error('Could not extract nonce from response: ' + JSON.stringify(result));
+            }
+            
+            console.log('Extracted nonce:', nonce);
+            return nonce;
+            
+        } catch (error) {
+            console.error('Error getting nonce:', error);
+            throw error;
+        }
+    }
+
+    // Connect to wallet - FIXED VERSION
+    async function connectWallet() {
+        console.log('Connecting wallet...');
+        
+        if (!isMetaMaskInstalled()) {
+            showToast('error', 'MetaMask Not Found', 'Please install MetaMask extension');
+            return;
+        }
+        
+        try {
+            // Request accounts from MetaMask
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts'
+            });
+            
+            if (accounts.length === 0) {
+                showToast('error', 'Connection Failed', 'No accounts found in MetaMask');
+                return;
+            }
+            
+            const userWalletAddress = accounts[0];
+            console.log('Wallet address:', userWalletAddress);
+            
+            // 1. Get nonce from backend
+            showToast('info', 'Authentication', 'Requesting authentication challenge...');
+            const nonce = await getWalletNonce(userWalletAddress);
+            console.log('Nonce to sign:', nonce);
+            
+            // 2. Sign the nonce with MetaMask
+            showToast('info', 'Authentication', 'Please sign the message in MetaMask...');
+            const signature = await window.ethereum.request({
+                method: 'personal_sign',
+                params: [nonce, userWalletAddress] // Sign the raw nonce
+            });
+            
+            console.log('Signature received:', signature);
+            
+            // 3. Verify signature with backend
+            showToast('info', 'Authentication', 'Verifying signature...');
+            
+            const verifyResponse = await fetch(`${API_BASE_URL}/api/v1/auth/wallet/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    walletAddress: userWalletAddress,
+                    signature: signature,
+                    nonce: nonce
+                })
+            });
+            
+            console.log('Verify response status:', verifyResponse.status);
+            
+            if (!verifyResponse.ok) {
+                const errorText = await verifyResponse.text();
+                console.error('Verify error:', errorText);
+                
+                // Try alternative: include message field
+                console.log('Trying with message field...');
+                const verifyResponse2 = await fetch(`${API_BASE_URL}/api/v1/auth/wallet/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        walletAddress: userWalletAddress,
+                        signature: signature,
+                        nonce: nonce,
+                        message: nonce // Add message field
+                    })
+                });
+                
+                if (!verifyResponse2.ok) {
+                    throw new Error(`Verification failed: ${await verifyResponse2.text()}`);
+                }
+                
+                var verifyResult = await verifyResponse2.json();
+            } else {
+                var verifyResult = await verifyResponse.json();
+            }
+            
+            console.log('Verify result:', verifyResult);
+            
+            // Extract access token from response
+            let accessToken;
+            if (verifyResult.success && verifyResult.data) {
+                accessToken = verifyResult.data.accessToken || verifyResult.data.token || verifyResult.data;
+            } else {
+                accessToken = verifyResult.accessToken || verifyResult.token || verifyResult.data;
+            }
+            
+            if (!accessToken) {
+                throw new Error('No access token received from server');
+            }
+            
+            console.log('Authentication successful! Token:', accessToken);
+            
+            // Store wallet data
+            walletAddress = userWalletAddress;
+            walletConnected = true;
+            accessToken = accessToken;
+            
+            // Get network
+            try {
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                walletNetworkDisplay.textContent = getNetworkName(chainId);
+            } catch (networkError) {
+                console.warn('Could not get chain ID:', networkError);
+                walletNetworkDisplay.textContent = 'Unknown';
+            }
+            
+            // Get balance
+            try {
+                walletBalance = await getWalletBalance(walletAddress);
+                console.log('Wallet balance:', walletBalance);
+            } catch (balanceError) {
+                console.warn('Could not get balance:', balanceError);
+                walletBalance = '0';
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('walletConnected', 'true');
+            localStorage.setItem('walletAddress', walletAddress);
+            localStorage.setItem('accessToken', accessToken);
+            
+            // Verify storage
+            console.log('LocalStorage saved:');
+            console.log('- walletConnected:', localStorage.getItem('walletConnected'));
+            console.log('- walletAddress:', localStorage.getItem('walletAddress'));
+            console.log('- accessToken exists:', !!localStorage.getItem('accessToken'));
+            
+            updateWalletUI();
+            hideWalletModal();
+            
+            showToast('success', 'Wallet Connected', `Connected to ${formatAddress(walletAddress)}`);
+            
+            // Set up event listeners
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            window.ethereum.on('chainChanged', handleChainChanged);
+            
+            // Check KYC status
+            checkKycStatus();
+            
+            // Refresh properties to update Invest buttons
+            fetchProperties();
+            
+        } catch (error) {
+            console.error('Error connecting wallet:', error);
+            
+            if (error.message.includes('User rejected')) {
+                showToast('error', 'Signature Rejected', 'Please sign the message to connect your wallet');
+            } else if (error.code === 4001) {
+                showToast('error', 'Connection Rejected', 'Please connect your wallet to continue');
+            } else if (error.code === -32002) {
+                showToast('warning', 'Request Pending', 'Please check MetaMask - connection request already pending');
+            } else {
+                showToast('error', 'Connection Failed', error.message || 'Authentication failed');
+            }
+        }
+    }
+
+    // Handle account changes
+    async function handleAccountsChanged(accounts) {
+        console.log('Accounts changed:', accounts);
+        
+        if (accounts.length === 0) {
+            // User disconnected wallet
+            disconnectWallet();
+            showToast('warning', 'Wallet Disconnected', 'Your wallet has been disconnected');
+        } else if (accounts[0] !== walletAddress) {
+            // Account changed
+            walletAddress = accounts[0];
+            
+            try {
+                walletBalance = await getWalletBalance(walletAddress);
+                
+                // Re-authenticate with new address
+                const nonce = await getWalletNonce(walletAddress);
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [nonce, walletAddress]
+                });
+                
+                const verifyResponse = await fetch(`${API_BASE_URL}/api/v1/auth/wallet/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        walletAddress: walletAddress,
+                        signature: signature,
+                        nonce: nonce
+                    })
+                });
+                
+                if (verifyResponse.ok) {
+                    const verifyResult = await verifyResponse.json();
+                    accessToken = verifyResult.data?.accessToken || verifyResult.accessToken;
+                    
+                    // Update localStorage
+                    localStorage.setItem('walletAddress', walletAddress);
+                    if (accessToken) {
+                        localStorage.setItem('accessToken', accessToken);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error updating wallet info:', error);
+            }
+            
+            updateWalletUI();
+            showToast('info', 'Account Changed', `Switched to ${formatAddress(walletAddress)}`);
+            
+            // Refresh properties
+            fetchProperties();
+        }
+    }
+
+    // Handle chain changes
+    async function handleChainChanged(chainId) {
+        console.log('Chain changed to:', chainId);
+        walletNetworkDisplay.textContent = getNetworkName(chainId);
+        showToast('info', 'Network Changed', `Switched to ${getNetworkName(chainId)}`);
+        
+        // Update balance for new chain
+        if (walletAddress) {
+            try {
+                walletBalance = await getWalletBalance(walletAddress);
+                updateWalletUI();
+            } catch (error) {
+                console.error('Error updating balance after chain change:', error);
+            }
+        }
+    }
+
+    // Disconnect wallet
+    function disconnectWallet() {
+        console.log('Disconnecting wallet...');
+        
+        walletConnected = false;
+        walletAddress = null;
+        walletBalance = '0';
+        accessToken = null;
+        
+        // Remove from localStorage
+        localStorage.removeItem('walletConnected');
+        localStorage.removeItem('walletAddress');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        
+        // Remove event listeners
+        if (window.ethereum) {
+            try {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+                window.ethereum.removeListener('chainChanged', handleChainChanged);
+            } catch (error) {
+                console.warn('Error removing event listeners:', error);
+            }
+        }
+        
+        updateWalletUI();
+        walletDropdown.classList.remove('show');
+        
+        // Update KYC button
+        updateKycButtonStatus('none');
+        
+        showToast('info', 'Wallet Disconnected', 'You have been disconnected');
+        
+        // Refresh properties to update Invest buttons
+        fetchProperties();
+    }
+
+    // Auto-connect on page load
+    async function autoConnectWallet() {
+        console.log('Attempting auto-connect...');
+        
+        const wasConnected = localStorage.getItem('walletConnected') === 'true';
+        const savedAddress = localStorage.getItem('walletAddress');
+        const savedToken = localStorage.getItem('accessToken');
+        
+        console.log('Saved state:', { wasConnected, savedAddress, hasToken: !!savedToken });
+        
+        if (wasConnected && savedAddress && savedToken) {
+            if (!isMetaMaskInstalled()) {
+                console.log('MetaMask not installed');
+                disconnectWallet(); // Clear saved state
+                return;
+            }
+            
+            try {
+                // Check if we're still connected
+                const accounts = await window.ethereum.request({
+                    method: 'eth_accounts'
+                });
+                
+                console.log('Current accounts:', accounts);
+                
+                if (accounts.length > 0 && accounts[0].toLowerCase() === savedAddress.toLowerCase()) {
+                    walletAddress = accounts[0];
+                    walletConnected = true;
+                    accessToken = savedToken;
+                    
+                    console.log('Auto-connected to:', walletAddress);
+                    
+                    try {
+                        // Get network
+                        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                        walletNetworkDisplay.textContent = getNetworkName(chainId);
+                        
+                        // Get balance
+                        walletBalance = await getWalletBalance(walletAddress);
+                        
+                        // Set up listeners
+                        window.ethereum.on('accountsChanged', handleAccountsChanged);
+                        window.ethereum.on('chainChanged', handleChainChanged);
+                        
+                        updateWalletUI();
+                        console.log('Auto-connect successful!');
+                        
+                        // Check KYC status
+                        checkKycStatus();
+                        
+                    } catch (error) {
+                        console.error('Error during auto-connect setup:', error);
+                        disconnectWallet();
+                    }
+                } else {
+                    console.log('No matching accounts found');
+                    disconnectWallet();
+                }
+            } catch (error) {
+                console.error('Auto-connect error:', error);
+                disconnectWallet();
+            }
+        } else {
+            console.log('No valid saved connection found');
+        }
+    }
+
+    // Wallet dropdown functions
+    function toggleWalletDropdown() {
+        walletDropdown.classList.toggle('show');
+    }
+
+    function copyWalletAddress() {
+        if (!walletAddress) return;
+        
+        navigator.clipboard.writeText(walletAddress).then(() => {
+            showToast('success', 'Copied!', 'Address copied to clipboard');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            showToast('error', 'Error', 'Failed to copy address');
+        });
+    }
+
+    function showWalletModal() {
+        walletModal.style.display = 'flex';
+    }
+
+    function hideWalletModal() {
+        walletModal.style.display = 'none';
+    }
+
+    // Check wallet before action
+    function checkWalletBeforeAction(actionName) {
+        if (!walletConnected) {
+            showToast('warning', 'Wallet Required', `Please connect your wallet to ${actionName}`);
+            showWalletModal();
+            return false;
+        }
+        return true;
+    }
+
+    // ==================== KYC FUNCTIONS ====================
+
+    function showKycModal() {
+        if (!checkWalletBeforeAction('complete KYC')) return;
+        
+        resetKycForm();
+        kycModal.style.display = 'flex';
+    }
+
+    function hideKycModal() {
+        kycModal.style.display = 'none';
+    }
+
+    function resetKycForm() {
+        currentKycStep = 1;
+        kycDocumentFile = null;
+        kycSelfieFile = null;
+        
+        document.getElementById('kycFullName').value = '';
+        document.getElementById('kycDateOfBirth').value = '';
+        document.getElementById('kycAddress').value = '';
+        document.getElementById('kycDocumentType').value = '';
+        document.getElementById('kycDocumentFile').value = '';
+        document.getElementById('kycSelfieFile').value = '';
+        document.getElementById('kycConsent').checked = false;
+        
+        document.getElementById('documentPreview').innerHTML = '';
+        document.getElementById('selfiePreview').innerHTML = '';
+        
+        updateKycUI();
+    }
+
+    function updateKycUI() {
+        // Update progress steps
+        document.getElementById('kycStep1').classList.remove('active', 'completed');
+        document.getElementById('kycStep2').classList.remove('active', 'completed');
+        document.getElementById('kycStep3').classList.remove('active', 'completed');
+        
+        if (currentKycStep === 1) {
+            document.getElementById('kycStep1').classList.add('active');
+        } else if (currentKycStep === 2) {
+            document.getElementById('kycStep1').classList.add('completed');
+            document.getElementById('kycStep2').classList.add('active');
+        } else if (currentKycStep === 3) {
+            document.getElementById('kycStep1').classList.add('completed');
+            document.getElementById('kycStep2').classList.add('completed');
+            document.getElementById('kycStep3').classList.add('active');
+            updateKycReview();
+        }
+        
+        // Show/hide form steps
+        document.getElementById('kycFormStep1').classList.remove('active');
+        document.getElementById('kycFormStep2').classList.remove('active');
+        document.getElementById('kycFormStep3').classList.remove('active');
+        document.getElementById('kycLoading').classList.remove('active');
+        document.getElementById('kycSuccess').classList.remove('active');
+        
+        document.getElementById(`kycFormStep${currentKycStep}`).classList.add('active');
+        
+        // Update buttons
+        document.getElementById('kycPrevBtn').style.display = currentKycStep > 1 ? 'inline-block' : 'none';
+        document.getElementById('kycNextBtn').style.display = currentKycStep < 3 ? 'inline-block' : 'none';
+        document.getElementById('kycSubmitBtn').style.display = currentKycStep === 3 ? 'inline-block' : 'none';
+        document.getElementById('kycCancelBtn').style.display = currentKycStep < 3 ? 'inline-block' : 'none';
+    }
+
+    function nextKycStep() {
+        if (!validateKycStep(currentKycStep)) {
+            return;
+        }
+        
+        currentKycStep++;
+        updateKycUI();
+    }
+
+    function prevKycStep() {
+        if (currentKycStep > 1) {
+            currentKycStep--;
+            updateKycUI();
+        }
+    }
+
+    function validateKycStep(step) {
+        if (step === 1) {
+            const fullName = document.getElementById('kycFullName').value.trim();
+            const dob = document.getElementById('kycDateOfBirth').value;
+            const address = document.getElementById('kycAddress').value.trim();
+            const docType = document.getElementById('kycDocumentType').value;
+            
+            if (!fullName) {
+                showToast('error', 'Validation Error', 'Please enter your full name');
+                return false;
+            }
+            
+            if (!dob) {
+                showToast('error', 'Validation Error', 'Please select your date of birth');
+                return false;
+            }
+            
+            // Check age (18+)
+            const birthDate = new Date(dob);
+            const age = new Date().getFullYear() - birthDate.getFullYear();
+            if (age < 18) {
+                showToast('error', 'Age Restriction', 'You must be 18 years or older');
+                return false;
+            }
+            
+            if (!address) {
+                showToast('error', 'Validation Error', 'Please enter your address');
+                return false;
+            }
+            
+            if (!docType) {
+                showToast('error', 'Validation Error', 'Please select document type');
+                return false;
+            }
+            
+            return true;
+            
+        } else if (step === 2) {
+            if (!kycDocumentFile) {
+                showToast('error', 'Validation Error', 'Please upload your ID document');
+                return false;
+            }
+            
+            if (!kycSelfieFile) {
+                showToast('error', 'Validation Error', 'Please upload your selfie with ID');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        return true;
+    }
+
+    function updateKycReview() {
+        document.getElementById('reviewFullName').textContent = document.getElementById('kycFullName').value;
+        document.getElementById('reviewDOB').textContent = document.getElementById('kycDateOfBirth').value;
+        document.getElementById('reviewAddress').textContent = document.getElementById('kycAddress').value;
+        document.getElementById('reviewDocumentType').textContent = document.getElementById('kycDocumentType').value;
+        
+        document.getElementById('reviewDocumentFile').textContent = kycDocumentFile ? kycDocumentFile.name : 'Not uploaded';
+        document.getElementById('reviewSelfieFile').textContent = kycSelfieFile ? kycSelfieFile.name : 'Not uploaded';
+    }
+
+    function setupKycFileUploads() {
+        // Document upload
+        const docUploadArea = document.getElementById('documentUploadArea');
+        const docInput = document.getElementById('kycDocumentFile');
+        
+        docUploadArea.addEventListener('click', () => docInput.click());
+        docUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            docUploadArea.classList.add('dragover');
+        });
+        docUploadArea.addEventListener('dragleave', () => {
+            docUploadArea.classList.remove('dragover');
+        });
+        docUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            docUploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                docInput.files = e.dataTransfer.files;
+                handleKycDocumentUpload(e.dataTransfer.files[0]);
+            }
+        });
+        docInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleKycDocumentUpload(e.target.files[0]);
+            }
+        });
+        
+        // Selfie upload
+        const selfieUploadArea = document.getElementById('selfieUploadArea');
+        const selfieInput = document.getElementById('kycSelfieFile');
+        
+        selfieUploadArea.addEventListener('click', () => selfieInput.click());
+        selfieUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            selfieUploadArea.classList.add('dragover');
+        });
+        selfieUploadArea.addEventListener('dragleave', () => {
+            selfieUploadArea.classList.remove('dragover');
+        });
+        selfieUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            selfieUploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                selfieInput.files = e.dataTransfer.files;
+                handleKycSelfieUpload(e.dataTransfer.files[0]);
+            }
+        });
+        selfieInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleKycSelfieUpload(e.target.files[0]);
+            }
+        });
+    }
+
+    function handleKycDocumentUpload(file) {
+        // Check file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('error', 'File Too Large', 'Document must be less than 5MB');
+            return;
+        }
+        
+        // Check file type
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast('error', 'Invalid File Type', 'Please upload PDF, JPG, or PNG files only');
+            return;
+        }
+        
+        kycDocumentFile = file;
+        
+        // Show preview for images
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('documentPreview').innerHTML = `
+                    <img src="${e.target.result}" alt="Document Preview">
+                    <div style="margin-top: 0.5rem;">
+                        <button class="modal-btn modal-btn-secondary" onclick="removeKycDocument()" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            document.getElementById('documentPreview').innerHTML = `
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px;">
+                    <i class="fas fa-file-pdf fa-2x" style="color: #e74c3c;"></i>
+                    <div>${file.name}</div>
+                    <div class="helper-text">${(file.size / 1024).toFixed(1)} KB</div>
+                    <button class="modal-btn modal-btn-secondary" onclick="removeKycDocument()" style="margin-top: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            `;
+        }
+        
+        showToast('success', 'Document Uploaded', 'ID document uploaded successfully');
+    }
+
+    function handleKycSelfieUpload(file) {
+        // Check file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('error', 'File Too Large', 'Selfie must be less than 5MB');
+            return;
+        }
+        
+        // Check file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast('error', 'Invalid File Type', 'Please upload JPG or PNG files only');
+            return;
+        }
+        
+        kycSelfieFile = file;
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('selfiePreview').innerHTML = `
+                <img src="${e.target.result}" alt="Selfie Preview">
+                <div style="margin-top: 0.5rem;">
+                    <button class="modal-btn modal-btn-secondary" onclick="removeKycSelfie()" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+        
+        showToast('success', 'Selfie Uploaded', 'Selfie with ID uploaded successfully');
+    }
+
+    function removeKycDocument() {
+        kycDocumentFile = null;
+        document.getElementById('kycDocumentFile').value = '';
+        document.getElementById('documentPreview').innerHTML = '';
+    }
+
+    function removeKycSelfie() {
+        kycSelfieFile = null;
+        document.getElementById('kycSelfieFile').value = '';
+        document.getElementById('selfiePreview').innerHTML = '';
+    }
+
+    async function submitKyc() {
+        if (!validateKycStep(3)) {
+            return;
+        }
+        
+        // Check consent
+        if (!document.getElementById('kycConsent').checked) {
+            showToast('error', 'Consent Required', 'Please certify that all information is accurate');
+            return;
+        }
+        
+        // Check authentication
+        if (!walletConnected || !walletAddress || !accessToken) {
+            showToast('error', 'Authentication Required', 'Please connect your wallet first');
+            return;
+        }
+        
+        // Show loading
+        document.getElementById('kycFormStep3').classList.remove('active');
+        document.getElementById('kycLoading').classList.add('active');
+        document.querySelectorAll('#kycModal .modal-footer button').forEach(btn => btn.disabled = true);
+        
+        try {
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('FullName', document.getElementById('kycFullName').value);
+            formData.append('DateOfBirth', document.getElementById('kycDateOfBirth').value);
+            formData.append('FullAddress', document.getElementById('kycAddress').value);
+            formData.append('DocumentType', document.getElementById('kycDocumentType').value);
+            
+            // Add files
+            if (kycDocumentFile) {
+                formData.append('DocumentFile', kycDocumentFile);
+            }
+            
+            if (kycSelfieFile) {
+                formData.append('SelfieFile', kycSelfieFile);
+            }
+            
+            console.log('Submitting KYC with token:', accessToken);
+            
+            // Send request
+            const response = await fetch(`${API_BASE_URL}/api/kyc/submit`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: formData
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Token expired
+                    showToast('warning', 'Session Expired', 'Please reconnect your wallet');
+                    disconnectWallet();
+                    return;
+                }
+                
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            
+            // Show success
+            document.getElementById('kycLoading').classList.remove('active');
+            document.getElementById('kycSuccess').classList.add('active');
+            
+            // Hide all buttons
+            document.querySelectorAll('#kycModal .modal-footer button').forEach(btn => btn.style.display = 'none');
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'modal-btn modal-btn-primary';
+            closeBtn.innerHTML = '<i class="fas fa-check"></i> Close';
+            closeBtn.onclick = hideKycModal;
+            document.querySelector('#kycModal .modal-footer').appendChild(closeBtn);
+            
+            console.log('KYC submitted successfully:', result);
+            showToast('success', 'KYC Submitted', 'Your KYC application has been submitted for review');
+            
+            // Update KYC button status
+            updateKycButtonStatus('pending');
+            localStorage.setItem('kycStatus', 'pending');
+            
+        } catch (error) {
+            console.error('Error submitting KYC:', error);
+            
+            // Show error
+            document.getElementById('kycLoading').classList.remove('active');
+            document.getElementById('kycFormStep3').classList.add('active');
+            document.querySelectorAll('#kycModal .modal-footer button').forEach(btn => {
+                btn.disabled = false;
+                btn.style.display = 'inline-block';
+            });
+            
+            showToast('error', 'Submission Failed', error.message || 'Failed to submit KYC. Please try again.');
+        }
+    }
+
+    async function checkKycStatus() {
+        if (!walletConnected || !accessToken) return;
+        
+        try {
+            // This endpoint would need to be implemented in your backend
+            // For now, use localStorage
+            const savedStatus = localStorage.getItem('kycStatus');
+            if (savedStatus) {
+                updateKycButtonStatus(savedStatus);
+            }
+            
+        } catch (error) {
+            console.error('Error checking KYC status:', error);
+            const savedStatus = localStorage.getItem('kycStatus');
+            if (savedStatus) {
+                updateKycButtonStatus(savedStatus);
+            }
+        }
+    }
+
+    function updateKycButtonStatus(status) {
+        const kycBtn = document.getElementById('kycButton');
+        const kycText = document.getElementById('kycButtonText');
+        const kycBadge = document.getElementById('kycStatusBadge');
+        
+        if (!kycBtn) return;
+        
+        kycBtn.classList.remove('verified', 'pending', 'rejected');
+        kycBadge.classList.remove('verified', 'pending', 'rejected');
+        
+        switch(status) {
+            case 'approved':
+            case 'verified':
+                kycBtn.classList.add('verified');
+                kycText.textContent = 'KYC';
+                kycBadge.textContent = 'Verified';
+                kycBadge.className = 'kyc-status verified';
+                kycBadge.style.display = 'inline-flex';
+                break;
+                
+            case 'pending':
+            case 'submitted':
+                kycBtn.classList.add('pending');
+                kycText.textContent = 'KYC';
+                kycBadge.textContent = 'Pending';
+                kycBadge.className = 'kyc-status pending';
+                kycBadge.style.display = 'inline-flex';
+                break;
+                
+            case 'rejected':
+            case 'failed':
+                kycBtn.classList.add('rejected');
+                kycText.textContent = 'KYC';
+                kycBadge.textContent = 'Rejected';
+                kycBadge.className = 'kyc-status rejected';
+                kycBadge.style.display = 'inline-flex';
+                break;
+                
+            default:
+                kycText.textContent = 'KYC';
+                kycBadge.style.display = 'none';
+        }
+    }
+
+    // ==================== MARKETPLACE FUNCTIONS ====================
+
+    const ETH_TO_USD = 2500;
+    
+    function calculatePricePerShare(valuation, totalUnits) {
+        const valuePerUnit = valuation / totalUnits;
+        const priceInETH = valuePerUnit / ETH_TO_USD;
+        return Math.round(priceInETH * 100) / 100;
+    }
+
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function getRiskLevel(score) {
+        if (score === null || score === undefined) return null;
+        
+        if (score <= 3) return { text: 'Low Risk', class: 'risk-low' };
+        if (score <= 6) return { text: 'Low Moderate Risk', class: 'risk-moderate' };
+        if (score <= 8) return { text: 'Moderate Risk', class: 'risk-moderate' };
+        return { text: 'High Risk', class: 'risk-high' };
+    }
+
+    function formatRiskScore(score) {
+        if (score === null || score === undefined) return 'N/A';
+        return `${score}/10`;
+    }
+
+    function buildImageUrl(imageUrl) {
+        if (!imageUrl) {
+            return createPlaceholderSVG(400, 200, 'No Image');
+        }
+        
+        if (imageUrl.startsWith('http')) {
+            return imageUrl;
+        }
+        
+        if (imageUrl.startsWith('/')) {
+            return `${API_BASE_URL}${imageUrl}`;
+        }
+        
+        return `${API_BASE_URL}/${imageUrl}`;
+    }
+
+    function handleImageError(img) {
+        console.log('Image failed to load, using placeholder');
+        img.onerror = null;
+        img.src = createPlaceholderSVG(400, 200, 'Image Failed to Load');
+        img.style.objectFit = 'cover';
+    }
+
+    async function fetchProperties() {
+        try {
+            propertiesGrid.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading properties...</div>';
+            
+            const url = new URL(MARKETPLACE_API);
+            url.searchParams.append('page', currentPage);
+            url.searchParams.append('pageSize', pageSize);
+            
+            if (currentSearch) {
+                url.searchParams.append('search', currentSearch);
+            }
+            
+            if (currentFilter !== 'all') {
+                url.searchParams.append('propertyType', currentFilter);
+            }
+
+            console.log('Fetching properties from:', url.toString());
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            console.log('Properties data received:', data);
+            
+            totalProperties = data.totalCount;
+            hasMore = data.hasMore;
+            
+            updatePagination();
+            renderProperties(data.items);
+            
+        } catch (error) {
+            console.error('Error fetching properties:', error);
+            propertiesGrid.innerHTML = `<div class="error"><i class="fas fa-exclamation-circle"></i> Failed to load properties. Please check your connection.</div>`;
+        }
+    }
+
+    function renderProperties(properties) {
+        if (properties.length === 0) {
+            propertiesGrid.innerHTML = '<div class="no-results">No properties found matching your criteria.</div>';
+            return;
+        }
+
+        propertiesGrid.innerHTML = '';
+        
+        properties.forEach(property => {
+            const pricePerShare = calculatePricePerShare(
+                property.approvedValuation, 
+                property.totalUnits
+            );
+            
+            const riskInfo = getRiskLevel(property.riskScore);
+            const formattedRiskScore = formatRiskScore(property.riskScore);
+            const availabilityPercentage = Math.round((property.availableUnits / property.totalUnits) * 100);
+            
+            const propertyCard = document.createElement('div');
+            propertyCard.className = 'property-card';
+            propertyCard.innerHTML = `
+                <img src="${buildImageUrl(property.imageUrl)}" alt="${property.name}" class="property-image" onerror="handleImageError(this)">
+                <div class="property-content">
+                    <h3 class="property-name">${property.name}</h3>
+                    <div class="property-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${property.location}</span>
+                    </div>
+                    
+                    <div class="risk-section">
+                        <span class="risk-label">Final Risk Score</span>
+                        <span class="risk-score ${riskInfo ? riskInfo.class : ''}">
+                            ${formattedRiskScore} ${riskInfo ? `(${riskInfo.text})` : ''}
+                        </span>
+                    </div>
+                    
+                    <div class="price-section">
+                        <span class="price-label">Price/Share</span>
+                        <span class="price-value">${pricePerShare} ETH</span>
+                    </div>
+                    
+                    <div class="availability-section">
+                        <span class="availability-label">Availability</span>
+                        <span class="availability-value">${formatNumber(property.availableUnits)}/${formatNumber(property.totalUnits)} (${availabilityPercentage}%)</span>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="view-details-btn" onclick="viewPropertyDetails('${property.id}')">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                        <button class="invest-btn" onclick="investInProperty('${property.id}', '${property.name}', ${pricePerShare})" 
+                                ${!walletConnected ? 'disabled' : ''}>
+                            <i class="fas fa-coins"></i> ${walletConnected ? 'Invest' : 'Connect to Invest'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            propertiesGrid.appendChild(propertyCard);
+        });
+    }
+
+    function updatePagination() {
+        pageInfo.textContent = `Page ${currentPage}`;
+        
+        prevPageBtn.disabled = currentPage <= 1;
+        nextPageBtn.disabled = !hasMore;
+    }
+
+    function viewPropertyDetails(propertyId) {
+        window.location.href = `property-details.html?id=${propertyId}`;
+    }
+
+    function investInProperty(propertyId, propertyName, pricePerShare) {
+        if (!checkWalletBeforeAction('invest')) return;
+        
+        showToast('info', 'Investment Ready', `Ready to invest in ${propertyName} at ${pricePerShare} ETH per share`);
+    }
+
+    function handleInvest() {
+        if (!checkWalletBeforeAction('view investments')) return;
+        alert('Invest button clicked - This will show investment opportunities or portfolio.');
+    }
+
+    function handleCreateProperty() {
+        if (!checkWalletBeforeAction('create properties')) return;
+        window.location.href = 'create-property.html';
+    }
+
+    // Search functionality
+    let searchTimeout;
+    function handleSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentSearch = searchInput.value.trim();
+            currentPage = 1;
+            fetchProperties();
+        }, 500);
+    }
+
+    function handleFilter(filter) {
+        filterTags.forEach(tag => {
+            if (tag.dataset.filter === filter) {
+                tag.classList.add('active');
+            } else {
+                tag.classList.remove('active');
+            }
+        });
+        
+        currentFilter = filter;
+        currentPage = 1;
+        fetchProperties();
+    }
+
+    // ==================== INITIALIZATION ====================
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log('Initializing marketplace...');
+        
+        // Setup KYC file uploads
+        setupKycFileUploads();
+        
+        // Auto-connect wallet
+        await autoConnectWallet();
+        
+        // Fetch properties
+        fetchProperties();
+        
+        // Wallet button click handler
+        walletBtn.addEventListener('click', (e) => {
+            if (!walletConnected) {
+                e.stopPropagation();
+                connectWallet();
+            }
+        });
+        
+        // Close wallet dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!walletBtn.contains(event.target) && !walletDropdown.contains(event.target)) {
+                walletDropdown.classList.remove('show');
+            }
+        });
+        
+        // Event listeners
+        searchInput.addEventListener('input', handleSearch);
+        
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchProperties();
+            }
+        });
+        
+        nextPageBtn.addEventListener('click', () => {
+            if (hasMore) {
+                currentPage++;
+                fetchProperties();
+            }
+        });
+        
+        filterTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                handleFilter(tag.dataset.filter);
+            });
+        });
+    });
+
+    // ==================== DEBUG FUNCTIONS ====================
+
+    // Debug function to test auth API
+    async function debugAuthAPI() {
+        try {
+            console.log('=== DEBUG: Testing Auth API ===');
+            
+            // Test nonce endpoint
+            const testAddress = '0x1234567890123456789012345678901234567890';
+            console.log('Testing with address:', testAddress);
+            
+            const response = await fetch(`${API_BASE_URL}/api/v1/auth/wallet/nonce`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ walletAddress: testAddress })
+            });
+            
+            console.log('Response status:', response.status);
+            
+            const responseText = await response.text();
+            console.log('Raw response:', responseText);
+            
+            try {
+                const parsed = JSON.parse(responseText);
+                console.log('Parsed JSON:', parsed);
+                console.log('Response keys:', Object.keys(parsed));
+                
+                // Check structure
+                if (parsed.data) {
+                    console.log('data property:', parsed.data);
+                    console.log('data type:', typeof parsed.data);
+                }
+                
+            } catch (e) {
+                console.log('Not JSON:', e.message);
+            }
+            
+            console.log('=== DEBUG END ===');
+            
+        } catch (error) {
+            console.error('Debug error:', error);
+        }
+    }
+
+    // Call from browser console: debugAuthAPI()
+</script>
+</body>
+
+</html>

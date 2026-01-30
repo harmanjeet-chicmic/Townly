@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SIWE Login – Minimal Frontend</title>
+</head>
+<body>
+
+<h2>SIWE Wallet Login (Minimal)</h2>
+
+<button onclick="connectWallet()">1. Connect Wallet</button>
+<br><br>
+<button onclick="login()">2. Sign & Login</button>
+
+<pre id="log"></pre>
+
+<script>
+/* ================= CONFIG ================= */
+const API_BASE = "http://localhost:5168/api/v1/auth";
+/* ========================================= */
+
+let walletAddress = null;
+let chainId = null;
+
+function log(msg) {
+  document.getElementById("log").textContent += msg + "\n";
+}
+
+/* 1️⃣ Connect wallet */
+async function connectWallet() {
+  if (!window.ethereum) {
+    alert("MetaMask not found");
+    return;
+  }
+
+  const accounts = await ethereum.request({
+    method: "eth_requestAccounts"
+  });
+
+  walletAddress = accounts[0];
+
+  chainId = parseInt(
+    await ethereum.request({ method: "eth_chainId" }),
+    16
+  );
+
+  log("Connected wallet: " + walletAddress);
+  log("Chain ID: " + chainId);
+}
+
+/* 2️⃣ Login with SIWE */
+async function login() {
+  if (!walletAddress || !chainId) {
+    alert("Connect wallet first");
+    return;
+  }
+
+  log("Requesting nonce...");
+
+  /* STEP 1: Request nonce + SIWE message */
+  const nonceRes = await fetch(`${API_BASE}/wallet/nonce`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      walletAddress: walletAddress,
+      chainId: chainId
+    })
+  });
+
+  const nonceJson = await nonceRes.json();
+  const siweMessage = nonceJson.data.siweMessage;
+
+  log("SIWE message received:");
+  log(siweMessage);
+
+  /* STEP 2: Ask user to sign (frontend NEVER verifies) */
+  log("Waiting for signature approval...");
+
+  const signature = await ethereum.request({
+    method: "personal_sign",
+    params: [siweMessage, walletAddress]
+  });
+
+  log("Signature received");
+
+  /* STEP 3: Send signature to backend */
+  log("Verifying on backend...");
+
+  const verifyRes = await fetch(`${API_BASE}/wallet/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      walletAddress: walletAddress,
+      signature: signature,
+      chainId: chainId
+    })
+  });
+
+  const verifyJson = await verifyRes.json();
+
+  log("Response:");
+  log(JSON.stringify(verifyJson, null, 2));
+
+  // OPTIONAL: store JWT (recommended)
+  // localStorage.setItem("accessToken", verifyJson.data.accessToken);
+}
+</script>
+
+</body>
+</html>

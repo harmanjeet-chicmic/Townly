@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RealEstateInvesting.API/RealEstateInvesting.API.csproj" />
+    <Project Path="src/RealEstateInvesting.Application/RealEstateInvesting.Application.csproj" />
+    <Project Path="src/RealEstateInvesting.Domain/RealEstateInvesting.Domain.csproj" />
+    <Project Path="src/RealEstateInvesting.Infrastructure/RealEstateInvesting.Infrastructure.csproj" />
+  </Folder>
+</Solution>

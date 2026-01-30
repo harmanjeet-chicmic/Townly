@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Townly - Property Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        .navbar {
+            background-color: #fff;
+            padding: 1.2rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #3498db;
+        }
+
+        .nav-links a.active {
+            color: #3498db;
+        }
+
+        /* Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-invest, .btn-create {
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-invest {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-invest:hover {
+            background-color: #219653;
+        }
+
+        .btn-create {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background-color: #2980b9;
+        }
+
+        /* Back Button */
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            color: #555;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-bottom: 2rem;
+        }
+
+        .back-button:hover {
+            background-color: #f0f7ff;
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Property Header */
+        .property-header {
+            margin-bottom: 2rem;
+        }
+
+        .property-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .property-address {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Property Image */
+        .property-image-container {
+            width: 100%;
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .property-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Main Layout */
+        .property-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 3rem;
+        }
+
+        /* Left Column - Property Info */
+        .property-info {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .property-description {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        /* Highlights Grid */
+        .highlights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .highlight-item {
+            background-color: #f8f9fa;
+            padding: 1.2rem;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .highlight-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-value {
+            color: #555;
+        }
+
+        /* Right Column - Investment Card */
+        .investment-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 100px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .stat-value.eth {
+            color: #3c3c3d;
+        }
+
+        .stat-value.yield {
+            color: #27ae60;
+        }
+
+        .stat-value.risk {
+            color: #f39c12;
+        }
+
+        /* Risk Score */
+        .risk-score-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .risk-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .risk-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #f39c12;
+        }
+
+        .risk-text {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        /* Invest Form */
+        .invest-form {
+            margin-top: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .units-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        /* Invest Button */
+        .invest-main-btn {
+            width: 100%;
+            padding: 1rem;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .invest-main-btn:hover {
+            background-color: #219653;
+        }
+
+        .invest-main-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Loading & Error States */
+        .loading, .error {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .property-layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .investment-card {
+                position: static;
+            }
+            
+            .property-image-container {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .header-actions {
+                margin-top: 1rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .property-title {
+                font-size: 2rem;
+            }
+            
+            .highlights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .property-image-container {
+                height: 200px;
+            }
+            
+            .property-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="marketplace.html" class="logo">Townly</a>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="#">Portfolio</a>
+            <a href="#">Dashboard</a>
+            <div class="header-actions">
+                <button class="btn-invest">
+                    <i class="fas fa-coins"></i> Invest
+                </button>
+                <button class="btn-create">
+                    <i class="fas fa-plus"></i> Create
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Back Button -->
+        <a href="marketplace.html" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Marketplace
+        </a>
+
+        <!-- Property Details Container -->
+        <div id="propertyDetails">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Loading property details...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:5168'; // Update with your localhost URL
+        
+        // Get property ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const propertyId = urlParams.get('id');
+
+        // DOM Elements
+        const propertyDetails = document.getElementById('propertyDetails');
+
+        // Calculate price in ETH (1 ETH = $2,500)
+        const ETH_TO_USD = 2500;
+        
+        function calculatePriceInETH(usdAmount) {
+            return Math.round((usdAmount / ETH_TO_USD) * 100) / 100;
+        }
+
+        // Format number with commas
+        function formatNumber(num) {
+            if (!num) return '0';
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return `$${formatNumber(amount.toFixed(2))}`;
+        }
+
+        // Get risk level based on score
+        function getRiskLevel(score) {
+            if (score === null || score === undefined) return { text: 'Not Rated', class: '' };
+            
+            if (score <= 3) return { text: 'Low Risk', class: 'risk-low' };
+            if (score <= 6) return { text: 'Low Moderate Risk', class: 'risk-moderate' };
+            if (score <= 8) return { text: 'Moderate Risk', class: 'risk-moderate' };
+            return { text: 'High Risk', class: 'risk-high' };
+        }
+
+        // Build image URL
+        function buildImageUrl(imageUrl) {
+            if (!imageUrl) return 'https://via.placeholder.com/1200x400?text=No+Image';
+            
+            if (imageUrl.startsWith('http')) {
+                return imageUrl;
+            }
+            
+            if (imageUrl.startsWith('/')) {
+                return `${API_BASE_URL}${imageUrl}`;
+            }
+            
+            return `${API_BASE_URL}/${imageUrl}`;
+        }
+
+        // Fetch property details from API
+        async function fetchPropertyDetails() {
+            if (!propertyId) {
+                propertyDetails.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i> No property ID provided.
+                        <p><a href="marketplace.html" class="back-button" style="margin-top: 1rem; display: inline-block;">Back to Marketplace</a></p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                propertyDetails.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading property details...</div>';
+                
+                const response = await fetch(`${API_BASE_URL}/api/properties/${propertyId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const property = await response.json();
+                
+                // Render property details
+                renderPropertyDetails(property);
+                
+            } catch (error) {
+                console.error('Error fetching property details:', error);
+                propertyDetails.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i> Failed to load property details. Please try again later.
+                        <p><a href="marketplace.html" class="back-button" style="margin-top: 1rem; display: inline-block;">Back to Marketplace</a></p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render property details
+        function renderPropertyDetails(property) {
+            const pricePerShareETH = calculatePriceInETH(property.pricePerUnit || (property.totalValue / property.totalUnits));
+            const totalValueETH = calculatePriceInETH(property.totalValue);
+            const availabilityPercentage = property.totalUnits > 0 
+                ? Math.round((property.availableUnits / property.totalUnits) * 100)
+                : 0;
+            
+            const riskInfo = getRiskLevel(property.riskScore);
+
+            propertyDetails.innerHTML = `
+                <!-- Property Header -->
+                <div class="property-header">
+                    <h1 class="property-title">${property.name}</h1>
+                    <div class="property-address">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${property.location}</span>
+                    </div>
+                </div>
+
+                <!-- Property Image -->
+                <div class="property-image-container">
+                    <img src="${buildImageUrl(property.imageUrl)}" alt="${property.name}" class="property-image" onerror="this.src='https://via.placeholder.com/1200x400?text=Property+Image'">
+                </div>
+
+                <!-- Main Layout -->
+                <div class="property-layout">
+                    <!-- Left Column - Property Info -->
+                    <div class="property-info">
+                        <h2 class="section-title">Property Highlights</h2>
+                        
+                        <p class="property-description">
+                            ${property.description || 'Premium investment property with high yield potential.'}
+                        </p>
+
+                        <div class="highlights-grid">
+                            <div class="highlight-item">
+                                <div class="highlight-title">Property Type</div>
+                                <div class="highlight-value">${property.propertyType}</div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-title">Total Shares</div>
+                                <div class="highlight-value">${formatNumber(property.totalUnits)}</div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-title">Available Shares</div>
+                                <div class="highlight-value">${formatNumber(property.availableUnits)} (${availabilityPercentage}%)</div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-title">Annual Yield</div>
+                                <div class="highlight-value">${property.annualYieldPercent}%</div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-title">Demand Score</div>
+                                <div class="highlight-value">${property.demandScore || 'N/A'}/10</div>
+                            </div>
+                        </div>
+
+                        <h2 class="section-title">Investment Information</h2>
+                        
+                        <div class="highlights-grid">
+                            <div class="highlight-item">
+                                <div class="highlight-title">Minimum Investment</div>
+                                <div class="highlight-value">1 share (${pricePerShareETH} ETH)</div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-title">Expected Returns</div>
+                                <div class="highlight-value">${property.annualYieldPercent}% annually</div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-title">Investment Type</div>
+                                <div class="highlight-value">Fractional Ownership</div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-title">Security</div>
+                                <div class="highlight-value">Blockchain Verified</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Investment Card -->
+                    <div class="investment-card">
+                        <h2 class="section-title">Investment Details</h2>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Total Value</span>
+                                <span class="stat-value">${formatCurrency(property.totalValue)}</span>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <span class="stat-label">Price/Share</span>
+                                <span class="stat-value eth">${pricePerShareETH} ETH</span>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <span class="stat-label">Annual Yield</span>
+                                <span class="stat-value yield">${property.annualYieldPercent}%</span>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <span class="stat-label">Available Shares</span>
+                                <span class="stat-value">${formatNumber(property.availableUnits)}/${formatNumber(property.totalUnits)}</span>
+                            </div>
+                        </div>
+
+                        <div class="risk-score-container">
+                            <div>
+                                <div class="risk-label">Risk Score</div>
+                                <div class="risk-text">${riskInfo.text}</div>
+                            </div>
+                            <div class="risk-value ${riskInfo.class}">
+                                ${property.riskScore || 'N/A'}/10
+                            </div>
+                        </div>
+
+                        <div class="invest-form">
+                            <div class="form-group">
+                                <label for="sharesInput">Number of Shares to Purchase</label>
+                                <input 
+                                    type="number" 
+                                    id="sharesInput" 
+                                    class="form-control" 
+                                    min="1" 
+                                    max="${property.availableUnits}"
+                                    value="1"
+                                    onchange="updateInvestmentAmount()"
+                                >
+                                <div class="units-display">
+                                    <span>1 share = ${pricePerShareETH} ETH</span>
+                                    <span>Max: ${formatNumber(property.availableUnits)} shares</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="totalAmount">Total Investment Amount</label>
+                                <input 
+                                    type="text" 
+                                    id="totalAmount" 
+                                    class="form-control" 
+                                    value="${pricePerShareETH} ETH"
+                                    readonly
+                                >
+                                <div class="units-display">
+                                    <span id="usdAmount">≈ $${formatNumber((pricePerShareETH * ETH_TO_USD).toFixed(2))}</span>
+                                </div>
+                            </div>
+
+                            <button class="invest-main-btn" onclick="handleInvest()">
+                                <i class="fas fa-coins"></i> Invest Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update investment amount when shares change
+        function updateInvestmentAmount() {
+            const sharesInput = document.getElementById('sharesInput');
+            const totalAmount = document.getElementById('totalAmount');
+            const usdAmount = document.getElementById('usdAmount');
+            
+            if (sharesInput && totalAmount && usdAmount) {
+                const shares = parseInt(sharesInput.value) || 1;
+                const pricePerShareETH = calculatePriceInETH(property.totalValue / property.totalUnits);
+                const totalETH = (shares * pricePerShareETH).toFixed(2);
+                const totalUSD = (totalETH * ETH_TO_USD).toFixed(2);
+                
+                totalAmount.value = `${totalETH} ETH`;
+                usdAmount.textContent = `≈ $${formatNumber(totalUSD)}`;
+            }
+        }
+
+        // Handle investment
+        function handleInvest() {
+            const sharesInput = document.getElementById('sharesInput');
+            const shares = sharesInput ? parseInt(sharesInput.value) || 1 : 1;
+            
+            alert(`Investing in ${shares} share(s) of this property.\n\nThis would connect to your wallet and process the transaction.`);
+            
+            // In the future:
+            // 1. Connect to wallet (MetaMask, etc.)
+            // 2. Show transaction confirmation
+            // 3. Process the investment
+            // 4. Redirect to portfolio or show success message
+        }
+
+        // Header button handlers
+        document.querySelector('.btn-invest')?.addEventListener('click', () => {
+            alert('Invest button clicked - This will show investment opportunities or portfolio.');
+        });
+
+        document.querySelector('.btn-create')?.addEventListener('click', () => {
+            alert('Create Property button clicked - This will open the property creation form.');
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', fetchPropertyDetails);
+    </script>
+</body>
+</html>

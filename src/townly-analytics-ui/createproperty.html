@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Townly - Create Property NFT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navigation */
+        .navbar {
+            background-color: #fff;
+            padding: 1.2rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #3498db;
+        }
+
+        .nav-links a.active {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        /* Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-invest, .btn-create {
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-invest {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-invest:hover {
+            background-color: #219653;
+        }
+
+        .btn-create {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background-color: #2980b9;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            flex: 1;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .page-subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            color: #7f8c8d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .step.active .step-number {
+            background-color: #3498db;
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .step.completed .step-number {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .step.active .step-label {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .step.completed .step-label {
+            color: #27ae60;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 25px;
+            left: 50px;
+            right: 50px;
+            height: 4px;
+            background-color: #e0e0e0;
+            z-index: 1;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #27ae60;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Form Container */
+        .form-container {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        /* Form Steps */
+        .form-step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .form-group .helper-text {
+            display: block;
+            margin-top: 0.5rem;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background-color: #fff;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f8c8d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+            padding-right: 2.5rem;
+        }
+
+        /* File Upload */
+        .file-upload-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .file-upload-label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #fafafa;
+        }
+
+        .file-upload-area:hover {
+            border-color: #3498db;
+            background-color: #f0f7ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #27ae60;
+            background-color: #e8f8f0;
+        }
+
+        .file-upload-icon {
+            font-size: 3rem;
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-text {
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload-hint {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-preview-container {
+            margin-top: 1rem;
+        }
+
+        .file-preview {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-preview-icon {
+            margin-right: 0.8rem;
+            color: #3498db;
+        }
+
+        .file-preview-name {
+            flex: 1;
+            color: #2c3e50;
+        }
+
+        .file-preview-remove {
+            color: #e74c3c;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        /* Document List */
+        .document-list {
+            margin-top: 1rem;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .document-name {
+            color: #2c3e50;
+        }
+
+        .document-remove {
+            color: #e74c3c;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .add-document-btn {
+            background-color: #f0f7ff;
+            color: #3498db;
+            border: 1px dashed #3498db;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .add-document-btn:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* Calculated Fields */
+        .calculated-fields {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .calculated-field {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .calculated-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .calculated-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .calculated-note {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-prev, .btn-next, .btn-submit {
+            padding: 0.9rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-prev {
+            background-color: #f8f9fa;
+            color: #555;
+            border: 1px solid #ddd;
+        }
+
+        .btn-prev:hover {
+            background-color: #e9ecef;
+        }
+
+        .btn-next {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-next:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-submit {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-submit:hover {
+            background-color: #219653;
+        }
+
+        .btn-submit:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Review Section */
+        .review-section {
+            margin-bottom: 2rem;
+        }
+
+        .review-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .review-item {
+            display: flex;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .review-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 200px;
+        }
+
+        .review-value {
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .review-value ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .review-value li {
+            margin-bottom: 0.3rem;
+        }
+
+        /* Loading & Success States */
+        .loading, .success, .error {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .loading i, .success i, .error i {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .loading {
+            color: #3498db;
+        }
+
+        .success {
+            color: #27ae60;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .message-text {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .header-actions {
+                margin-top: 1rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+            
+            .form-container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .progress-steps {
+                margin-bottom: 2rem;
+            }
+            
+            .step {
+                max-width: 150px;
+            }
+            
+            .step-number {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .progress-line {
+                top: 20px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .btn-prev, .btn-next, .btn-submit {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .review-item {
+                flex-direction: column;
+            }
+            
+            .review-label {
+                min-width: auto;
+                margin-bottom: 0.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="marketplace.html" class="logo">Townly</a>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="#">Portfolio</a>
+            <a href="#">Dashboard</a>
+            <div class="header-actions">
+                <button class="btn-invest">
+                    <i class="fas fa-coins"></i> Invest
+                </button>
+                <button class="btn-create" onclick="window.location.href='create-property.html'">
+                    <i class="fas fa-plus"></i> Create
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Create Property NFT</h1>
+            <p class="page-subtitle">Tokenize your real estate asset and enable fractional ownership on OneChain</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-steps">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-label">Property Details</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-label">Review & Submit</div>
+            </div>
+            <div class="progress-line">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Form Container -->
+        <div class="form-container">
+            <!-- Step 1: Property Details -->
+            <div class="form-step active" id="formStep1">
+                <h2 class="step-title">Property Details</h2>
+                <p class="helper-text" style="margin-bottom: 2rem;">Let's start with the basic information about your property</p>
+
+                <form id="propertyForm">
+                    <!-- Property Name -->
+                    <div class="form-group">
+                        <label for="propertyName">Property Name *</label>
+                        <input type="text" id="propertyName" class="form-control" placeholder="e.g., Sunset Villa, Downtown Loft" required>
+                        <span class="helper-text">Enter a descriptive name for your property</span>
+                    </div>
+
+                    <!-- Property Description -->
+                    <div class="form-group">
+                        <label for="propertyDescription">Property Description *</label>
+                        <textarea id="propertyDescription" class="form-control" placeholder="Describe the property; its features, location highlights, and what makes it a great investment opportunity." maxlength="500" required></textarea>
+                        <div class="helper-text">
+                            <span id="charCount">0</span>/500 characters
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="form-group">
+                        <label for="location">Location *</label>
+                        <input type="text" id="location" class="form-control" placeholder="e.g., Miami, Florida" required>
+                        <span class="helper-text">Enter the city and state/country of the property</span>
+                    </div>
+
+                    <!-- Property Type -->
+                    <div class="form-group">
+                        <label for="propertyType">Property Type *</label>
+                        <select id="propertyType" class="form-control" required>
+                            <option value="">Select property type</option>
+                            <option value="Residential">Residential</option>
+                            <option value="Commercial">Commercial</option>
+                            <option value="Fractional">Fractional</option>
+                            <option value="Industrial">Industrial</option>
+                        </select>
+                    </div>
+
+                    <!-- Property Image -->
+                    <div class="form-group">
+                        <label>Property Image *</label>
+                        <div class="file-upload-container">
+                            <div class="file-upload-area" id="imageUploadArea">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    <strong>Click to upload</strong> or drag and drop
+                                </div>
+                                <div class="file-upload-hint">
+                                    Recommended: 1280×800px or higher, JPG or PNG format
+                                </div>
+                            </div>
+                            <input type="file" id="propertyImage" class="file-input" accept="image/jpeg,image/png,image/jpg" required>
+                            
+                            <!-- Image Preview -->
+                            <div class="image-preview" id="imagePreview"></div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Information -->
+                    <h3 class="step-title" style="font-size: 1.4rem; margin-top: 2rem;">Financial Information</h3>
+                    <p class="helper-text" style="margin-bottom: 2rem;">Configure the tokenization and investment parameters</p>
+
+                    <!-- Total Property Value -->
+                    <div class="form-group">
+                        <label for="totalValue">Total Property Value (USD) *</label>
+                        <input type="number" id="totalValue" class="form-control" placeholder="e.g., 2500000" min="1000" step="1000" required>
+                        <span class="helper-text">Minimum value: $1,000</span>
+                    </div>
+
+                    <!-- Total Units/Shares -->
+                    <div class="form-group">
+                        <label for="totalUnits">Total Shares *</label>
+                        <input type="number" id="totalUnits" class="form-control" placeholder="e.g., 10000" min="1" max="1000000" required>
+                        <span class="helper-text">Maximum: 1,000,000 shares</span>
+                    </div>
+
+                    <!-- Auto-calculated Price Per Share -->
+                    <div class="calculated-fields">
+                        <div class="calculated-field">
+                            <span class="calculated-label">Price Per Share</span>
+                            <span class="calculated-value" id="pricePerShare">$0.00</span>
+                        </div>
+                        <div class="calculated-note" id="priceCalculationNote">
+                            Calculated as: $0 ÷ 0 shares
+                        </div>
+                    </div>
+
+                    <!-- Annual Yield -->
+                    <div class="form-group">
+                        <label for="annualYield">Expected Annual Yield (%) *</label>
+                        <input type="number" id="annualYield" class="form-control" placeholder="e.g., 9.5" min="0" max="100" step="0.1" required>
+                        <span class="helper-text">Estimated annual rental return percentage</span>
+                    </div>
+
+                    <!-- Monthly Rental Income (Optional) -->
+                    <div class="form-group">
+                        <label for="monthlyRental">Monthly Rental Income (USD) - Optional</label>
+                        <input type="number" id="monthlyRental" class="form-control" placeholder="e.g., 3000" min="0" step="100">
+                        <span class="helper-text">Optional: Historical or estimated monthly rental income</span>
+                    </div>
+
+                    <!-- Documents -->
+                    <div class="form-group">
+                        <label>Property Documents</label>
+                        <div class="file-upload-container">
+                            <div class="file-upload-area" id="documentUploadArea">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    <strong>Click to upload documents</strong> or drag and drop
+                                </div>
+                                <div class="file-upload-hint">
+                                    Recommended: PDF documents (Property Deed, Tax Records, etc.)
+                                </div>
+                            </div>
+                            <input type="file" id="propertyDocuments" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+                            
+                            <!-- Documents List -->
+                            <div class="document-list" id="documentsList"></div>
+                            
+                            <button type="button" class="add-document-btn" onclick="document.getElementById('propertyDocuments').click()">
+                                <i class="fas fa-plus"></i> Add More Documents
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Step 1 Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn-prev" disabled>
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="button" class="btn-next" onclick="goToStep(2)">
+                        Continue <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Review & Submit -->
+            <div class="form-step" id="formStep2">
+                <h2 class="step-title">Review & Submit</h2>
+                <p class="helper-text" style="margin-bottom: 2rem;">Review your property information before minting the NFT</p>
+
+                <!-- Review Content -->
+                <div id="reviewContent">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <!-- Step 2 Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn-prev" onclick="goToStep(1)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="button" class="btn-submit" id="submitBtn" onclick="submitProperty()">
+                        <i class="fas fa-check"></i> Submit Property
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="form-step" id="loadingState">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <div class="message-text">Submitting your property for approval...</div>
+                    <p>Please wait while we process your request.</p>
+                </div>
+            </div>
+
+            <!-- Success State -->
+            <div class="form-step" id="successState">
+                <div class="success">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="message-text">Property Submitted Successfully!</div>
+                    <p>Your property has been submitted for approval. You will be notified once it's approved and listed on the marketplace.</p>
+                    <button type="button" class="btn-submit" onclick="window.location.href='marketplace.html'" style="margin-top: 2rem;">
+                        <i class="fas fa-store"></i> Go to Marketplace
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="form-step" id="errorState">
+                <div class="error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div class="message-text" id="errorMessage">Error Submitting Property</div>
+                    <p id="errorDetails">An error occurred while submitting your property. Please try again.</p>
+                    <button type="button" class="btn-prev" onclick="goToStep(2)" style="margin-top: 2rem;">
+                        <i class="fas fa-arrow-left"></i> Back to Form
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:5168'; // Update with your backend URL
+        const CREATE_PROPERTY_API = `${API_BASE_URL}/api/properties`;
+
+        // State
+        let currentStep = 1;
+        let propertyImage = null;
+        let propertyDocuments = [];
+        let isSubmitting = false;
+
+        // DOM Elements
+        const step1Element = document.getElementById('step1');
+        const step2Element = document.getElementById('step2');
+        const formStep1 = document.getElementById('formStep1');
+        const formStep2 = document.getElementById('formStep2');
+        const loadingState = document.getElementById('loadingState');
+        const successState = document.getElementById('successState');
+        const errorState = document.getElementById('errorState');
+        const progressFill = document.getElementById('progressFill');
+        const charCount = document.getElementById('charCount');
+        const pricePerShare = document.getElementById('pricePerShare');
+        const priceCalculationNote = document.getElementById('priceCalculationNote');
+        const reviewContent = document.getElementById('reviewContent');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            setupEventListeners();
+            updateCharCount();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Character count for description
+            document.getElementById('propertyDescription').addEventListener('input', updateCharCount);
+            
+            // Calculate price per share when values change
+            document.getElementById('totalValue').addEventListener('input', calculatePricePerShare);
+            document.getElementById('totalUnits').addEventListener('input', calculatePricePerShare);
+            
+            // Image upload
+            const imageUploadArea = document.getElementById('imageUploadArea');
+            const imageInput = document.getElementById('propertyImage');
+            
+            imageUploadArea.addEventListener('click', () => imageInput.click());
+            imageUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                imageUploadArea.classList.add('dragover');
+            });
+            imageUploadArea.addEventListener('dragleave', () => {
+                imageUploadArea.classList.remove('dragover');
+            });
+            imageUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                imageUploadArea.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    imageInput.files = e.dataTransfer.files;
+                    handleImageUpload(e.dataTransfer.files[0]);
+                }
+            });
+            imageInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleImageUpload(e.target.files[0]);
+                }
+            });
+            
+            // Document upload
+            const documentUploadArea = document.getElementById('documentUploadArea');
+            const documentInput = document.getElementById('propertyDocuments');
+            
+            documentUploadArea.addEventListener('click', () => documentInput.click());
+            documentUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                documentUploadArea.classList.add('dragover');
+            });
+            documentUploadArea.addEventListener('dragleave', () => {
+                documentUploadArea.classList.remove('dragover');
+            });
+            documentUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                documentUploadArea.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    handleDocumentUpload(Array.from(e.dataTransfer.files));
+                }
+            });
+            documentInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleDocumentUpload(Array.from(e.target.files));
+                }
+            });
+        }
+
+        // Update character count
+        function updateCharCount() {
+            const description = document.getElementById('propertyDescription').value;
+            charCount.textContent = description.length;
+        }
+
+        // Calculate price per share
+        function calculatePricePerShare() {
+            const totalValue = parseFloat(document.getElementById('totalValue').value) || 0;
+            const totalUnits = parseInt(document.getElementById('totalUnits').value) || 0;
+            
+            if (totalUnits > 0) {
+                const price = totalValue / totalUnits;
+                pricePerShare.textContent = `$${price.toFixed(2)}`;
+                priceCalculationNote.textContent = `Calculated as: $${formatNumber(totalValue.toFixed(2))} ÷ ${formatNumber(totalUnits)} shares`;
+            } else {
+                pricePerShare.textContent = '$0.00';
+                priceCalculationNote.textContent = 'Calculated as: $0 ÷ 0 shares';
+            }
+        }
+
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Handle image upload
+        function handleImageUpload(file) {
+            if (!file.type.match('image.*')) {
+                alert('Please upload an image file (JPG, PNG)');
+                return;
+            }
+            
+            propertyImage = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imagePreview = document.getElementById('imagePreview');
+                imagePreview.innerHTML = `
+                    <img src="${e.target.result}" alt="Property Preview">
+                    <button type="button" class="add-document-btn" onclick="removeImage()">
+                        <i class="fas fa-trash"></i> Remove Image
+                    </button>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove image
+        function removeImage() {
+            propertyImage = null;
+            document.getElementById('propertyImage').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+        }
+
+        // Handle document upload
+        function handleDocumentUpload(files) {
+            files.forEach(file => {
+                // Check file type
+                const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert(`File "${file.name}" is not a supported document type. Please upload PDF, DOC, DOCX, JPG, or PNG files.`);
+                    return;
+                }
+                
+                // Check if file already exists
+                if (propertyDocuments.some(doc => doc.name === file.name)) {
+                    alert(`Document "${file.name}" is already added.`);
+                    return;
+                }
+                
+                propertyDocuments.push(file);
+            });
+            
+            updateDocumentsList();
+        }
+
+        // Update documents list display
+        function updateDocumentsList() {
+            const documentsList = document.getElementById('documentsList');
+            
+            if (propertyDocuments.length === 0) {
+                documentsList.innerHTML = '';
+                return;
+            }
+            
+            documentsList.innerHTML = propertyDocuments.map((doc, index) => `
+                <div class="document-item">
+                    <div class="document-name">
+                        <i class="fas fa-file ${doc.type.includes('pdf') ? 'fa-file-pdf' : doc.type.includes('image') ? 'fa-file-image' : 'fa-file-word'}"></i>
+                        ${doc.name} (${(doc.size / 1024).toFixed(1)} KB)
+                    </div>
+                    <button type="button" class="document-remove" onclick="removeDocument(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Remove document
+        function removeDocument(index) {
+            propertyDocuments.splice(index, 1);
+            updateDocumentsList();
+        }
+
+        // Navigate between steps
+        function goToStep(step) {
+            if (isSubmitting) return;
+            
+            // Validate step 1 before moving to step 2
+            if (step === 2 && currentStep === 1) {
+                if (!validateStep1()) {
+                    return;
+                }
+                updateReviewContent();
+            }
+            
+            // Update step visibility
+            currentStep = step;
+            updateProgress();
+            
+            // Hide all form steps
+            document.querySelectorAll('.form-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Show current step
+            if (step === 1) {
+                formStep1.classList.add('active');
+            } else if (step === 2) {
+                formStep2.classList.add('active');
+            }
+        }
+
+        // Update progress bar and step indicators
+        function updateProgress() {
+            // Update step indicators
+            step1Element.classList.toggle('active', currentStep >= 1);
+            step1Element.classList.toggle('completed', currentStep > 1);
+            step2Element.classList.toggle('active', currentStep >= 2);
+            
+            // Update progress bar
+            const progressPercentage = (currentStep - 1) * 50;
+            progressFill.style.width = `${progressPercentage}%`;
+        }
+
+        // Validate step 1
+        function validateStep1() {
+            const requiredFields = [
+                'propertyName',
+                'propertyDescription', 
+                'location',
+                'propertyType',
+                'totalValue',
+                'totalUnits',
+                'annualYield'
+            ];
+            
+            let isValid = true;
+            let firstInvalidField = null;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    isValid = false;
+                    if (!firstInvalidField) firstInvalidField = field;
+                    field.style.borderColor = '#e74c3c';
+                } else {
+                    field.style.borderColor = '#ddd';
+                }
+            });
+            
+            // Check image
+            if (!propertyImage) {
+                isValid = false;
+                alert('Please upload a property image.');
+            }
+            
+            if (!isValid && firstInvalidField) {
+                firstInvalidField.focus();
+                alert('Please fill in all required fields.');
+            }
+            
+            return isValid;
+        }
+
+        // Update review content
+        function updateReviewContent() {
+            const formData = getFormData();
+            const pricePerShareValue = parseFloat(formData.totalValue) / parseInt(formData.totalUnits);
+            
+            // Create image preview URL
+            let imagePreview = '';
+            if (propertyImage) {
+                const reader = new FileReader();
+                reader.readAsDataURL(propertyImage);
+                reader.onload = function() {
+                    document.getElementById('imageReview').innerHTML = `<img src="${reader.result}" alt="Property Image" style="max-width: 100%; border-radius: 8px;">`;
+                };
+            }
+            
+            reviewContent.innerHTML = `
+                <!-- Property Details -->
+                <div class="review-section">
+                    <h3 class="review-title">Property Details</h3>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Property Name:</div>
+                        <div class="review-value">${formData.propertyName}</div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Location:</div>
+                        <div class="review-value">${formData.location}</div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Property Type:</div>
+                        <div class="review-value">${formData.propertyType}</div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Documents:</div>
+                        <div class="review-value">
+                            <ul>
+                                ${propertyDocuments.map(doc => `<li>${doc.name}</li>`).join('')}
+                                ${propertyDocuments.length === 0 ? '<li>No documents uploaded</li>' : ''}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Description:</div>
+                        <div class="review-value">${formData.propertyDescription}</div>
+                    </div>
+                </div>
+                
+                <!-- Financial Information -->
+                <div class="review-section">
+                    <h3 class="review-title">Financial Information</h3>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Total Property Value:</div>
+                        <div class="review-value">$${formatNumber(parseFloat(formData.totalValue).toFixed(2))}</div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Total Shares:</div>
+                        <div class="review-value">${formatNumber(formData.totalUnits)}</div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Monthly Rental Income:</div>
+                        <div class="review-value">${formData.monthlyRental ? `$${formatNumber(parseFloat(formData.monthlyRental).toFixed(2))}` : 'Not specified'}</div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Price Per Share:</div>
+                        <div class="review-value">$${pricePerShareValue.toFixed(2)}</div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-label">Expected Annual Yield:</div>
+                        <div class="review-value">${formData.annualYield}%</div>
+                    </div>
+                </div>
+                
+                <!-- Property Image -->
+                <div class="review-section">
+                    <h3 class="review-title">Property Image</h3>
+                    <div class="review-item">
+                        <div class="review-value">
+                            <div id="imageReview" style="text-align: center;">
+                                <p>Image will be previewed here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get form data
+        function getFormData() {
+            return {
+                propertyName: document.getElementById('propertyName').value,
+                propertyDescription: document.getElementById('propertyDescription').value,
+                location: document.getElementById('location').value,
+                propertyType: document.getElementById('propertyType').value,
+                totalValue: document.getElementById('totalValue').value,
+                totalUnits: document.getElementById('totalUnits').value,
+                annualYield: document.getElementById('annualYield').value,
+                monthlyRental: document.getElementById('monthlyRental').value || null
+            };
+        }
+
+        // Submit property
+        async function submitProperty() {
+            if (isSubmitting) return;
+            
+            // Validate form
+            if (!validateStep1()) {
+                goToStep(1);
+                return;
+            }
+            
+            // Show loading state
+            isSubmitting = true;
+            formStep2.classList.remove('active');
+            loadingState.classList.add('active');
+            submitBtn.disabled = true;
+            
+            try {
+                // Prepare form data
+                const formData = getFormData();
+                const postData = new FormData();
+                
+                // Add text fields
+                postData.append('Name', formData.propertyName);
+                postData.append('Description', formData.propertyDescription);
+                postData.append('Location', formData.location);
+                postData.append('PropertyType', formData.propertyType);
+                postData.append('InitialValuation', formData.totalValue);
+                postData.append('TotalUnits', formData.totalUnits);
+                postData.append('AnnualYieldPercent', formData.annualYield);
+                
+                // Add image
+                if (propertyImage) {
+                    postData.append('Image', propertyImage);
+                }
+                
+                // Add documents
+                propertyDocuments.forEach((doc, index) => {
+                    postData.append('Documents', doc);
+                });
+                
+                // Send request
+                const response = await fetch(CREATE_PROPERTY_API, {
+                    method: 'POST',
+                    body: postData,
+                    // Note: Don't set Content-Type header for FormData - browser sets it automatically with boundary
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const result = await response.json();
+                
+                // Show success state
+                loadingState.classList.remove('active');
+                successState.classList.add('active');
+                
+                console.log('Property created successfully:', result);
+                
+            } catch (error) {
+                console.error('Error submitting property:', error);
+                
+                // Show error state
+                loadingState.classList.remove('active');
+                errorState.classList.add('active');
+                
+                document.getElementById('errorMessage').textContent = 'Error Submitting Property';
+                document.getElementById('errorDetails').textContent = error.message || 'Please check your connection and try again.';
+                
+                // Re-enable submit button
+                isSubmitting = false;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Header button handlers
+        document.querySelector('.btn-invest').addEventListener('click', () => {
+            alert('Invest button clicked - This will show investment opportunities or portfolio.');
+        });
+
+        // Calculate price per share on load
+        calculatePricePerShare();
+    </script>
+</body>
+</html>
