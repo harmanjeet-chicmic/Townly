@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Domain.Enums;
-using RealEstateInvesting.Infrastructure.VectorSearch;
 using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Infrastructure.VectorSearch;
 
 namespace RealEstateInvesting.Api.Controllers;
 
@@ -20,27 +20,24 @@ public class InternalVectorController : ControllerBase
         _indexer = indexer;
     }
 
-    /// <summary>
-    /// Manually sync all ACTIVE properties into vector DB
-    /// </summary>
-    [HttpPost("sync-properties")]
-    public async Task<IActionResult> SyncActiveProperties()
+    [HttpPost("index-properties")]
+    public async Task<IActionResult> IndexActiveProperties()
     {
-        var activeProperties = await _propertyRepository
-            .GetByStatusAsync(PropertyStatus.Active);
+        var properties =
+            await _propertyRepository.GetByStatusAsync(PropertyStatus.Active);
 
-        int count = 0;
+        int indexed = 0;
 
-        foreach (var property in activeProperties)
+        foreach (var property in properties)
         {
             await _indexer.IndexAsync(property);
-            count++;
+            indexed++;
         }
 
         return Ok(new
         {
-            Message = "Vector sync completed",
-            IndexedProperties = count
+            Message = "Vector indexing completed",
+            IndexedProperties = indexed
         });
     }
 }

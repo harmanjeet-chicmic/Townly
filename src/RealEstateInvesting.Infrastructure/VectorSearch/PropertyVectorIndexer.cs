@@ -1,48 +1,46 @@
-
+using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.VectorSearch;
 using RealEstateInvesting.Domain.Entities;
 
-namespace RealEstateInvesting.Infrastructure.VectorSearch
+namespace RealEstateInvesting.Infrastructure.VectorSearch;
+
+public class PropertyVectorIndexer
 {
-    public class PropertyVectorIndexer
+    private readonly IEmbeddingService _embeddingService;
+    private readonly IVectorStore _vectorStore;
+
+    public PropertyVectorIndexer(
+        IEmbeddingService embeddingService,
+        IVectorStore vectorStore)
     {
-        private readonly OpenAIEmbeddingService _embeddingService;
-        private readonly QdrantVectorStore _vectorStore;
+        _embeddingService = embeddingService;
+        _vectorStore = vectorStore;
+    }
 
-        public PropertyVectorIndexer(
-            OpenAIEmbeddingService embeddingService,
-            QdrantVectorStore vectorStore)
-        {
-            _embeddingService = embeddingService;
-            _vectorStore = vectorStore;
-        }
+    public async Task IndexAsync(Property property)
+    {
+        var embeddingText = $"""
+        Property name: {property.Name}
+        Property type: {property.PropertyType}
+        Location: {property.Location}
 
-        public async Task IndexAsync(Property property)
-        {
-            // Build semantic text
-            var embeddingText = BuildEmbeddingText(property);
+        {property.Description}
 
-            // Generate vector
-            var vector = await _embeddingService.GenerateEmbeddingAsync(embeddingText);
+        Approved valuation: {property.ApprovedValuation}
+        Total units: {property.TotalUnits}
+        Annual yield: {property.AnnualYieldPercent}
+        """;
 
-            // Store in Qdrant
-            await _vectorStore.UpsertAsync(property.Id, vector);
-        }
+        var vector = await _embeddingService.GenerateEmbeddingAsync(embeddingText);
 
-        private static string BuildEmbeddingText(Property property)
-        {
-            return $"""
-            Property name: {property.Name}
-            Property type: {property.PropertyType}
-            Location: {property.Location}
-
-            Description:
-            {property.Description}
-
-            Approved valuation: {property.ApprovedValuation} USD
-            Total units: {property.TotalUnits}
-            Expected annual yield: {property.AnnualYieldPercent} percent
-            Status: {property.Status}
-            """;
-        }
+        await _vectorStore.UpsertAsync(
+            property.Id,
+            vector,
+            new Dictionary<string, object>
+            {
+                ["propertyId"] = property.Id.ToString(),
+                ["location"] = property.Location,
+                ["type"] = property.PropertyType
+            });
     }
 }

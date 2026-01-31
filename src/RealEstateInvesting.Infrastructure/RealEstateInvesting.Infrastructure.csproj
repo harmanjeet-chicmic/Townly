@@ -23,6 +23,7 @@
     <PackageReference Include="Nethereum.Signer" Version="5.8.0" />
     <PackageReference Include="Nethereum.Siwe" Version="5.8.0" />
      <FrameworkReference Include="Microsoft.AspNetCore.App" />
+     <PackageReference Include="System.Net.Http.Json" Version="10.0.2" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -131,6 +131,7 @@ builder.Services.AddHostedService<AnalyticsBackgroundService>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddHttpClient<CoinGeckoEthPriceService>();
+builder.Services.AddVectorSearch(builder.Configuration);
 
 builder.Services.AddScoped<IEthPriceService>(sp =>
 {

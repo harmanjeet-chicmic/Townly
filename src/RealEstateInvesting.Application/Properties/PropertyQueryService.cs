@@ -2,26 +2,34 @@ using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Enums;
 using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.VectorSearch;
 
 namespace RealEstateInvesting.Application.Properties;
 
 public class PropertyQueryService
 {
-   
-   
+
+
     private readonly IPropertyRepository _propertyRepository;
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
     private readonly IEthPriceService _ethPriceService;
+    private readonly IEmbeddingService _embeddingService;
+    private readonly IVectorStore _vectorStore;
+
     public PropertyQueryService(IPropertyRepository propertyRepository,
                 IInvestmentRepository investmentRepository,
                  IAnalyticsSnapshotRepository analyticsSnapshotRepository,
-                  IEthPriceService ethPriceService)
+                  IEthPriceService ethPriceService,
+                   IEmbeddingService embeddingService,
+                IVectorStore vectorStore)
     {
         _propertyRepository = propertyRepository;
         _investmentRepository = investmentRepository;
         _analyticsSnapshotRepository = analyticsSnapshotRepository;
         _ethPriceService = ethPriceService;
+        _embeddingService = embeddingService;
+        _vectorStore = vectorStore;
     }
 
     public async Task<object> GetMarketplaceAsync(
@@ -243,6 +251,84 @@ public class PropertyQueryService
             };
         });
     }
+    public async Task<IEnumerable<MarketplacePropertyDto>> GetRelatedPropertiesAsync(Guid propertyId)
+    {
+        // 1️⃣ Get base property
+        var baseProperty = await _propertyRepository.GetByIdAsync(propertyId)
+            ?? throw new InvalidOperationException("Property not found.");
+
+        // 2️⃣ Build embedding text (stable + meaningful)
+        var embeddingText = $"""
+    Property name: {baseProperty.Name}
+    Property type: {baseProperty.PropertyType}
+    Location: {baseProperty.Location}
+
+    {baseProperty.Description}
+
+    Approved valuation: {baseProperty.ApprovedValuation}
+    Total units: {baseProperty.TotalUnits}
+    Annual yield: {baseProperty.AnnualYieldPercent}
+    """;
+
+        // 3️⃣ Generate vector
+        List<Guid> relatedIds;
+        
+    //   try{
+        
+            var vector = await _embeddingService.GenerateEmbeddingAsync(embeddingText);
+            relatedIds =
+                await _vectorStore.SearchSimilarAsync(propertyId, vector, limit: 3);
+        // }
+        // catch (Exception)
+           
+        // {   
+
+        //     Console.WriteLine("=====================Fallback one =====================");
+        //     // 🔁 Fallback: rule-based related properties
+        //     relatedIds = (await _propertyRepository.GetFeaturedAsync(6))
+        //         .Where(p => p.Id != propertyId)
+        //         .Select(p => p.Id)
+        //         .ToList();
+        // }
+
+        if (!relatedIds.Any())
+            return Enumerable.Empty<MarketplacePropertyDto>();
+
+        // 5️⃣ Fetch properties
+        var relatedProperties =
+            await _propertyRepository.GetByIdsAsync(relatedIds);
+
+        // 6️⃣ ETH price
+        var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
+
+        return relatedProperties
+            .Where(p => p.Status == PropertyStatus.Active)
+            .Select(p =>
+            {
+                var pricePerUnitUsd =
+                    p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
+
+                var pricePerUnitEth =
+                    ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
+
+                return new MarketplacePropertyDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Location = p.Location,
+                    PropertyType = p.PropertyType,
+                    ImageUrl = p.ImageUrl,
+
+                    ApprovedValuation = p.ApprovedValuation,
+                    AnnualYieldPercent = p.AnnualYieldPercent,
+                    TotalUnits = p.TotalUnits,
+                    AvailableUnits = p.TotalUnits, // sold units optional here
+
+                    PricePerUnitEth = pricePerUnitEth
+                };
+            });
+    }
+
 
 
 }
