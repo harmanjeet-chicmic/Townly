@@ -12,17 +12,26 @@ using RealEstateInvesting.Application.Analytics;
 using Amazon;
 using Amazon.S3;
 using RealEstateInvesting.Infrastructure.Storage;
-using RealEstateInvesting.Application.Common.Interfaces;
+
 using RealEstateInvesting.Infrastructure.Pricing;
 using Microsoft.Extensions.Caching.Memory;
 using RealEstateInvesting.Application.Portfolio;
 using RealEstateInvesting.Infrastructure.VectorSearch;
+using RealEstateInvesting.Application.AdminAuth;
+using RealEstateInvesting.Application.AdminAuth.Interfaces;
 
+using RealEstateInvesting.Infrastructure.Security;
+using Microsoft.AspNetCore.Identity;
+using RealEstateInvesting.Domain.Entities;
 
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
+var hasher = new PasswordHasher<AdminUser>();
+var hash = hasher.HashPassword(null!, "Admin@123");
+Console.WriteLine("============================================================");
+Console.WriteLine(hash);
+Console.WriteLine("======================================");
 builder.Services.AddOpenApi();
 
 builder.Services.AddControllers(options =>
@@ -140,6 +149,10 @@ builder.Services.AddScoped<IEthPriceService>(sp =>
 
     return new CachedEthPriceService(live, cache);
 });
+// Admin auth
+builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IAdminPasswordHasher, AdminPasswordHasher>();
 
 
 builder.Services.AddHttpContextAccessor();

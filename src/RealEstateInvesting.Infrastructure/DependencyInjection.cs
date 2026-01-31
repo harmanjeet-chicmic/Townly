@@ -8,6 +8,9 @@ using RealEstateInvesting.Infrastructure.Persistence;
 using RealEstateInvesting.Infrastructure.Persistence.Repositories;
 using RealEstateInvesting.Application.Kyc;
 using RealEstateInvesting.Infrastructure.Kyc;
+using  RealEstateInvesting.Application.Admin.Kyc;
+using RealEstateInvesting.Application.Admin.Kyc.Interfaces;
+using RealEstateInvesting.Infrastructure.Admin.Kyc;
 namespace RealEstateInvesting.Infrastructure;
 
 public static class DependencyInjection
@@ -39,7 +42,10 @@ public static class DependencyInjection
        services.AddScoped<IKycFileStorageService, KycFileStorageService>();
        services.AddScoped<IUnitOfWork, UnitOfWork>();
       services.AddHttpClient<IPriceFeed, CoinGeckoPriceFeed>();
+       services.AddScoped<IAdminKycService, AdminKycService>();
 
+      services.AddScoped<IAdminKycRepository, AdminKycRepository>();
+services.AddScoped<IAdminKycService, AdminKycService>();
 
         return services;
     }

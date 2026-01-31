@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
 
     public DbSet<UserPortfolioSnapshot> UserPortfolioSnapshots
         => Set<UserPortfolioSnapshot>();
+    public DbSet<AdminUser> Admins { get; set; } = default!;
 
 
 

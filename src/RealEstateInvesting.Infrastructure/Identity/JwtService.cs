@@ -20,26 +20,44 @@ public class JwtService : IJwtService
     public string GenerateToken(User user)
     {
         var claims = new List<Claim>
-        {
-            // REQUIRED by CurrentUser
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Role, user.Role.ToString()),
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Role, user.Role.ToString()),
 
-            // Identity
-            new Claim("walletAddress", user.WalletAddress),
-            new Claim("chainId", user.ChainId.ToString()),
+        new Claim("walletAddress", user.WalletAddress),
+        new Claim("chainId", user.ChainId.ToString()),
 
-            // Compliance
-            new Claim("kycStatus", user.KycStatus.ToString()),
-            new Claim("isBlocked", user.IsBlocked.ToString()),
+        new Claim("kycStatus", user.KycStatus.ToString()),
+        new Claim("isBlocked", user.IsBlocked.ToString()),
 
-            // Metadata
-            new Claim("auth_method", "wallet"),
-            new Claim(JwtRegisteredClaimNames.Iat,
-                DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
-                ClaimValueTypes.Integer64)
-        };
+        new Claim("auth_method", "wallet"),
+        new Claim(JwtRegisteredClaimNames.Iat,
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+            ClaimValueTypes.Integer64)
+    };
 
+        return GenerateJwt(claims);
+    }
+
+    public string GenerateAdminToken(AdminUser admin)
+    {
+        var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
+        new Claim(ClaimTypes.Email, admin.Email),
+        new Claim(ClaimTypes.Role, "Admin"),
+
+        new Claim("auth_method", "admin"),
+        new Claim(JwtRegisteredClaimNames.Iat,
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+            ClaimValueTypes.Integer64)
+    };
+
+        return GenerateJwt(claims);
+    }
+
+    private string GenerateJwt(List<Claim> claims)
+    {
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)
         );
@@ -59,4 +77,5 @@ public class JwtService : IJwtService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
 }
