@@ -13,3 +13,40 @@
   <script src="js/marketplace.js"></script>
 </body>
 </html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Authentication</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <h1>Connect Your Wallet</h1>
+        <div class="wallet-options">
+            <button id="connectMetamask" class="wallet-btn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
+                Connect with MetaMask
+            </button>
+            <button id="connectWalletConnect" class="wallet-btn">
+                <img src="https://walletconnect.org/_next/static/media/logo_mark.84dd8525.svg" alt="WalletConnect">
+                Connect with WalletConnect
+            </button>
+        </div>
+        <div id="message" class="message"></div>
+        <div id="signatureSection" class="signature-section" style="display: none;">
+            <h3>Sign the Message</h3>
+            <p id="signMessage"></p>
+            <button id="signBtn" class="sign-btn">Sign Message</button>
+        </div>
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

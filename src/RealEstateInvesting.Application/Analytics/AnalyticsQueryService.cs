@@ -138,6 +138,4 @@ public class AnalyticsQueryService
         return result;
     }
 
-
-
 }

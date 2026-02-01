@@ -26,6 +26,9 @@ public class Property : BaseEntity
 
     // Approval
     public DateTime? ApprovedAt { get; private set; }
+    public Guid? ReviewedBy { get; private set; }
+    public DateTime? ReviewedAt { get; private set; }
+    public string? RejectionReason { get; private set; }
 
     private Property() { }
 
@@ -91,5 +94,21 @@ public class Property : BaseEntity
         Status = PropertyStatus.SoldOut;
         MarkUpdated();
     }
+    public void Reject(Guid adminUserId, string reason)
+    {
+        if (Status != PropertyStatus.PendingApproval)
+            throw new InvalidOperationException("Only pending properties can be rejected.");
+
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new InvalidOperationException("Rejection reason is required.");
+
+        Status = PropertyStatus.Rejected;
+        ReviewedBy = adminUserId;
+        ReviewedAt = DateTime.UtcNow;
+        RejectionReason = reason;
+
+        MarkUpdated();
+    }
+
 
 }

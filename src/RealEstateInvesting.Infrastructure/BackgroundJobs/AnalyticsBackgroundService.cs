@@ -20,7 +20,7 @@ public class AnalyticsBackgroundService : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             await RunAnalyticsAsync();
-            await Task.Delay(TimeSpan.FromMinutes(100), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
 

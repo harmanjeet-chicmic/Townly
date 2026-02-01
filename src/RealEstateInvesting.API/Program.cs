@@ -23,15 +23,19 @@ using RealEstateInvesting.Application.AdminAuth.Interfaces;
 using RealEstateInvesting.Infrastructure.Security;
 using Microsoft.AspNetCore.Identity;
 using RealEstateInvesting.Domain.Entities;
-
+using RealEstateInvesting.Application.Admin.Properties;
+using RealEstateInvesting.Application.Admin.Properties.Interfaces;
+using RealEstateInvesting.Infrastructure.Admin.Properties;
 using System.Text;
+using RealEstateInvesting.Application.Notifications.Interfaces;
+using RealEstateInvesting.Application.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
-var hasher = new PasswordHasher<AdminUser>();
-var hash = hasher.HashPassword(null!, "Admin@123");
-Console.WriteLine("============================================================");
-Console.WriteLine(hash);
-Console.WriteLine("======================================");
+// var hasher = new PasswordHasher<AdminUser>();
+// var hash = hasher.HashPassword(null!, "Admin@123");
+// Console.WriteLine("============================================================");
+// Console.WriteLine(hash);
+// Console.WriteLine("======================================");
 builder.Services.AddOpenApi();
 
 builder.Services.AddControllers(options =>
@@ -45,6 +49,8 @@ builder.Services.AddControllers(options =>
 // -------------------------------
 var awsSection = builder.Configuration.GetSection("AWS");
 builder.Services.AddScoped<PortfolioQueryService>();
+builder.Services.AddScoped<IAdminPropertyService, AdminPropertyService>();
+builder.Services.AddScoped<IAdminPropertyRepository, AdminPropertyRepository>();
 
 builder.Services.AddSingleton<IAmazonS3>(_ =>
 {
@@ -153,6 +159,8 @@ builder.Services.AddScoped<IEthPriceService>(sp =>
 builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IAdminPasswordHasher, AdminPasswordHasher>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 
 builder.Services.AddHttpContextAccessor();

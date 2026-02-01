@@ -1,0 +1,215 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.auth-container {
+    background: white;
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+}
+
+.logo {
+    margin-bottom: 40px;
+}
+
+.logo h1 {
+    color: #1a2980;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.logo p {
+    color: #666;
+    font-size: 16px;
+}
+
+.wallet-options {
+    margin: 30px 0;
+}
+
+.wallet-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 18px 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 16px;
+    background: white;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.wallet-btn:hover {
+    border-color: #1a2980;
+    background: #f8f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(26, 41, 128, 0.1);
+}
+
+.wallet-btn:active {
+    transform: translateY(0);
+}
+
+.wallet-btn img {
+    width: 36px;
+    height: 36px;
+}
+
+.signature-section {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 16px;
+    margin: 25px 0;
+    border: 1px solid #e9ecef;
+    text-align: left;
+}
+
+.signature-section h3 {
+    color: #1a2980;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.message-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    margin: 15px 0;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.sign-btn {
+    background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.sign-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(26, 41, 128, 0.2);
+}
+
+.sign-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.hint {
+    color: #6c757d;
+    font-size: 14px;
+    margin-top: 15px;
+    font-style: italic;
+}
+
+.message {
+    padding: 16px;
+    border-radius: 12px;
+    margin: 20px 0;
+    display: none;
+    font-weight: 500;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    display: block;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    display: block;
+}
+
+.info {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.info p {
+    margin: 8px 0;
+}
+
+.loading {
+    margin: 30px 0;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #1a2980;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .auth-container {
+        padding: 25px;
+    }
+    
+    .logo h1 {
+        font-size: 24px;
+    }
+    
+    .wallet-btn {
+        font-size: 16px;
+        padding: 16px 20px;
+    }
+    
+    .message-box {
+        font-size: 12px;
+        padding: 15px;
+    }
+}

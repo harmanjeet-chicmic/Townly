@@ -259,9 +259,9 @@ public class PropertyQueryService
 
         // 2️⃣ Build embedding text (stable + meaningful)
         var embeddingText = $"""
-    Property name: {baseProperty.Name}
-    Property type: {baseProperty.PropertyType}
-    Location: {baseProperty.Location}
+          Property name: {baseProperty.Name}
+           Property type: {baseProperty.PropertyType}
+           Location: {baseProperty.Location}
 
     {baseProperty.Description}
 

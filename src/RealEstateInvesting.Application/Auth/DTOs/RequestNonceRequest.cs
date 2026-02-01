@@ -11,5 +11,5 @@ namespace RealEstateInvesting.Application.Auth.DTOs;
 public class RequestNonceRequest
 {
     public string WalletAddress { get; set; } = null!;
-    public int ChainId { get; set; }
+    public long ChainId { get; set; }
 }
