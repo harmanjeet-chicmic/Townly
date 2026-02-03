@@ -1,5 +1,6 @@
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Analytics.Dtos;
+using Amazon.Runtime.Internal.Util;
 
 namespace RealEstateInvesting.Application.Analytics;
 
@@ -8,6 +9,7 @@ public class AnalyticsQueryService
     private readonly IAnalyticsSnapshotRepository _snapshotRepository;
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IPropertyRepository _propertyRepository;
+    private readonly ILogger logger;
     public AnalyticsQueryService(IAnalyticsSnapshotRepository snapshotRepository,
     IInvestmentRepository investmentRepository,
     IPropertyRepository propertyRepository)
@@ -24,6 +26,7 @@ public class AnalyticsQueryService
 
         var snapshots =
             await _snapshotRepository.GetPropertySnapshotsAsync(propertyId, fromUtc);
+        logger.InfoFormat("this is logging");
 
         return snapshots.Select(s => new PropertyAnalyticsTrendDto
         {
@@ -118,7 +121,7 @@ public class AnalyticsQueryService
                 0,
                 DateTimeKind.Utc))
             .OrderBy(g => g.Key);
-
+ 
         var result = new List<PortfolioLineChartDto>();
 
         foreach (var group in grouped)

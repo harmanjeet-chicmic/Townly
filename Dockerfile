@@ -1,6 +1,6 @@
 # -------- BUILD STAGE --------
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR src/RealEstateInvesting.API
 
 COPY *.csproj ./
 RUN dotnet restore

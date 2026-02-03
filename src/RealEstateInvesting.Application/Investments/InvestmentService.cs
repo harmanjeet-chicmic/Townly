@@ -41,6 +41,8 @@ public class InvestmentService
             // 1️⃣ User validation
             var user = await _userRepository.GetByIdAsync(userId)
                 ?? throw new InvalidOperationException("User not found.");
+            Console.WriteLine("====================================== kyc status "+user.KycStatus);
+            Console.WriteLine("================================user id ==="+user.Id);
 
             if (user.KycStatus != KycStatus.Approved)
                 throw new InvalidOperationException("KYC approval required.");

@@ -28,6 +28,19 @@ public class PropertyQueryController : ControllerBase
 
         return Ok(result);
     }
+    [HttpGet("marketplace/cursor")]
+    public async Task<IActionResult> GetMarketplaceCursor(
+    [FromQuery] int limit = 9,
+    [FromQuery] string? cursor = null,
+    [FromQuery] string? search = null,
+    [FromQuery] string? propertyType = null)
+    {
+        var result = await _service.GetMarketplaceCursorAsync(
+            limit, cursor, search, propertyType);
+
+        return Ok(result);
+    }
+
     [HttpGet("{propertyId}")]
     public async Task<IActionResult> GetPropertyDetails(Guid propertyId)
     {

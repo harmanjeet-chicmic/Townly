@@ -45,7 +45,7 @@ public static class DependencyInjection
        services.AddScoped<IAdminKycService, AdminKycService>();
 
       services.AddScoped<IAdminKycRepository, AdminKycRepository>();
-services.AddScoped<IAdminKycService, AdminKycService>();
+     services.AddScoped<IAdminKycService, AdminKycService>();
 
         return services;
     }

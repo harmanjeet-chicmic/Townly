@@ -96,6 +96,65 @@ public class PropertyQueryService
     }
 
 
+    public async Task<object> GetMarketplaceCursorAsync(
+    int limit,
+    string? cursor,
+    string? search,
+    string? propertyType)
+    {
+        var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
+
+        var items = await _propertyRepository.GetMarketplaceCursorAsync(
+            limit, cursor, search, propertyType);
+
+        var propertyIds = items.Select(p => p.Id).ToList();
+
+        var snapshots =
+            await _analyticsSnapshotRepository
+                .GetLatestPropertySnapshotsAsync(propertyIds);
+
+        var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
+
+        var data = items.Select(p =>
+        {
+            snapshotMap.TryGetValue(p.Id, out var snapshot);
+
+            var pricePerUnitUsd =
+                p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
+
+            var pricePerUnitEth =
+                ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
+
+            return new MarketplacePropertyDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Location = p.Location,
+                PropertyType = p.PropertyType,
+                ImageUrl = p.ImageUrl,
+
+                ApprovedValuation = p.ApprovedValuation,
+                AnnualYieldPercent = p.AnnualYieldPercent,
+                TotalUnits = p.TotalUnits,
+                AvailableUnits = p.TotalUnits - p.SoldUnits,
+
+                PricePerUnitEth = pricePerUnitEth,
+                RiskScore = snapshot?.RiskScore
+            };
+        }).ToList();
+
+        // 🔑 Generate next cursor
+        var last = items.LastOrDefault();
+        var nextCursor = last == null
+            ? null
+            : $"{last.CreatedAt:o}|{last.Id}";
+
+        return new
+        {
+            Items = data,
+            NextCursor = nextCursor
+        };
+    }
 
     public async Task<PropertyDetailsDto> GetDetailsAsync(Guid propertyId)
     {
@@ -259,9 +318,9 @@ public class PropertyQueryService
 
         // 2️⃣ Build embedding text (stable + meaningful)
         var embeddingText = $"""
-          Property name: {baseProperty.Name}
-           Property type: {baseProperty.PropertyType}
-           Location: {baseProperty.Location}
+    Property name: {baseProperty.Name}
+    Property type: {baseProperty.PropertyType}
+    Location: {baseProperty.Location}
 
     {baseProperty.Description}
 
@@ -272,15 +331,15 @@ public class PropertyQueryService
 
         // 3️⃣ Generate vector
         List<Guid> relatedIds;
-        
-    //   try{
-        
-            var vector = await _embeddingService.GenerateEmbeddingAsync(embeddingText);
-            relatedIds =
-                await _vectorStore.SearchSimilarAsync(propertyId, vector, limit: 3);
+
+        //   try{
+
+        var vector = await _embeddingService.GenerateEmbeddingAsync(embeddingText);
+        relatedIds =
+            await _vectorStore.SearchSimilarAsync(propertyId, vector, limit: 3);
         // }
         // catch (Exception)
-           
+
         // {   
 
         //     Console.WriteLine("=====================Fallback one =====================");

@@ -7,8 +7,8 @@ public interface IVectorStore
         float[] vector,
         int limit = 6);
         Task UpsertAsync(
-    Guid id,
-    float[] vector,
-    Dictionary<string, object>? payload = null);
+        Guid id,
+        float[] vector,
+        Dictionary<string, object>? payload = null);
 
 }

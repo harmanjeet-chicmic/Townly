@@ -36,6 +36,7 @@ public class AdminPropertyService : IAdminPropertyService
         property.Activate();
 
         await _propertyRepo.SaveChangesAsync();
+        
     }
 
     public async Task RejectAsync(Guid propertyId, Guid adminId, string reason)

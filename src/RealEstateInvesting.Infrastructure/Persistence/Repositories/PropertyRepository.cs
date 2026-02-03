@@ -88,6 +88,63 @@ GetMarketplaceAsync(
 
         return (items, totalCount);
     }
+    public async Task<List<MarketplacePropertyReadModel>> GetMarketplaceCursorAsync(
+    int limit,
+    string? cursor,
+    string? search,
+    string? propertyType)
+    {
+        var query = _context.Properties
+            .Where(p => p.Status == PropertyStatus.Active);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(p =>
+                p.Name.Contains(search) ||
+                p.Location.Contains(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(propertyType))
+        {
+            query = query.Where(p => p.PropertyType == propertyType);
+        }
+
+        // 🔑 Cursor logic
+        if (!string.IsNullOrWhiteSpace(cursor))
+        {
+            var parts = cursor.Split('|');
+            var createdAt = DateTime.Parse(parts[0]);
+            var id = Guid.Parse(parts[1]);
+
+            query = query.Where(p =>
+                p.CreatedAt < createdAt ||
+                (p.CreatedAt == createdAt && p.Id.CompareTo(id) < 0));
+        }
+
+        return await query
+            .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.Id)
+            .Take(limit)
+            .Select(p => new MarketplacePropertyReadModel
+            {
+                Id = p.Id,
+                CreatedAt = p.CreatedAt,
+
+                Name = p.Name,
+                Location = p.Location,
+                PropertyType = p.PropertyType,
+                ImageUrl = p.ImageUrl,
+                ApprovedValuation = p.ApprovedValuation,
+                AnnualYieldPercent = p.AnnualYieldPercent,
+                TotalUnits = p.TotalUnits,
+
+                SoldUnits = _context.Investments
+                    .Where(i => i.PropertyId == p.Id)
+                    .Sum(i => (int?)i.SharesPurchased) ?? 0
+            })
+            .ToListAsync();
+    }
+
 
     public async Task<IEnumerable<Property>> GetFeaturedAsync(int limit)
     {

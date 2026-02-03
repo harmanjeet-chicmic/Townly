@@ -31,11 +31,11 @@ using RealEstateInvesting.Application.Notifications.Interfaces;
 using RealEstateInvesting.Application.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
-// var hasher = new PasswordHasher<AdminUser>();
-// var hash = hasher.HashPassword(null!, "Admin@123");
-// Console.WriteLine("============================================================");
-// Console.WriteLine(hash);
-// Console.WriteLine("======================================");
+var hasher = new PasswordHasher<AdminUser>();
+var hash = hasher.HashPassword(null!, "Admin@123");
+Console.WriteLine("============================================================");
+Console.WriteLine(hash);
+Console.WriteLine("======================================");
 builder.Services.AddOpenApi();
 
 builder.Services.AddControllers(options =>

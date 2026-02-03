@@ -9,7 +9,7 @@ namespace RealEstateInvesting.Infrastructure.BackgroundJobs;
 public class AnalyticsBackgroundService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
-
+ 
     public AnalyticsBackgroundService(IServiceScopeFactory scopeFactory)
     {
         _scopeFactory = scopeFactory;
@@ -20,7 +20,7 @@ public class AnalyticsBackgroundService : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             await RunAnalyticsAsync();
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(100), stoppingToken);
         }
     }
 

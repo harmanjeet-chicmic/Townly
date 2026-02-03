@@ -77,37 +77,61 @@ public class WalletNonceService : IWalletNonceService
         _db = dbContext;
     }
 
-    public async Task<RequestNonceResponse> GenerateNonceAsync(
-        RequestNonceRequest request)
+    // public async Task<RequestNonceResponse> GenerateNonceAsync(
+    //     RequestNonceRequest request)
+    // {
+    //     var wallet = request.WalletAddress.ToLowerInvariant();
+
+    //     // 1️⃣ Invalidate old nonces for this wallet
+    //     var oldNonces = await _db.WalletNonces
+    //         .Where(x => x.WalletAddress == wallet && !x.IsUsed)
+    //         .ToListAsync();
+
+    //     foreach (var n in oldNonces)
+    //         n.MarkUsed();
+
+    //     // 2️⃣ Generate new nonce
+    //     var nonceValue = Guid.NewGuid().ToString("N");
+
+    //     // 3️⃣ Create entity (NO message stored)
+    //     var entity = WalletNonce.Create(
+    //         wallet,
+    //         request.ChainId,
+    //         nonceValue
+    //     );
+
+    //     // ❗ BUG FIX: you were adding `nonce` (undefined)
+    //     _db.WalletNonces.Add(entity);
+    //     await _db.SaveChangesAsync();
+
+    //     // 4️⃣ Return nonce to frontend
+    //     return new RequestNonceResponse
+    //     {
+    //         Nonce = nonceValue
+    //     };
+    // }
+    public async Task<RequestNonceResponse> GenerateNonceAsync()
+{
+    // Optional: clean up expired nonces
+    var expired = await _db.WalletNonces
+        .Where(x => !x.IsUsed && x.ExpiresAt < DateTime.UtcNow)
+        .ToListAsync();
+
+    foreach (var n in expired)
+        n.MarkUsed();
+
+    var nonceValue = Guid.NewGuid().ToString("N");
+    Console.WriteLine("===============================NONCE =-==========="+ nonceValue);
+
+    var entity = WalletNonce.CreateAnonymous(nonceValue);
+
+    _db.WalletNonces.Add(entity);
+    await _db.SaveChangesAsync();
+
+    return new RequestNonceResponse
     {
-        var wallet = request.WalletAddress.ToLowerInvariant();
+        Nonce = nonceValue
+    };
+}
 
-        // 1️⃣ Invalidate old nonces for this wallet
-        var oldNonces = await _db.WalletNonces
-            .Where(x => x.WalletAddress == wallet && !x.IsUsed)
-            .ToListAsync();
-
-        foreach (var n in oldNonces)
-            n.MarkUsed();
-
-        // 2️⃣ Generate new nonce
-        var nonceValue = Guid.NewGuid().ToString("N");
-
-        // 3️⃣ Create entity (NO message stored)
-        var entity = WalletNonce.Create(
-            wallet,
-            request.ChainId,
-            nonceValue
-        );
-
-        // ❗ BUG FIX: you were adding `nonce` (undefined)
-        _db.WalletNonces.Add(entity);
-        await _db.SaveChangesAsync();
-
-        // 4️⃣ Return nonce to frontend
-        return new RequestNonceResponse
-        {
-            Nonce = nonceValue
-        };
-    }
 }

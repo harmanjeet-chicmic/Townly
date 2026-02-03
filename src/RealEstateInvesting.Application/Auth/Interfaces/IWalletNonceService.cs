@@ -4,5 +4,7 @@ namespace RealEstateInvesting.Application.Auth.Interfaces;
 
 public interface IWalletNonceService
 {
-    Task<RequestNonceResponse> GenerateNonceAsync(RequestNonceRequest request);
+    // Task<RequestNonceResponse> GenerateNonceAsync(RequestNonceRequest request);
+    Task<RequestNonceResponse> GenerateNonceAsync();
+
 }

@@ -16,7 +16,11 @@ GetMarketplaceAsync(
     int pageSize,
     string? search,
     string? propertyType);
-
+    Task<List<MarketplacePropertyReadModel>> GetMarketplaceCursorAsync(
+    int limit,
+    string? cursor,
+    string? search,
+    string? propertyType);
 
     Task<IEnumerable<Property>> GetFeaturedAsync(int limit);
     Task UpdateAsync(Property property);
