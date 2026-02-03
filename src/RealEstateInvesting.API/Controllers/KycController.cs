@@ -4,7 +4,8 @@ using RealEstateInvesting.Api.DTOs;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Kyc;
 using RealEstateInvesting.Infrastructure.Kyc;
-
+using RealEstateInvesting.Application.Kyc.Handlers;
+using RealEstateInvesting.Application.Kyc.Queries;
 namespace RealEstateInvesting.Api.Controllers;
 
 [ApiController]
@@ -15,15 +16,18 @@ public class KycController : ControllerBase
     private readonly SubmitKycHandler _submitKycHandler;
     private readonly IKycFileStorageService _fileStorageService;
     private readonly ICurrentUser _currentUser;
-
+    private readonly GetMyKycStatusHandler _getMyKycStatusHandler;
+   
     public KycController(
         SubmitKycHandler submitKycHandler,
         IKycFileStorageService fileStorageService,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        GetMyKycStatusHandler getMyKycStatusHandler)
     {
         _submitKycHandler = submitKycHandler;
         _fileStorageService = fileStorageService;
         _currentUser = currentUser;
+        _getMyKycStatusHandler = getMyKycStatusHandler;
     }
 
     [HttpPost("submit")]
@@ -63,4 +67,15 @@ public class KycController : ControllerBase
             message = "KYC submitted successfully and is under review."
         });
     }
+    [HttpGet("me/status")]
+    public async Task<IActionResult> GetMyKycStatus(
+    CancellationToken cancellationToken)
+    {
+        var result = await _getMyKycStatusHandler.HandleAsync(
+            new GetMyKycStatusQuery(_currentUser.UserId),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
 }

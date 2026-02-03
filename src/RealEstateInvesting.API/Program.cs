@@ -29,6 +29,8 @@ using RealEstateInvesting.Infrastructure.Admin.Properties;
 using System.Text;
 using RealEstateInvesting.Application.Notifications.Interfaces;
 using RealEstateInvesting.Application.Notifications;
+using RealEstateInvesting.Application.Kyc.Handlers;
+using RealEstateInvesting.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 var hasher = new PasswordHasher<AdminUser>();
@@ -51,6 +53,7 @@ var awsSection = builder.Configuration.GetSection("AWS");
 builder.Services.AddScoped<PortfolioQueryService>();
 builder.Services.AddScoped<IAdminPropertyService, AdminPropertyService>();
 builder.Services.AddScoped<IAdminPropertyRepository, AdminPropertyRepository>();
+builder.Services.AddScoped<GetMyKycStatusHandler>();
 
 builder.Services.AddSingleton<IAmazonS3>(_ =>
 {
@@ -70,10 +73,16 @@ builder.Services.AddScoped<IFileStorage>(sp =>
     return new S3FileStorage(
         sp.GetRequiredService<IAmazonS3>(),
         awsSection["BucketName"]!,
-        awsSection["BasePrefix"]!);
+        awsSection["BasePrefix"]!,
+        awsSection["Region"]!
+    );
 });
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 //----------------------------------------------------------------
 // 🔐 JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -185,6 +194,8 @@ app.UseCors("AllowAll");
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 app.UseStaticFiles();
 

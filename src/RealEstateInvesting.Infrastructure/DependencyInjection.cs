@@ -10,7 +10,11 @@ using RealEstateInvesting.Application.Kyc;
 using RealEstateInvesting.Infrastructure.Kyc;
 using  RealEstateInvesting.Application.Admin.Kyc;
 using RealEstateInvesting.Application.Admin.Kyc.Interfaces;
+using RealEstateInvesting.Application.Kyc.Queries;
+using RealEstateInvesting.Infrastructure.Kyc.ReadModels;
 using RealEstateInvesting.Infrastructure.Admin.Kyc;
+using RealEstateInvesting.Application.Health.Queries;
+using RealEstateInvesting.Infrastructure.Health;
 namespace RealEstateInvesting.Infrastructure;
 
 public static class DependencyInjection
@@ -46,6 +50,8 @@ public static class DependencyInjection
 
       services.AddScoped<IAdminKycRepository, AdminKycRepository>();
      services.AddScoped<IAdminKycService, AdminKycService>();
+        services.AddScoped<IGetMyKycStatusReadService, KycStatusReadService>();
+         services.AddScoped<IHealthCheckService, HealthCheckService>();
 
         return services;
     }

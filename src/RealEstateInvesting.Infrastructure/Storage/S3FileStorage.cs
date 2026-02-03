@@ -9,15 +9,18 @@ public class S3FileStorage : IFileStorage
     private readonly IAmazonS3 _s3;
     private readonly string _bucketName;
     private readonly string _basePrefix;
+    private readonly string _region;
 
     public S3FileStorage(
         IAmazonS3 s3,
         string bucketName,
-        string basePrefix)
+        string basePrefix,
+        string region)
     {
         _s3 = s3;
         _bucketName = bucketName;
         _basePrefix = basePrefix.Trim('/');
+        _region = region;
     }
 
 
@@ -41,6 +44,6 @@ public class S3FileStorage : IFileStorage
 
         await _s3.PutObjectAsync(request, cancellationToken);
 
-        return $"https://{_bucketName}.s3.amazonaws.com/{key}";
+        return $"https://{_bucketName}.s3.{_region}.amazonaws.com/{key}";
     }
 }

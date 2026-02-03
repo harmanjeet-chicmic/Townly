@@ -42,11 +42,11 @@ public class PropertyRepository : IPropertyRepository
             .ToListAsync();
     }
     public async Task<(IEnumerable<MarketplacePropertyReadModel> Items, int TotalCount)>
-GetMarketplaceAsync(
-    int page,
-    int pageSize,
-    string? search,
-    string? propertyType)
+    GetMarketplaceAsync(
+         int page,
+         int pageSize,
+         string? search,
+         string? propertyType)
     {
         var query = _context.Properties
             .Where(p => p.Status == PropertyStatus.Active);
