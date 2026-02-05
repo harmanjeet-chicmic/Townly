@@ -1,7 +1,6 @@
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Enums;
-using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.VectorSearch;
 
 namespace RealEstateInvesting.Application.Properties;

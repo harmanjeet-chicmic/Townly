@@ -24,7 +24,8 @@ public class PropertyService
     public async Task<Guid> CreatePropertyAsync(
         Guid userId,
         CreatePropertyCommand command)
-    {
+    {    
+        
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found.");
         Console.WriteLine("=========================== kyc statuds========"+user.KycStatus);

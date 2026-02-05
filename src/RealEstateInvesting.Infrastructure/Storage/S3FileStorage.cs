@@ -30,7 +30,11 @@ public class S3FileStorage : IFileStorage
         string fileName,
         string folder,
         CancellationToken cancellationToken = default)
-    {
+    {    
+        Console.WriteLine("==============================="+fileStream);
+        Console.WriteLine("===========================content-type ========"+contentType);
+        Console.WriteLine("==================== filename ============"+fileName);
+        Console.WriteLine("==============folder============="+folder);
         var key = $"{_basePrefix}/{Guid.NewGuid()}{Path.GetExtension(fileName)}";
 
         var request = new PutObjectRequest

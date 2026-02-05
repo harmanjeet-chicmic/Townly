@@ -58,7 +58,7 @@ public class AuthController : ControllerBase
     [HttpPost("wallet/verify")]
     public async Task<IActionResult> VerifyWallet(
         [FromBody] VerifyWalletRequest request)
-    {
+    {   
         var response = await _walletAuthService.VerifySignatureAsync(request);
 
         return Ok(ApiResponse<AuthResponse>.Success(

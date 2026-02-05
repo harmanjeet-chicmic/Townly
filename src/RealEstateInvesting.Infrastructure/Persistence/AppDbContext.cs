@@ -25,6 +25,12 @@ public class AppDbContext : DbContext
     public DbSet<UserPortfolioSnapshot> UserPortfolioSnapshots
         => Set<UserPortfolioSnapshot>();
     public DbSet<AdminUser> Admins { get; set; } = default!;
+    
+
+    // 🔥 ADD THESE
+    public DbSet<TokenRequest> TokenRequests => Set<TokenRequest>();
+    public DbSet<UserTokenBalance> UserTokenBalances => Set<UserTokenBalance>();
+    public DbSet<TokenTransaction> TokenTransactions => Set<TokenTransaction>();
 
 
 

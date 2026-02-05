@@ -33,8 +33,11 @@ public class PropertiesController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> CreateProperty(
         [FromForm] CreatePropertyMultipartDto request)
-    {
+    {   
         var userId = GetUserId();
+         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+         Console.WriteLine("=================PROPERTY CONTROLLER HITTED");
+        Console.WriteLine($"================================Authorization Header: {authHeader}");
 
         // 1️⃣ Save image
         // string? imageUrl = null;

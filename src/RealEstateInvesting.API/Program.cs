@@ -31,13 +31,16 @@ using RealEstateInvesting.Application.Notifications.Interfaces;
 using RealEstateInvesting.Application.Notifications;
 using RealEstateInvesting.Application.Kyc.Handlers;
 using RealEstateInvesting.Application;
+using RealEstateInvesting.API.RequestDebugMiddleware;
+using RealEstateInvesting.Application.Tokens.Requests;
+using RealEstateInvesting.Application.Tokens.Balance;
 
 var builder = WebApplication.CreateBuilder(args);
-var hasher = new PasswordHasher<AdminUser>();
-var hash = hasher.HashPassword(null!, "Admin@123");
-Console.WriteLine("============================================================");
-Console.WriteLine(hash);
-Console.WriteLine("======================================");
+// var hasher = new PasswordHasher<AdminUser>();
+// var hash = hasher.HashPassword(null!, "Admin@123");
+// Console.WriteLine("============================================================");
+// Console.WriteLine(hash);
+// Console.WriteLine("======================================");
 builder.Services.AddOpenApi();
 
 builder.Services.AddControllers(options =>
@@ -84,7 +87,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 //----------------------------------------------------------------
-// 🔐 JWT Authentication
+// 🔐 JWT 
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -107,6 +111,28 @@ builder.Services.AddAuthentication(options =>
         ),
 
         ClockSkew = TimeSpan.Zero
+    };
+     options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {   
+
+            Console.WriteLine("=======jwt middleware hitted========");
+            var authHeader = context.Request.Headers["Authorization"].ToString();
+
+            Console.WriteLine("================== JWT RECEIVED ==========");
+            Console.WriteLine(authHeader);
+
+            return Task.CompletedTask;
+        },
+
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("========== JWT FAILED ==========");
+            Console.WriteLine(context.Exception.Message);
+
+            return Task.CompletedTask;
+        }
     };
 });
 builder.Services.AddCors(options =>
@@ -171,6 +197,19 @@ builder.Services.AddScoped<IAdminPasswordHasher, AdminPasswordHasher>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
+// Required for CurrentUserService
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Token system repositories
+builder.Services.AddScoped<ITokenRequestRepository, TokenRequestRepository>();
+builder.Services.AddScoped<IUserTokenBalanceRepository, UserTokenBalanceRepository>();
+builder.Services.AddScoped<ITokenTransactionRepository, TokenTransactionRepository>();
+
+// Token system handlers/services
+builder.Services.AddScoped<CreateTokenRequestHandler>();
+builder.Services.AddScoped<ReviewTokenRequestHandler>();
+builder.Services.AddScoped<UserTokenBalanceService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddCors(options =>
@@ -201,7 +240,7 @@ app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 app.UseCors("DevCorsPolicy");
-
+app.UseMiddleware<RequestDebugMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
