@@ -139,6 +139,8 @@ using RealEstateInvesting.Application.Investments.Dtos;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Domain.Enums;
 using RealEstateInvesting.Application.Notifications.Interfaces;
+using RealEstateInvesting.Application.Common.Exceptions;
+using RealEstateInvesting.Application.Common.Errors;
 
 namespace RealEstateInvesting.Application.Investments;
 
@@ -189,7 +191,11 @@ public class InvestmentService
                 ?? throw new InvalidOperationException("User not found.");
 
             if (user.KycStatus != KycStatus.Approved)
-                throw new InvalidOperationException("KYC approval required.");
+                throw new BusinessException(
+                    ErrorCodes.KycRequired,
+                    ErrorMessages.KycRequired
+                );
+
 
             if (user.IsBlocked)
                 throw new InvalidOperationException("User is blocked.");
@@ -233,7 +239,11 @@ public class InvestmentService
                 await _userTokenBalanceRepository.GetByUserIdAsync(userId);
             Console.WriteLine("===========TToken Balance ==============" + tokenBalance.Available);
             if (tokenBalance == null || tokenBalance.Available < requiredTokensEth)
-                throw new InvalidOperationException("Insufficient token balance.");
+                throw new BusinessException(
+                    ErrorCodes.InsufficientTokens,
+                    ErrorMessages.InsufficientTokens
+                );
+
 
             // Deduct tokens
             tokenBalance.Deduct(requiredTokensEth);

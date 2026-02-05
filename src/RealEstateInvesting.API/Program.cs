@@ -21,8 +21,7 @@ using RealEstateInvesting.Application.AdminAuth;
 using RealEstateInvesting.Application.AdminAuth.Interfaces;
 
 using RealEstateInvesting.Infrastructure.Security;
-using Microsoft.AspNetCore.Identity;
-using RealEstateInvesting.Domain.Entities;
+
 using RealEstateInvesting.Application.Admin.Properties;
 using RealEstateInvesting.Application.Admin.Properties.Interfaces;
 using RealEstateInvesting.Infrastructure.Admin.Properties;

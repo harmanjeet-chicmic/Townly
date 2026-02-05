@@ -14,7 +14,7 @@ public class AdminPropertyService : IAdminPropertyService
               INotificationService notificationService)
     {
         _propertyRepo = propertyRepo;
-        notificationService = _notificationService;
+        _notificationService = notificationService;
     }
 
     public async Task<List<AdminPropertyListDto>> GetPendingAsync()
