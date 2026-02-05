@@ -39,4 +39,38 @@ public class NotificationController : ControllerBase
 
         return Ok();
     }
+
+    [HttpGet("me/unread")]
+    public async Task<IActionResult> GetUnread()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var notifications = await _repo.GetUnreadByUserAsync(userId);
+        return Ok(notifications);
+    }
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var notification = await _repo.GetByIdAsync(id);
+
+        if (notification == null || notification.UserId != userId)
+            return NotFound();
+
+        notification.MarkAsRead();
+        await _repo.SaveChangesAsync();
+
+        return Ok(notification);
+    }
+    [HttpPost("me/read-all")]
+    public async Task<IActionResult> MarkAllAsRead()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        await _repo.MarkAllAsReadAsync(userId);
+        await _repo.SaveChangesAsync();
+
+        return Ok();
+    }
+
+
 }

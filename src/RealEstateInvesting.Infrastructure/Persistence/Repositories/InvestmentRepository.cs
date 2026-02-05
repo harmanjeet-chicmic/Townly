@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Math.EC.Rfc7748;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Domain.Entities;
 
@@ -37,7 +38,7 @@ public class InvestmentRepository : IInvestmentRepository
     public async Task<IEnumerable<Investment>> GetByUserIdAsync(Guid userId)
     {
         return await _context.Investments
-            .Where(i => i.UserId == userId)
+            .Where(i => i.UserId == userId).OrderByDescending(x=>x.CreatedAt)
             .ToListAsync();
     }
 

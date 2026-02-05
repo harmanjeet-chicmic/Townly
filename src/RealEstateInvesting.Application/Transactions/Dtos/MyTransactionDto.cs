@@ -16,6 +16,8 @@ public class MyTransactionDto
     // ETH snapshot (execution-time)
     public decimal? EthAmountAtExecution { get; set; }
     public decimal? EthUsdRateAtExecution { get; set; }
+    public string Status { get; set; } = default!;
+
 
     public DateTime CreatedAt { get; set; }
 }

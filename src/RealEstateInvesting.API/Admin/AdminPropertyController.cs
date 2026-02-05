@@ -41,6 +41,7 @@ public class AdminPropertyController : ControllerBase
     {
         var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await _service.RejectAsync(propertyId, adminId, request.Reason);
+        
         return Ok();
     }
 }

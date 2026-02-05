@@ -2,16 +2,19 @@ using RealEstateInvesting.Application.Admin.Properties.DTOs;
 using RealEstateInvesting.Application.Admin.Properties.Interfaces;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Domain.Enums;
+using RealEstateInvesting.Application.Notifications.Interfaces;
 
 namespace RealEstateInvesting.Application.Admin.Properties;
 
 public class AdminPropertyService : IAdminPropertyService
 {
     private readonly IAdminPropertyRepository _propertyRepo;
-
-    public AdminPropertyService(IAdminPropertyRepository propertyRepo)
+    private readonly INotificationService _notificationService;
+    public AdminPropertyService(IAdminPropertyRepository propertyRepo,
+              INotificationService notificationService)
     {
         _propertyRepo = propertyRepo;
+        notificationService = _notificationService;
     }
 
     public async Task<List<AdminPropertyListDto>> GetPendingAsync()
@@ -36,7 +39,16 @@ public class AdminPropertyService : IAdminPropertyService
         property.Activate();
 
         await _propertyRepo.SaveChangesAsync();
-        
+
+        // 🔔 Notification to property owner
+        await _notificationService.CreateAsync(
+            property.OwnerUserId,
+            NotificationType.PropertyApproved,
+            "Property Approved",
+            $"Your property \"{property.Name}\" has been approved and is now live.",
+            property.Id
+        );
+
     }
 
     public async Task RejectAsync(Guid propertyId, Guid adminId, string reason)
@@ -45,6 +57,13 @@ public class AdminPropertyService : IAdminPropertyService
             ?? throw new InvalidOperationException("Property not found");
 
         property.Reject(adminId, reason);
+        await _notificationService.CreateAsync(
+            property.OwnerUserId,
+            NotificationType.PropertyRejected,
+            "Property Rejected",        
+            $"Your property \"{property.Name}\" was rejected. Reason: {reason}",
+            property.Id
+        );
 
         await _propertyRepo.SaveChangesAsync();
     }

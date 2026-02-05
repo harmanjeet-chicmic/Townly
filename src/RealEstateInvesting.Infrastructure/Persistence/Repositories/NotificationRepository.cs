@@ -31,6 +31,30 @@ public class NotificationRepository : INotificationRepository
     {
         return await _db.Notifications.FirstOrDefaultAsync(n => n.Id == id);
     }
+    public async Task<List<Notification>> GetUnreadByUserAsync(Guid userId)
+    {
+        return await _db.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetUnreadCountAsync(Guid userId)
+    {
+        return await _db.Notifications
+            .CountAsync(n => n.UserId == userId && !n.IsRead);
+    }
+
+    public async Task MarkAllAsReadAsync(Guid userId)
+    {
+        var unread = await _db.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ToListAsync();
+
+        foreach (var n in unread)
+            n.MarkAsRead();
+    }
+
 
     public async Task SaveChangesAsync()
     {

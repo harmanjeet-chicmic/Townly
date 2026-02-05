@@ -9,4 +9,8 @@ public interface INotificationRepository
 
     Task<List<Notification>> GetByUserAsync(Guid userId);
     Task<Notification?> GetByIdAsync(Guid id);
+    Task<List<Notification>> GetUnreadByUserAsync(Guid userId);
+    Task<int> GetUnreadCountAsync(Guid userId);
+    Task MarkAllAsReadAsync(Guid userId);
+
 }

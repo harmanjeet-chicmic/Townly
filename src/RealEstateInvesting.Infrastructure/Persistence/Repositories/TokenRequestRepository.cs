@@ -29,7 +29,7 @@ public class TokenRequestRepository : ITokenRequestRepository
     {
         return await _context.Set<TokenRequest>()
             .Where(x => x.Status == TokenRequestStatus.Pending)
-            .OrderBy(x => x.CreatedAt)
+            .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
     }
 

@@ -10,17 +10,23 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
     {
         builder.ToTable("Transactions");
 
-        builder.HasKey(x => x.Id);
+        builder.HasKey(t => t.Id);
 
-        builder.Property(x => x.Amount)
-            .HasPrecision(18, 2);
+        builder.Property(t => t.AmountUsd)
+               .HasPrecision(18, 2)
+               .IsRequired();
 
-        builder.Property(x => x.Currency)
-            .HasMaxLength(10)
-            .IsRequired();
+        builder.Property(t => t.EthAmountAtExecution)
+               .HasPrecision(18, 8);
 
-        builder.HasIndex(x => x.UserId);
-        builder.HasIndex(x => x.PropertyId);
-        builder.HasIndex(x => x.Type);
+        builder.Property(t => t.EthUsdRateAtExecution)
+               .HasPrecision(18, 6);
+
+        builder.Property(t => t.Currency)
+               .HasMaxLength(10)
+               .IsRequired();
+
+        builder.Property(t => t.IsSuccessful)
+               .IsRequired();
     }
 }

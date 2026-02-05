@@ -83,7 +83,7 @@ namespace RealEstateInvesting.Domain.Entities;
 
 public class WalletNonce : BaseEntity
 {
-    public string? WalletAddress { get; private set; }   // 👈 nullable
+    public string? WalletAddress { get; private set; }   
     public string Nonce { get; private set; } = default!;
     public long? ChainId { get; private set; }           // 👈 nullable
     public DateTime ExpiresAt { get; private set; }

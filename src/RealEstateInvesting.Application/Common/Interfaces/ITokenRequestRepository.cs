@@ -9,4 +9,5 @@ public interface ITokenRequestRepository
     Task<List<TokenRequest>> GetPendingAsync();
     Task<List<TokenRequest>> GetByUserAsync(Guid userId);
     Task SaveChangesAsync();
-}
+    
+}   
