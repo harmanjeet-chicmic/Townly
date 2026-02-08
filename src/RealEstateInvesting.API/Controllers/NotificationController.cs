@@ -47,6 +47,13 @@ public class NotificationController : ControllerBase
         var notifications = await _repo.GetUnreadByUserAsync(userId);
         return Ok(notifications);
     }
+    [HttpGet("me/unread/count")]
+    public async Task<IActionResult> GetCount()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var notifications = await _repo.GetUnreadByUserAsync(userId);
+        return Ok(notifications.Count());
+    }
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {

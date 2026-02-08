@@ -153,7 +153,6 @@ public class InvestmentService
     private readonly IUserTokenBalanceRepository _userTokenBalanceRepository;
     private readonly ITokenTransactionRepository _tokenTransactionRepository;
     private readonly INotificationService _notificationService;
-
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPriceFeed _priceFeed;
 
@@ -188,73 +187,81 @@ public class InvestmentService
         {
             // 1️⃣ User validation
             var user = await _userRepository.GetByIdAsync(userId)
-                ?? throw new InvalidOperationException("User not found.");
+                ?? throw new BusinessException(
+                    ErrorCodes.UserNotFound,
+                    ErrorMessages.UserNotFound);
 
             if (user.KycStatus != KycStatus.Approved)
                 throw new BusinessException(
                     ErrorCodes.KycRequired,
-                    ErrorMessages.KycRequired
-                );
-
+                    ErrorMessages.KycRequired);
 
             if (user.IsBlocked)
-                throw new InvalidOperationException("User is blocked.");
+                throw new BusinessException(
+                    ErrorCodes.UserBlocked,
+                    ErrorMessages.UserBlocked);
 
             // 2️⃣ Property validation
             var property = await _propertyRepository.GetByIdAsync(dto.PropertyId)
-                ?? throw new InvalidOperationException("Property not found.");
+                ?? throw new BusinessException(
+                    ErrorCodes.PropertyNotFound,
+                    ErrorMessages.PropertyNotFound);
 
             if (property.OwnerUserId == userId)
-                throw new InvalidOperationException("Cannot invest in own property.");
+                throw new BusinessException(
+                    ErrorCodes.OwnPropertyInvestment,
+                    ErrorMessages.OwnPropertyInvestment);
 
             if (property.Status != PropertyStatus.Active)
-                throw new InvalidOperationException("Property is not open for investment.");
+                throw new BusinessException(
+                    ErrorCodes.PropertyNotActive,
+                    ErrorMessages.PropertyNotActive);
 
-            // 3️⃣ Shares availability (inside transaction)
+            // 3️⃣ Shares availability
             var investedShares =
                 await _investmentRepository.GetTotalSharesInvestedAsync(property.Id);
 
             var availableShares = property.TotalUnits - investedShares;
 
             if (dto.Shares <= 0)
-                throw new InvalidOperationException("Shares must be greater than zero.");
+                throw new BusinessException(
+                    ErrorCodes.InsufficientShares,
+                    "Investment shares must be greater than zero.");
 
             if (dto.Shares > availableShares)
-                throw new InvalidOperationException("Not enough shares available.");
+                throw new BusinessException(
+                    ErrorCodes.InsufficientShares,
+                    ErrorMessages.InsufficientShares);
 
-            // 4️⃣ Price calculation (USD is source of truth)
+            // 4️⃣ Price calculation (USD source of truth)
             var pricePerShareUsd =
                 property.ApprovedValuation / property.TotalUnits;
 
             var ethUsdRate = await _priceFeed.GetEthUsdPriceAsync();
-            Console.WriteLine("===================ETH===========" + ethUsdRate);
             if (ethUsdRate <= 0)
-                throw new InvalidOperationException("Invalid ETH price feed.");
+                throw new BusinessException(
+                    ErrorCodes.InvalidEthPrice,
+                    ErrorMessages.InvalidEthPrice);
 
-            // 🔥 5️⃣ TOKEN CHECK & DEDUCTION (ETH units)
+            // 5️⃣ Token check & deduction
             var totalUsd = decimal.Round(dto.Shares * pricePerShareUsd, 2);
             var requiredTokensEth = decimal.Round(totalUsd / ethUsdRate, 8);
 
             var tokenBalance =
                 await _userTokenBalanceRepository.GetByUserIdAsync(userId);
-            Console.WriteLine("===========TToken Balance ==============" + tokenBalance.Available);
+
             if (tokenBalance == null || tokenBalance.Available < requiredTokensEth)
                 throw new BusinessException(
                     ErrorCodes.InsufficientTokens,
-                    ErrorMessages.InsufficientTokens
-                );
+                    ErrorMessages.InsufficientTokens);
 
-
-            // Deduct tokens
             tokenBalance.Deduct(requiredTokensEth);
 
-            // Audit token deduction
             var tokenTx = TokenTransaction.Create(
                 userId: userId,
                 amount: requiredTokensEth,
                 type: "Deduct",
-                reference: $"Property:{property.Id}"
-            );
+                reference: $"Property:{property.Id}");
 
             await _tokenTransactionRepository.AddAsync(tokenTx);
 
@@ -264,47 +271,33 @@ public class InvestmentService
                 property.Id,
                 dto.Shares,
                 pricePerShareUsd,
-                ethUsdRate
-            );
+                ethUsdRate);
 
             await _investmentRepository.AddAsync(investment);
 
-            // 7️⃣ Create USD ledger transactions
+            // 7️⃣ Ledger transactions
             var transactions = new List<Transaction>
             {
-                // Investor ledger
                 Transaction.CreateInvestment(
-    userId: userId,
-    propertyId: property.Id,
-    amountUsd: investment.TotalAmount,
-    ethAmount: investment.EthAmountAtExecution,
-    ethUsdRate: investment.EthUsdRateAtExecution,
-    referenceId: investment.Id
-),
+                    userId: userId,
+                    propertyId: property.Id,
+                    amountUsd: investment.TotalAmount,
+                    ethAmount: investment.EthAmountAtExecution,
+                    ethUsdRate: investment.EthUsdRateAtExecution,
+                    referenceId: investment.Id),
 
-                // Property owner ledger
                 Transaction.CreateInvestment(
-    userId: property.OwnerUserId,
-    propertyId: property.Id,
-    amountUsd: investment.TotalAmount,
-    ethAmount: investment.EthAmountAtExecution,
-    ethUsdRate: investment.EthUsdRateAtExecution,
-    referenceId: investment.Id
-),
-Transaction.CreateInvestment(
-    userId: property.OwnerUserId,
-    propertyId: property.Id,
-    amountUsd: investment.TotalAmount,
-    ethAmount: investment.EthAmountAtExecution,
-    ethUsdRate: investment.EthUsdRateAtExecution,
-    referenceId: investment.Id
-),
-
+                    userId: property.OwnerUserId,
+                    propertyId: property.Id,
+                    amountUsd: investment.TotalAmount,
+                    ethAmount: investment.EthAmountAtExecution,
+                    ethUsdRate: investment.EthUsdRateAtExecution,
+                    referenceId: investment.Id)
             };
 
             await _transactionRepository.AddRangeAsync(transactions);
 
-            // 8️⃣ Auto mark sold out
+            // 8️⃣ Sold-out detection
             if (availableShares - dto.Shares == 0)
             {
                 property.MarkSoldOut();
@@ -312,11 +305,10 @@ Transaction.CreateInvestment(
                 isSoldOut = true;
             }
 
-
-            // 9️⃣ Commit everything
+            // 9️⃣ Commit
             await _unitOfWork.CommitAsync();
 
-            // 🔔 Property sold-out notification
+            // 🔔 Sold-out notification
             if (isSoldOut)
             {
                 await _notificationService.CreateAsync(
@@ -324,8 +316,7 @@ Transaction.CreateInvestment(
                     NotificationType.PropertySoldOut,
                     "Property Sold Out",
                     $"Your property \"{property.Name}\" is now fully sold out.",
-                    property.Id
-                );
+                    property.Id);
             }
 
             return investment.Id;

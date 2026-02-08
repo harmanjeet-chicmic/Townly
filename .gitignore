@@ -7,6 +7,8 @@ src/RealEstateInvesting.Domain/bin
 src/RealEstateInvesting.Domain/obj
 src/RealEstateInvesting.Infrastructure/bin
 src/RealEstateInvesting.Infrastructure/obj
+src/RealEstateInvesting.API/firebase-service-account.json
+
 tests/**/bin
 tests/**/obj
 **/bin/

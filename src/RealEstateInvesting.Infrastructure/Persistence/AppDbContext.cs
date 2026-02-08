@@ -31,6 +31,8 @@ public class AppDbContext : DbContext
     public DbSet<TokenRequest> TokenRequests => Set<TokenRequest>();
     public DbSet<UserTokenBalance> UserTokenBalances => Set<UserTokenBalance>();
     public DbSet<TokenTransaction> TokenTransactions => Set<TokenTransaction>();
+     public DbSet<UserDeviceToken> UserDeviceTokens { get; set; } = default!;
+
 
 
 

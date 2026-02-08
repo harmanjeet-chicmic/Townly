@@ -12,7 +12,7 @@ using RealEstateInvesting.Application.Analytics;
 using Amazon;
 using Amazon.S3;
 using RealEstateInvesting.Infrastructure.Storage;
-
+using RealEstateInvesting.Infrastructure.Push;
 using RealEstateInvesting.Infrastructure.Pricing;
 using Microsoft.Extensions.Caching.Memory;
 using RealEstateInvesting.Application.Portfolio;
@@ -35,6 +35,17 @@ using RealEstateInvesting.Application.Tokens.Requests;
 using RealEstateInvesting.Application.Tokens.Balance;
 
 var builder = WebApplication.CreateBuilder(args);
+var firebasePath = builder.Configuration["Firebase:ServiceAccountPath"];
+
+if (!string.IsNullOrWhiteSpace(firebasePath))
+{
+    firebasePath = Path.Combine(
+        builder.Environment.ContentRootPath,
+        firebasePath
+    );
+}
+
+FirebaseInitializer.Initialize(firebasePath);
 // var hasher = new PasswordHasher<AdminUser>();
 // var hash = hasher.HashPassword(null!, "Admin@123");
 // Console.WriteLine("============================================================");
@@ -195,6 +206,8 @@ builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IAdminPasswordHasher, AdminPasswordHasher>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+
 
 // Required for CurrentUserService
 builder.Services.AddHttpContextAccessor();
@@ -223,11 +236,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddVectorSearch(builder.Configuration);
 
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<IUserDeviceTokenRepository, UserDeviceTokenRepository>();
 
 // Infrastructure (DbContext, services, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+app.UseMiddleware<RealEstateInvesting.API.Middleware.ExceptionMiddleware>();
+
 app.UseCors("AllowAll");
 if (app.Environment.IsDevelopment())
 {
