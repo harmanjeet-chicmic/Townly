@@ -43,20 +43,27 @@ public class PropertyRepository : IPropertyRepository
     }
     public async Task<(IEnumerable<MarketplacePropertyReadModel> Items, int TotalCount)>
     GetMarketplaceAsync(
+         Guid? currentUserId,
          int page,
          int pageSize,
          string? search,
          string? propertyType)
     {
         var query = _context.Properties
-            .Where(p => p.Status == PropertyStatus.Active);
-
+            .Where(p => p.Status == PropertyStatus.Active && p.OwnerUserId != currentUserId);
+        Console.WriteLine("=============================seach=======================" + search + "-------------------------");
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(p =>
-                p.Name.Contains(search) ||
-                p.Location.Contains(search));
+            search = search.Trim();
+            Console.WriteLine("=============================seach=======================" + search);
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(p =>
+                    p.Name.Contains(search) ||
+                    p.Location.Contains(search));
+            }
         }
+
 
         if (!string.IsNullOrWhiteSpace(propertyType))
         {
@@ -88,6 +95,32 @@ public class PropertyRepository : IPropertyRepository
 
         return (items, totalCount);
     }
+    public async Task<(IEnumerable<Property> Items, int TotalCount)>
+GetByOwnerIdPagedAsync(
+    Guid ownerUserId,
+    int page,
+    int pageSize,
+    PropertyStatus? status)
+    {
+        var query = _context.Properties
+            .Where(p => p.OwnerUserId == ownerUserId);
+
+        if (status.HasValue)
+        {
+            query = query.Where(p => p.Status == status.Value);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
     public async Task<List<MarketplacePropertyReadModel>> GetMarketplaceCursorAsync(
     int limit,
     string? cursor,
@@ -146,10 +179,10 @@ public class PropertyRepository : IPropertyRepository
     }
 
 
-    public async Task<IEnumerable<Property>> GetFeaturedAsync(int limit)
+    public async Task<IEnumerable<Property>> GetFeaturedAsync(int limit , Guid? CurrentUserId)
     {
         return await _context.Properties
-            .Where(p => p.Status == PropertyStatus.Active)
+            .Where(p => p.Status == PropertyStatus.Active && p.OwnerUserId!=CurrentUserId)
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit)
             .ToListAsync();
@@ -190,6 +223,11 @@ public class PropertyRepository : IPropertyRepository
             .FirstOrDefaultAsync();
     }
 
+    public async Task DeleteAsync(Property property)
+    {
+        _context.Properties.Remove(property);
+        await _context.SaveChangesAsync();
+    }
 
 
 }

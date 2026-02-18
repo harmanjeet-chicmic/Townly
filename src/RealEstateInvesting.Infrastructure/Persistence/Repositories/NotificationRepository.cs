@@ -60,4 +60,10 @@ public class NotificationRepository : INotificationRepository
     {
         await _db.SaveChangesAsync();
     }
+    public async Task DeleteAsync(Notification notification)
+
+    {
+         _db.Notifications.Remove(notification);
+         await _db.SaveChangesAsync();
+    }
 }

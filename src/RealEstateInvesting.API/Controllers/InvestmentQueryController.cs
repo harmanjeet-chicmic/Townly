@@ -18,14 +18,18 @@ public class InvestmentQueryController : ControllerBase
     }
 
     [HttpGet("me")]
-    public async Task<IActionResult> GetMyInvestments()
+    public async Task<IActionResult> GetMyInvestments(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5)
     {
         var userId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        var result = await _service.GetMyInvestmentsAsync(userId);
+        var result = await _service.GetMyInvestmentsAsync(userId, page, pageSize);
+
         return Ok(result);
     }
+
     [HttpGet("me/summary")]
     public async Task<IActionResult> GetPortfolioSummary()
     {

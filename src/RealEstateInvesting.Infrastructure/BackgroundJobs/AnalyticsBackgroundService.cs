@@ -20,7 +20,7 @@ public class AnalyticsBackgroundService : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             await RunAnalyticsAsync();
-            await Task.Delay(TimeSpan.FromMinutes(100), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(60), stoppingToken);
         }
     }
 
@@ -185,7 +185,7 @@ public class AnalyticsBackgroundService : BackgroundService
             // Pricing
             // -------------------------------
             var basePricePerShare =
-                property.InitialValuation / property.TotalUnits;
+                property.InitialValuation / property.TotalUnits; 
 
             var pricePerShare =
                 basePricePerShare * (1 + (demandScore / 100m) * 0.05m);

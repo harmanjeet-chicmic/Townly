@@ -32,6 +32,7 @@ public class PropertyQueryService
     }
 
     public async Task<object> GetMarketplaceAsync(
+    Guid? currentUserId,
     int page,
     int pageSize,
     string? search,
@@ -42,7 +43,7 @@ public class PropertyQueryService
 
         var (items, totalCount) =
             await _propertyRepository.GetMarketplaceAsync(
-                page, pageSize, search, propertyType);
+                currentUserId, page, pageSize, search, propertyType);
 
         var propertyIds = items.Select(p => p.Id).ToList();
 
@@ -155,7 +156,7 @@ public class PropertyQueryService
         };
     }
 
-    public async Task<PropertyDetailsDto> GetDetailsAsync(Guid propertyId)
+    public async Task<PropertyDetailsDto> GetDetailsAsync(Guid? userId, Guid propertyId)
     {
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
@@ -172,6 +173,24 @@ public class PropertyQueryService
 
         var pricePerUnitEth =
             ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
+        decimal? userInvestmentAmount = null;
+
+        if (userId.HasValue)
+        {
+            userInvestmentAmount =
+                await _investmentRepository
+                    .GetUserInvestmentAmountAsync(
+                        userId.Value,
+                        propertyId);
+        }
+        decimal? userInvestmentAmountEth = null;
+
+        if (userInvestmentAmount.HasValue && ethUsdRate != 0)
+        {
+            userInvestmentAmountEth =
+                decimal.Round(userInvestmentAmount.Value / ethUsdRate, 8);
+        }
+
 
         return new PropertyDetailsDto
         {
@@ -191,17 +210,19 @@ public class PropertyQueryService
             AvailableUnits = property.TotalUnits - property.SoldUnits,
 
             RiskScore = snapshot?.RiskScore,
-            DemandScore = snapshot?.DemandScore
+            DemandScore = snapshot?.DemandScore,
+            UserInvestmentAmount = userInvestmentAmount,
+            UserInvestedAmountEth = userInvestmentAmountEth
         };
     }
 
 
 
-    public async Task<IEnumerable<MarketplacePropertyDto>> GetFeaturedAsync()
+    public async Task<IEnumerable<MarketplacePropertyDto>> GetFeaturedAsync(Guid? currentUserId)
     {
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
-        var properties = await _propertyRepository.GetFeaturedAsync(6);
+        var properties = await _propertyRepository.GetFeaturedAsync(6, currentUserId);
 
         if (!properties.Any())
             return Enumerable.Empty<MarketplacePropertyDto>();
@@ -244,18 +265,34 @@ public class PropertyQueryService
     }
 
 
-    public async Task<IEnumerable<MyPropertyDto>> GetMyPropertiesAsync(Guid userId)
+    public async Task<object> GetMyPropertiesAsync(
+        Guid userId,
+        int page,
+        int pageSize,
+        PropertyStatus? status)
     {
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
-        var properties = await _propertyRepository.GetByOwnerIdAsync(userId);
+        var (properties, totalCount) =
+            await _propertyRepository.GetByOwnerIdPagedAsync(
+                userId, page, pageSize, status);
 
         if (!properties.Any())
-            return Enumerable.Empty<MyPropertyDto>();
-
-        var investments = await _investmentRepository.GetAllUserInvestmentsAsync();
+        {
+            return new
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = 0,
+                HasMore = false,
+                Items = new List<MyPropertyDto>()
+            };
+        }
 
         var propertyIds = properties.Select(p => p.Id).ToList();
+        var soldUnitsMap =
+      await _investmentRepository
+          .GetSoldUnitsForPropertiesAsync(propertyIds);
 
         var snapshots =
             await _analyticsSnapshotRepository
@@ -263,52 +300,110 @@ public class PropertyQueryService
 
         var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
 
-        return properties.Select(p =>
+        var items = properties.Select(p =>
+ {
+     snapshotMap.TryGetValue(p.Id, out var snapshot);
+     soldUnitsMap.TryGetValue(p.Id, out var soldUnits);
+
+     var availableUnits = p.TotalUnits - soldUnits;
+
+     var progressPercent =
+         p.TotalUnits == 0 ? 0 :
+         Math.Round((decimal)soldUnits / p.TotalUnits * 100, 2);
+
+     var pricePerUnitUsd =
+         p.TotalUnits == 0 ? 0 :
+         p.ApprovedValuation / p.TotalUnits;
+
+     var pricePerUnitEth =
+         ethUsdRate == 0 ? 0 :
+         decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
+
+     return new MyPropertyDto
+     {
+         Id = p.Id,
+         Name = p.Name,
+         Location = p.Location,
+         PropertyType = p.PropertyType,
+         ImageUrl = p.ImageUrl,
+
+         Status = p.Status,
+         ApprovedValuation = p.ApprovedValuation,
+         TotalUnits = p.TotalUnits,
+         AnnualYieldPercent = p.AnnualYieldPercent,
+
+         SoldUnits = soldUnits,
+         AvailableUnits = availableUnits,
+         InvestmentProgressPercent = progressPercent,
+
+         PricePerUnitEth = pricePerUnitEth,
+         RiskScore = snapshot?.RiskScore
+     };
+ });
+
+
+        return new
         {
-            var propertyInvestments =
-                investments.Where(i => i.PropertyId == p.Id).ToList();
-
-            var soldUnits = propertyInvestments.Sum(i => i.SharesPurchased);
-            var availableUnits = p.TotalUnits - soldUnits;
-
-            var totalAmountInvestedUsd =
-                propertyInvestments.Sum(i => i.TotalAmount);
-
-            var progressPercent =
-                p.TotalUnits == 0 ? 0 :
-                Math.Round((decimal)soldUnits / p.TotalUnits * 100, 2);
-
-            var pricePerUnitUsd =
-                p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
-
-            var pricePerUnitEth =
-                ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
-
-            snapshotMap.TryGetValue(p.Id, out var snapshot);
-
-            return new MyPropertyDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Location = p.Location,
-                PropertyType = p.PropertyType,
-                ImageUrl = p.ImageUrl,
-
-                Status = p.Status,
-                ApprovedValuation = p.ApprovedValuation,
-                TotalUnits = p.TotalUnits,
-                AnnualYieldPercent = p.AnnualYieldPercent,
-
-                SoldUnits = soldUnits,
-                AvailableUnits = availableUnits,
-                InvestmentProgressPercent = progressPercent,
-                TotalAmountInvestedUsd = totalAmountInvestedUsd,
-
-                PricePerUnitEth = pricePerUnitEth,
-                RiskScore = snapshot?.RiskScore
-            };
-        });
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            HasMore = page * pageSize < totalCount,
+            Items = items
+        };
     }
+
+    public async Task<PropertyDetailsDto> GetMyPropertyDetailsAsync(
+    Guid userId,
+    Guid propertyId)
+    {
+        var property = await _propertyRepository.GetByIdAsync(propertyId)
+            ?? throw new InvalidOperationException("Property not found.");
+
+        // 🔒 SECURITY CHECK
+        if (property.OwnerUserId != userId)
+            throw new UnauthorizedAccessException("This property does not belong to you.");
+
+        var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
+
+        // 🔥 Use existing repository method
+        var soldUnits =
+            await _investmentRepository.GetTotalSharesInvestedAsync(propertyId);
+
+        var snapshot =
+            await _analyticsSnapshotRepository
+                .GetLatestPropertySnapshotAsync(propertyId);
+
+        var pricePerUnitUsd =
+            property.TotalUnits == 0 ? 0 :
+            property.ApprovedValuation / property.TotalUnits;
+
+        var pricePerUnitEth =
+            ethUsdRate == 0 ? 0 :
+            decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
+
+        return new PropertyDetailsDto
+        {
+            Id = property.Id,
+            Name = property.Name,
+            Description = property.Description,
+            Location = property.Location,
+            PropertyType = property.PropertyType,
+            ImageUrl = property.ImageUrl,
+
+            TotalValue = property.ApprovedValuation,
+            TotalUnits = property.TotalUnits,
+            PricePerUnit = pricePerUnitUsd,
+            PricePerUnitEth = pricePerUnitEth,
+
+            AnnualYieldPercent = property.AnnualYieldPercent,
+
+            AvailableUnits = property.TotalUnits - soldUnits,
+
+            RiskScore = snapshot?.RiskScore,
+            DemandScore = snapshot?.DemandScore
+        };
+    }
+
     public async Task<IEnumerable<MarketplacePropertyDto>> GetRelatedPropertiesAsync(Guid propertyId)
     {
         // 1️⃣ Get base property
@@ -385,6 +480,26 @@ public class PropertyQueryService
                     PricePerUnitEth = pricePerUnitEth
                 };
             });
+    }
+    public async Task DeletePropertyAsync(Guid userId, Guid propertyId)
+    {
+        var property = await _propertyRepository.GetByIdAsync(propertyId)
+            ?? throw new InvalidOperationException("Property not found.");
+
+        // 🔒 Ownership check
+        if (property.OwnerUserId != userId)
+            throw new UnauthorizedAccessException("You cannot delete this property.");
+
+        // 🔥 Check if any shares sold
+        var soldShares =
+            await _investmentRepository.GetTotalSharesInvestedAsync(propertyId);
+
+        if (soldShares > 0)
+            throw new InvalidOperationException(
+                "Cannot delete property because shares have already been sold.");
+
+        // ✅ Safe to delete
+        await _propertyRepository.DeleteAsync(property);
     }
 
 

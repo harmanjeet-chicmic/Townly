@@ -2,14 +2,12 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 
 namespace RealEstateInvesting.Infrastructure.Push;
-
 public static class FirebaseInitializer
 {
     public static void Initialize(string? serviceAccountJsonPath)
     {
         if (FirebaseApp.DefaultInstance != null)
-            return;
-
+            return;           
         if (string.IsNullOrWhiteSpace(serviceAccountJsonPath))
             throw new InvalidOperationException(
                 "Firebase ServiceAccountPath is not configured. " +
@@ -24,5 +22,4 @@ public static class FirebaseInitializer
             Credential = GoogleCredential.FromFile(serviceAccountJsonPath)
         });
     }
-
 }

@@ -78,6 +78,19 @@ public class NotificationController : ControllerBase
 
         return Ok();
     }
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteNotification(Guid id)
+    {
+         
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var notification = await _repo.GetByIdAsync(id);
+
+        if (notification == null || notification.UserId != userId)
+            return NotFound();
+        await _repo.DeleteAsync(notification);
+        
+        return Ok("notification deleted sucessfully");
+    }
 
 
 }

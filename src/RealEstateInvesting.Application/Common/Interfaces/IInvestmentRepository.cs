@@ -14,13 +14,22 @@ public interface IInvestmentRepository
     Task<int> GetSharesInvestedInLastDaysAsync(
    Guid propertyId,
    int days);
+    Task<(IEnumerable<Investment> Items, int TotalCount)>
+GetByUserIdPagedAsync(
+    Guid userId,
+    int page,
+    int pageSize);
 
     Task<int> GetUniqueInvestorCountAsync(Guid propertyId);
+    Task<Dictionary<Guid, int>>
+GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds);
 
     Task<DateTime?> GetLastInvestmentAtAsync(Guid propertyId);
-   Task<int> GetSharesInvestedInLastHoursAsync(
-    Guid propertyId,
-    int hours);
+    Task<int> GetSharesInvestedInLastHoursAsync(
+     Guid propertyId,
+     int hours);
+     Task<decimal?> GetUserInvestmentAmountAsync(Guid userId, Guid propertyId);
+
 
 
 }

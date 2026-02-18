@@ -38,7 +38,7 @@ public class InvestmentRepository : IInvestmentRepository
     public async Task<IEnumerable<Investment>> GetByUserIdAsync(Guid userId)
     {
         return await _context.Investments
-            .Where(i => i.UserId == userId).OrderByDescending(x=>x.CreatedAt)
+            .Where(i => i.UserId == userId).OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
     }
 
@@ -50,6 +50,25 @@ public class InvestmentRepository : IInvestmentRepository
     // -----------------------------
     // 🔥 Demand Score v1 methods
     // -----------------------------
+    public async Task<(IEnumerable<Investment> Items, int TotalCount)>
+GetByUserIdPagedAsync(
+    Guid userId,
+    int page,
+    int pageSize)
+    {
+        var query = _context.Investments
+            .Where(i => i.UserId == userId);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(i => i.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 
     public async Task<int> GetSharesInvestedInLastDaysAsync(
         Guid propertyId,
@@ -81,6 +100,20 @@ public class InvestmentRepository : IInvestmentRepository
             .Select(i => (DateTime?)i.CreatedAt)
             .FirstOrDefaultAsync();
     }
+    public async Task<Dictionary<Guid, int>>
+GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
+    {
+        return await _context.Investments
+            .Where(i => propertyIds.Contains(i.PropertyId))
+            .GroupBy(i => i.PropertyId)
+            .Select(g => new
+            {
+                PropertyId = g.Key,
+                SoldUnits = g.Sum(x => x.SharesPurchased)
+            })
+            .ToDictionaryAsync(x => x.PropertyId, x => x.SoldUnits);
+    }
+
     public async Task<int> GetSharesInvestedInLastHoursAsync(
     Guid propertyId,
     int hours)
@@ -93,6 +126,18 @@ public class InvestmentRepository : IInvestmentRepository
                 i.PropertyId == propertyId &&
                 i.CreatedAt >= fromTime)
             .SumAsync(i => i.SharesPurchased);
+    }
+    public async Task<decimal?> GetUserInvestmentAmountAsync(Guid userId , Guid propertyId)
+    {
+        var total = await _context.Investments
+        .Where(i =>
+            !i.IsDeleted &&
+            i.UserId == userId &&
+            i.PropertyId == propertyId)
+        .SumAsync(i => (decimal?)i.TotalAmount);
+       Console.WriteLine("=============Invested=============="+total);
+
+    return total;
     }
 
 }

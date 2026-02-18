@@ -12,6 +12,7 @@ public interface IPropertyRepository
     Task<IEnumerable<Property>> GetByStatusAsync(PropertyStatus status);
     Task<(IEnumerable<MarketplacePropertyReadModel> Items, int TotalCount)>
 GetMarketplaceAsync(
+     Guid? currentUserId,
     int page,
     int pageSize,
     string? search,
@@ -22,12 +23,20 @@ GetMarketplaceAsync(
     string? search,
     string? propertyType);
 
-    Task<IEnumerable<Property>> GetFeaturedAsync(int limit);
+    Task<(IEnumerable<Property> Items, int TotalCount)>
+ GetByOwnerIdPagedAsync(
+     Guid ownerUserId,
+     int page,
+     int pageSize,
+     PropertyStatus? status);
+
+    Task<IEnumerable<Property>> GetFeaturedAsync(int limit , Guid? CurrentUserId);
     Task UpdateAsync(Property property);
     Task<IEnumerable<Property>> GetByIdsAsync(IEnumerable<Guid> propertyIds);
 
     Task<PropertyWithSoldUnits?> GetDetailsWithSoldUnitsAsync(Guid propertyId);
 
+    Task DeleteAsync(Property property);
 
-
+   
 }

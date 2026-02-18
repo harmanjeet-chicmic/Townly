@@ -81,7 +81,6 @@ public class PortfolioQueryService
 
         // 2️⃣ Group by property
         var grouped = investments.GroupBy(i => i.PropertyId);
-
         var propertyIds = grouped.Select(g => g.Key).ToList();
 
         // 3️⃣ Fetch properties

@@ -16,7 +16,7 @@ public class CoinGeckoPriceFeed : IPriceFeed
     public async Task<decimal> GetEthUsdPriceAsync()
     {
         Console.WriteLine("================== API HIT FOR ETH PRICE ======");
-
+    
         try
         {
             var response = await _httpClient.GetFromJsonAsync<CoinGeckoResponse>(

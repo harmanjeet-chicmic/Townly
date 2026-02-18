@@ -3,6 +3,8 @@ using RealEstateInvesting.Application.Properties;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RealEstateInvesting.Domain.Enums;
+
 namespace RealEstateInvesting.Api.Controllers;
 
 [ApiController]
@@ -23,8 +25,17 @@ public class PropertyQueryController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] string? propertyType = null)
     {
+        // var userId = Guid.Parse(
+        //     User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid? currentUserId = null;
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            currentUserId = Guid.Parse(
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!); // your extension method
+        }
         var result = await _service.GetMarketplaceAsync(
-            page, pageSize, search, propertyType);
+           currentUserId, page, pageSize, search, propertyType);
 
         return Ok(result);
     }
@@ -43,33 +54,76 @@ public class PropertyQueryController : ControllerBase
 
     [HttpGet("{propertyId}")]
     public async Task<IActionResult> GetPropertyDetails(Guid propertyId)
-    {
-        var result = await _service.GetDetailsAsync(propertyId);
+    {   
+        Guid? currentUserId = null;
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            currentUserId = Guid.Parse(
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!); // your extension method
+        }
+        var result =    await _service.GetDetailsAsync( currentUserId , propertyId);
         return Ok(result);
     }
     [HttpGet("featured")]
     public async Task<IActionResult> GetFeatured()
-    {
-        var result = await _service.GetFeaturedAsync();
+    {   
+         Guid? currentUserId = null;
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            currentUserId = Guid.Parse(
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!); // your extension method
+        }
+        var result = await _service.GetFeaturedAsync(currentUserId);
         return Ok(result);
     }
 
 
     [HttpGet("me")]
     [Authorize]
-    public async Task<IActionResult> GetMyProperties()
+    public async Task<IActionResult> GetMyProperties(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 6,
+    [FromQuery] PropertyStatus? status = null)
     {
         var userId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        var result = await _service.GetMyPropertiesAsync(userId);
+        var result = await _service.GetMyPropertiesAsync(
+            userId, page, pageSize, status);
+
         return Ok(result);
     }
+
+    [HttpGet("me/{propertyId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> GetMyPropertyDetails(Guid propertyId)
+    {
+        var userId = Guid.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var result = await _service.GetMyPropertyDetailsAsync(userId, propertyId);
+
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}/related")]
     public async Task<IActionResult> GetRelatedProperties(Guid id)
     {
         var result = await _service.GetRelatedPropertiesAsync(id);
         return Ok(result);
+    }
+    [HttpDelete("{propertyId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteProperty(Guid propertyId)
+    {
+        var userId = Guid.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        await _service.DeletePropertyAsync(userId, propertyId);
+
+        return NoContent();
     }
 
 

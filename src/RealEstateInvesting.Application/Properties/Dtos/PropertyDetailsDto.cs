@@ -18,5 +18,7 @@ public class PropertyDetailsDto
     public decimal? RiskScore { get; set; }
     public decimal? DemandScore { get; set; }
     public decimal PricePerUnitEth { get; set; }
+    public decimal? UserInvestmentAmount { get; set; }
+    public decimal? UserInvestedAmountEth {get;set;}
 
 }

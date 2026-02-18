@@ -37,4 +37,12 @@ public class PropertyUpdateRequestRepository : IPropertyUpdateRequestRepository
         _context.PropertyUpdateRequests.Update(request);
         await _context.SaveChangesAsync();
     }
+    public async Task<List<PropertyUpdateRequest>> GetAllPendingAsync()
+    {
+        return await _context.PropertyUpdateRequests
+            .Where(x => x.Status == PropertyUpdateStatus.Pending)
+            .OrderByDescending(x => x.RequestedAt)
+            .ToListAsync();
+    }
+
 }

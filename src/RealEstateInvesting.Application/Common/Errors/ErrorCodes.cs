@@ -11,4 +11,7 @@ public static class ErrorCodes
     public const string InsufficientShares = "INSUFFICIENT_SHARES";
     public const string InsufficientTokens = "INSUFFICIENT_TOKENS";
     public const string InvalidEthPrice = "INVALID_ETH_PRICE";
+    public const string ExcessShares = "EXCESS_SHARES";
+    public const string DobAgeLessThan18 = "DOB_LESS_THAN_18";
+    public const string DobGreaterThanCurrentDate = "DOB_GREATER_THAN_CURRENT_DATE";
 }

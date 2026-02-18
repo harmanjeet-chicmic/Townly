@@ -12,7 +12,6 @@ public class PushNotificationService : IPushNotificationService
     {
         _deviceTokenRepo = deviceTokenRepo;
     }
-
     public async Task SendToUserAsync(
      Guid userId,
      string title,
@@ -21,6 +20,7 @@ public class PushNotificationService : IPushNotificationService
      Guid? referenceId = null)
     {
         var tokens = await _deviceTokenRepo.GetActiveByUserIdAsync(userId);
+        
 
         Console.WriteLine($"[PUSH] UserId: {userId}, Tokens found: {tokens.Count}");
 
@@ -74,14 +74,30 @@ public class PushNotificationService : IPushNotificationService
             try
             {
                 var response = await FirebaseMessaging.DefaultInstance.SendAsync(msg);
+                Console.WriteLine($"[PUSH] UserId: {userId}, Tokens found: {tokens.Count}");
+
                 Console.WriteLine($"[PUSH] ✅ Firebase accepted message. MessageId: {response}");
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                Console.WriteLine("[PUSH] ❌ Firebase send failed");
+                Console.WriteLine($"Messaging Error Code: {ex.MessagingErrorCode}");
+
+                if (ex.MessagingErrorCode == MessagingErrorCode.Unregistered ||
+                    ex.MessagingErrorCode == MessagingErrorCode.InvalidArgument)
+                {
+                    Console.WriteLine("[PUSH] Deactivating invalid token");
+
+                    t.Deactivate();
+                    await _deviceTokenRepo.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[PUSH] ❌ Firebase send failed");
+                Console.WriteLine("[PUSH] Unexpected error");
                 Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
             }
+
         }
     }
 

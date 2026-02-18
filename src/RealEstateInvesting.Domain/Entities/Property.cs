@@ -109,6 +109,29 @@ public class Property : BaseEntity
 
         MarkUpdated();
     }
+    // ---------------------------
+    // Metadata Update (Admin Approved)
+    // ---------------------------
+    public void ApplyApprovedUpdate(
+        string name,
+        string description,
+        string location,
+        string propertyType,
+        string? imageUrl)
+    {
+        if (Status != PropertyStatus.Active &&
+            Status != PropertyStatus.SoldOut)
+            throw new InvalidOperationException(
+                "Only active or sold properties can be updated.");
+
+        Name = name;
+        Description = description;
+        Location = location;
+        PropertyType = propertyType;
+        ImageUrl = imageUrl;
+
+        MarkUpdated();
+    }
 
 
 }

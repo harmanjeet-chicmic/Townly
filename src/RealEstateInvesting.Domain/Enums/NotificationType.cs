@@ -9,5 +9,6 @@ public enum NotificationType
     InvestmentSuccess = 5,
     TokenRequestApproved = 6,
     TokenRequestRejected = 7,
-    PropertySoldOut = 8
+    PropertySoldOut = 8,
+    PropertyUpdateRejected = 9
 }

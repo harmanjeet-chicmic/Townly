@@ -222,7 +222,10 @@ public class InvestmentService
                 await _investmentRepository.GetTotalSharesInvestedAsync(property.Id);
 
             var availableShares = property.TotalUnits - investedShares;
-
+            if (dto.Shares > 10000)
+            {
+                throw new BusinessException(ErrorCodes.ExcessShares, "cannot buy more than 10000 shares");
+            }
             if (dto.Shares <= 0)
                 throw new BusinessException(
                     ErrorCodes.InsufficientShares,

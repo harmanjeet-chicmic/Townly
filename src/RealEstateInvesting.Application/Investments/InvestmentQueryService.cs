@@ -17,23 +17,38 @@ public class InvestmentQueryService
         _propertyRepository = propertyRepository;
     }
 
-    public async Task<IEnumerable<MyInvestmentDto>> GetMyInvestmentsAsync(Guid userId)
+    public async Task<object> GetMyInvestmentsAsync(
+        Guid userId,
+        int page,
+        int pageSize)
     {
-        var investments = await _investmentRepository.GetByUserIdAsync(userId);
+        var (investments, totalCount) =
+            await _investmentRepository
+                .GetByUserIdPagedAsync(userId, page, pageSize);
 
         if (!investments.Any())
-            return Enumerable.Empty<MyInvestmentDto>();
+        {
+            return new
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = 0,
+                HasMore = false,
+                Items = new List<MyInvestmentDto>()
+            };
+        }
 
         var propertyIds = investments
             .Select(i => i.PropertyId)
             .Distinct()
             .ToList();
 
-        var properties = await _propertyRepository.GetByIdsAsync(propertyIds);
+        var properties =
+            await _propertyRepository.GetByIdsAsync(propertyIds);
 
         var propertyLookup = properties.ToDictionary(p => p.Id);
 
-        return investments.Select(i =>
+        var items = investments.Select(i =>
         {
             var property = propertyLookup[i.PropertyId];
 
@@ -47,18 +62,24 @@ public class InvestmentQueryService
 
                 SharesPurchased = i.SharesPurchased,
 
-                // USD truth
                 PricePerShareUsd = i.PricePerShareAtPurchase,
                 TotalAmountUsd = i.TotalAmount,
 
-                // ETH snapshot
                 EthAmountAtExecution = i.EthAmountAtExecution,
                 EthUsdRateAtExecution = i.EthUsdRateAtExecution,
 
                 InvestedAt = i.CreatedAt
             };
-
         });
+
+        return new
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            HasMore = page * pageSize < totalCount,
+            Items = items
+        };
     }
 
     public async Task<PortfolioSummaryDto> GetPortfolioSummaryAsync(Guid userId)

@@ -26,6 +26,7 @@ public class UserDeviceTokenRepository : IUserDeviceTokenRepository
             .Where(x => x.UserId == userId && x.IsActive)
             .ToListAsync();
     }
+    
 
     public async Task AddAsync(UserDeviceToken token)
     {

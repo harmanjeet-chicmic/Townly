@@ -41,7 +41,41 @@ public class AdminPropertyController : ControllerBase
     {
         var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await _service.RejectAsync(propertyId, adminId, request.Reason);
-        
+
         return Ok();
     }
+    [HttpGet("update-requests/pending")]
+    public async Task<IActionResult> GetPendingUpdateRequests()
+    {
+        var result = await _service.GetPendingUpdateRequestsAsync();
+        return Ok(result);
+    }
+    [HttpPost("update-requests/{updateRequestId:guid}/approve")]
+    public async Task<IActionResult> ApproveUpdateRequest(Guid updateRequestId)
+    {
+        var adminId = Guid.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        await _service.ApproveUpdateRequestAsync(updateRequestId, adminId);
+
+        return Ok();
+    }
+
+    [HttpPost("update-requests/{updateRequestId:guid}/reject")]
+    public async Task<IActionResult> RejectUpdateRequest(
+     Guid updateRequestId,
+     [FromBody] RejectUpdateRequestDto request)
+    {
+        var adminId = Guid.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        await _service.RejectUpdateRequestAsync(
+            updateRequestId,
+            adminId,
+            request.Reason);
+
+        return Ok();
+    }
+
+
 }
