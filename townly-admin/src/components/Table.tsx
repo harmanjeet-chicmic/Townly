@@ -26,16 +26,45 @@ const Table: React.FC<TableProps> = ({
     if (Array.isArray(data)) {
       return data;
     } else if (data && typeof data === 'object') {
-      // If it's a single object, wrap in array
       return [data];
     }
-    // Default to empty array
     return [];
   }, [data]);
 
-  // Get the actual ID from the item, checking multiple possible ID fields
+  // Get the correct ID based on what's available in the item
   const getItemId = (item: any): string | undefined => {
-    return item.kycId || item.propertyId || item.requestId || item.updateRequestId || item.id;
+    // Log what keys are available (remove in production)
+    console.log('Getting ID from item:', item);
+    
+    // For property updates, it MUST be updateRequestId
+    if (item.updateRequestId) {
+      console.log('✅ Using updateRequestId:', item.updateRequestId);
+      return item.updateRequestId;
+    }
+    
+    // Fallbacks for other pages
+    if (item.kycId) {
+      console.log('✅ Using kycId:', item.kycId);
+      return item.kycId;
+    }
+    
+    if (item.propertyId && !item.updateRequestId) {
+      console.log('⚠️ Using propertyId (might be wrong for updates):', item.propertyId);
+      return item.propertyId;
+    }
+    
+    if (item.requestId) {
+      console.log('✅ Using requestId:', item.requestId);
+      return item.requestId;
+    }
+    
+    if (item.id) {
+      console.log('✅ Using id:', item.id);
+      return item.id;
+    }
+    
+    console.warn('❌ No ID found in item:', item);
+    return undefined;
   };
 
   return (
@@ -51,39 +80,48 @@ const Table: React.FC<TableProps> = ({
         </thead>
         <tbody>
           {safeData.length > 0 ? (
-            safeData.map((item, index) => (
-              <tr key={getItemId(item) || index}>
-                {columns.map((col) => (
-                  <td key={col.key}>
-                    {col.render
-                      ? col.render(item[col.key], item)
-                      : item[col.key] || '-'}
-                  </td>
-                ))}
-                {showActions && (
-                  <td>
-                    <div className="action-buttons">
-                      {onApprove && (
-                        <button
-                          onClick={() => onApprove(getItemId(item) || '')}
-                          className="btn btn-success"
-                        >
-                          ✓ Approve
-                        </button>
-                      )}
-                      {onReject && (
-                        <button
-                          onClick={() => onReject(getItemId(item) || '')}
-                          className="btn btn-danger"
-                        >
-                          ✗ Reject
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                )}
-              </tr>
-            ))
+            safeData.map((item, index) => {
+              const itemId = getItemId(item);
+              return (
+                <tr key={itemId || index}>
+                  {columns.map((col) => (
+                    <td key={col.key}>
+                      {col.render
+                        ? col.render(item[col.key], item)
+                        : item[col.key] || '-'}
+                    </td>
+                  ))}
+                  {showActions && (
+                    <td>
+                      <div className="action-buttons">
+                        {onApprove && itemId && (
+                          <button
+                            onClick={() => {
+                              console.log('Approve clicked with ID:', itemId);
+                              onApprove(itemId);
+                            }}
+                            className="btn btn-success"
+                          >
+                            ✓ Approve
+                          </button>
+                        )}
+                        {onReject && itemId && (
+                          <button
+                            onClick={() => {
+                              console.log('Reject clicked with ID:', itemId);
+                              onReject(itemId);
+                            }}
+                            className="btn btn-danger"
+                          >
+                            ✗ Reject
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              );
+            })
           ) : (
             <tr>
               <td colSpan={columns.length + (showActions ? 1 : 0)} style={{ textAlign: 'center', padding: '40px' }}>

@@ -88,7 +88,7 @@ const PropertiesPending: React.FC = () => {
       <div className="page-header">
         <div>
           <h1>Pending Properties</h1>
-          <p>Review and approve property listings</p>
+          <p>Review and approve new property listings</p>
         </div>
       </div>
 
