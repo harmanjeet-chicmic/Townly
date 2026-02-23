@@ -18,7 +18,10 @@ public interface IInvestmentRepository
 GetByUserIdPagedAsync(
     Guid userId,
     int page,
-    int pageSize);
+    int pageSize,
+    string? search,
+    string? propertyType);
+
 
     Task<int> GetUniqueInvestorCountAsync(Guid propertyId);
     Task<Dictionary<Guid, int>>
@@ -28,7 +31,7 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds);
     Task<int> GetSharesInvestedInLastHoursAsync(
      Guid propertyId,
      int hours);
-     Task<decimal?> GetUserInvestmentAmountAsync(Guid userId, Guid propertyId);
+    Task<decimal?> GetUserInvestmentAmountAsync(Guid userId, Guid propertyId);
 
 
 

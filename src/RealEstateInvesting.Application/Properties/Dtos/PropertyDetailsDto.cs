@@ -1,3 +1,4 @@
+using RealEstateInvesting.Domain.Enums;
 namespace RealEstateInvesting.Application.Properties.Dtos;
 
 public class PropertyDetailsDto
@@ -9,6 +10,9 @@ public class PropertyDetailsDto
     public string Location { get; set; } = default!;
     public string PropertyType { get; set; } = default!;
     public string? ImageUrl { get; set; }
+     public PropertyStatus Status { get; set; }
+     public string? RejectionReason { get; set; }
+     
 
     public decimal TotalValue { get; set; }
     public int TotalUnits { get; set; }

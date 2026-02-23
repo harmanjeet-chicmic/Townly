@@ -81,9 +81,14 @@ public class Property : BaseEntity
     {
         if (Status != PropertyStatus.PendingApproval)
             throw new InvalidOperationException("Property must be pending approval.");
-
+        
         Status = PropertyStatus.Active;
         ApprovedAt = DateTime.UtcNow;
+
+        RejectionReason = null;
+        ReviewedBy = null;
+        ReviewedAt = null;
+        
         MarkUpdated();
     }
     public void MarkSoldOut()

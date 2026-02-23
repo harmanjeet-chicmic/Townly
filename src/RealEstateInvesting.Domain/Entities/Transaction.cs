@@ -138,4 +138,32 @@ public class Transaction : BaseEntity
             IsSuccessful = true
         };
     }
+    public static Transaction CreateWithEth(
+    Guid userId,
+    Guid propertyId,
+    TransactionType type,
+    decimal amountUsd,
+    decimal ethAmount,
+    decimal ethUsdRate,
+    Guid referenceId)
+{
+    if (amountUsd <= 0)
+        throw new InvalidOperationException("Transaction amount must be greater than zero.");
+
+    if (ethAmount <= 0 || ethUsdRate <= 0)
+        throw new InvalidOperationException("Invalid ETH snapshot.");
+
+    return new Transaction
+    {
+        UserId = userId,
+        PropertyId = propertyId,
+        Type = type,
+        AmountUsd = amountUsd,
+        Currency = "USD",
+        EthAmountAtExecution = ethAmount,
+        EthUsdRateAtExecution = ethUsdRate,
+        ReferenceId = referenceId,
+        IsSuccessful = true
+    };
+}
 }

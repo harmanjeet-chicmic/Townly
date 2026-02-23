@@ -19,13 +19,16 @@ public class InvestmentQueryController : ControllerBase
 
     [HttpGet("me")]
     public async Task<IActionResult> GetMyInvestments(
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 5,
+        [FromQuery] string? search = null,
+        [FromQuery] string? propertyType = null)
     {
         var userId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        var result = await _service.GetMyInvestmentsAsync(userId, page, pageSize);
+        var result = await _service.GetMyInvestmentsAsync(
+            userId, page, pageSize, search, propertyType);
 
         return Ok(result);
     }
@@ -37,7 +40,7 @@ public class InvestmentQueryController : ControllerBase
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var result = await _service.GetPortfolioSummaryAsync(userId);
+
         return Ok(result);
     }
-
 }

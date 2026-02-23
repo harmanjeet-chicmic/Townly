@@ -85,13 +85,14 @@ public class PropertyQueryController : ControllerBase
     public async Task<IActionResult> GetMyProperties(
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 6,
-    [FromQuery] PropertyStatus? status = null)
+    [FromQuery] PropertyStatus? status = null,
+     [FromQuery] string? search = null)
     {
         var userId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var result = await _service.GetMyPropertiesAsync(
-            userId, page, pageSize, status);
+            userId, page, pageSize, status , search);
 
         return Ok(result);
     }

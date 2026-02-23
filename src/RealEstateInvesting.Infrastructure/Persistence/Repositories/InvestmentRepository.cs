@@ -49,26 +49,66 @@ public class InvestmentRepository : IInvestmentRepository
 
     // -----------------------------
     // 🔥 Demand Score v1 methods
-    // -----------------------------
     public async Task<(IEnumerable<Investment> Items, int TotalCount)>
-GetByUserIdPagedAsync(
-    Guid userId,
-    int page,
-    int pageSize)
+   GetByUserIdPagedAsync(
+       Guid userId,
+       int page,
+       int pageSize,
+       string? search,
+       string? propertyType)
     {
-        var query = _context.Investments
-            .Where(i => i.UserId == userId);
+        var query =
+            from i in _context.Investments
+            join p in _context.Properties
+                on i.PropertyId equals p.Id
+            where i.UserId == userId
+            select new { Investment = i, Property = p };
 
-        var totalCount = await query.CountAsync();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+            query = query.Where(x =>
+                x.Property.Name.Contains(search) ||
+                x.Property.Location.Contains(search));
+        }
 
-        var items = await query
-            .OrderByDescending(i => i.CreatedAt)
+        if (!string.IsNullOrWhiteSpace(propertyType))
+        {
+            query = query.Where(x =>
+                x.Property.PropertyType == propertyType);
+        }
+
+        // 🔥 GROUP BY Property
+        var groupedQuery =
+            from x in query
+            group x by x.Property.Id into g
+            select new
+            {
+                PropertyId = g.Key,
+                TotalShares = g.Sum(x => x.Investment.SharesPurchased),
+                TotalAmount = g.Sum(x => x.Investment.TotalAmount),
+                LatestInvestmentDate = g.Max(x => x.Investment.CreatedAt)
+            };
+
+        var totalCount = await groupedQuery.CountAsync();
+
+        var paged = await groupedQuery
+            .OrderByDescending(x => x.LatestInvestmentDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        return (items, totalCount);
+        // Fetch related investment rows for service mapping
+        var propertyIds = paged.Select(x => x.PropertyId).ToList();
+
+        var investments = await _context.Investments
+            .Where(i => i.UserId == userId && propertyIds.Contains(i.PropertyId))
+            .ToListAsync();
+
+        return (investments, totalCount);
     }
+
+
 
     public async Task<int> GetSharesInvestedInLastDaysAsync(
         Guid propertyId,
@@ -127,7 +167,7 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
                 i.CreatedAt >= fromTime)
             .SumAsync(i => i.SharesPurchased);
     }
-    public async Task<decimal?> GetUserInvestmentAmountAsync(Guid userId , Guid propertyId)
+    public async Task<decimal?> GetUserInvestmentAmountAsync(Guid userId, Guid propertyId)
     {
         var total = await _context.Investments
         .Where(i =>
@@ -135,9 +175,9 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
             i.UserId == userId &&
             i.PropertyId == propertyId)
         .SumAsync(i => (decimal?)i.TotalAmount);
-       Console.WriteLine("=============Invested=============="+total);
+        Console.WriteLine("=============Invested==============" + total);
 
-    return total;
+        return total;
     }
 
 }

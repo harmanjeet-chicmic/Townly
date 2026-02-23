@@ -28,7 +28,8 @@ GetMarketplaceAsync(
      Guid ownerUserId,
      int page,
      int pageSize,
-     PropertyStatus? status);
+     PropertyStatus? status,
+     string? search);
 
     Task<IEnumerable<Property>> GetFeaturedAsync(int limit , Guid? CurrentUserId);
     Task UpdateAsync(Property property);

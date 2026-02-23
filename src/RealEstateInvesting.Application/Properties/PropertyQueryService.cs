@@ -229,6 +229,11 @@ public class PropertyQueryService
 
         var propertyIds = properties.Select(p => p.Id).ToList();
 
+        // 🔥 Get sold units in bulk
+        var soldUnitsMap =
+            await _investmentRepository
+                .GetSoldUnitsForPropertiesAsync(propertyIds);
+
         var snapshots =
             await _analyticsSnapshotRepository
                 .GetLatestPropertySnapshotsAsync(propertyIds);
@@ -238,6 +243,9 @@ public class PropertyQueryService
         return properties.Select(p =>
         {
             snapshotMap.TryGetValue(p.Id, out var snapshot);
+            soldUnitsMap.TryGetValue(p.Id, out var soldUnits);
+
+            var availableUnits = p.TotalUnits - soldUnits;
 
             var pricePerUnitUsd =
                 p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
@@ -256,7 +264,7 @@ public class PropertyQueryService
                 ApprovedValuation = p.ApprovedValuation,
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
-                AvailableUnits = p.TotalUnits,
+                AvailableUnits = availableUnits,   // ✅ FIXED
 
                 PricePerUnitEth = pricePerUnitEth,
                 RiskScore = snapshot?.RiskScore
@@ -265,17 +273,19 @@ public class PropertyQueryService
     }
 
 
+
     public async Task<object> GetMyPropertiesAsync(
         Guid userId,
         int page,
         int pageSize,
-        PropertyStatus? status)
+        PropertyStatus? status,
+        string? search)
     {
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
         var (properties, totalCount) =
             await _propertyRepository.GetByOwnerIdPagedAsync(
-                userId, page, pageSize, status);
+                userId, page, pageSize, status, search);
 
         if (!properties.Any())
         {
@@ -389,6 +399,10 @@ public class PropertyQueryService
             Location = property.Location,
             PropertyType = property.PropertyType,
             ImageUrl = property.ImageUrl,
+            Status = property.Status,
+            RejectionReason = property.Status == PropertyStatus.Rejected
+        ? property.RejectionReason
+        : null,
 
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
@@ -490,7 +504,12 @@ public class PropertyQueryService
         if (property.OwnerUserId != userId)
             throw new UnauthorizedAccessException("You cannot delete this property.");
 
-        // 🔥 Check if any shares sold
+        // 🔥 NEW RULE: Only certain statuses allowed
+        if (property.Status == PropertyStatus.Active)
+            throw new InvalidOperationException(
+                "Active properties cannot be deleted.");
+
+        // 🔥 Check if any shares sold (extra safety)
         var soldShares =
             await _investmentRepository.GetTotalSharesInvestedAsync(propertyId);
 
@@ -501,7 +520,6 @@ public class PropertyQueryService
         // ✅ Safe to delete
         await _propertyRepository.DeleteAsync(property);
     }
-
 
 
 }

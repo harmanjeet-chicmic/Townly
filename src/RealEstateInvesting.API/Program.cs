@@ -33,6 +33,8 @@ using RealEstateInvesting.Application;
 using RealEstateInvesting.API.RequestDebugMiddleware;
 using RealEstateInvesting.Application.Tokens.Requests;
 using RealEstateInvesting.Application.Tokens.Balance;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 var firebasePath = builder.Configuration["Firebase:ServiceAccountPath"];
@@ -236,6 +238,32 @@ builder.Services.AddCors(options =>
 builder.Services.AddVectorSearch(builder.Configuration);
 
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("PropertyCreationPolicy", context =>
+    {
+        var userId = context.User?.FindFirst(
+            System.Security.Claims.ClaimTypes.NameIdentifier
+        )?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return RateLimitPartition.GetNoLimiter("anonymous");
+        }
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: userId,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,                  
+                Window = TimeSpan.FromHours(1),     
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 builder.Services.AddScoped<IUserDeviceTokenRepository, UserDeviceTokenRepository>();
 
 // Infrastructure (DbContext, services, etc.)

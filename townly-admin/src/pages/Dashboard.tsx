@@ -1,4 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import {
+  UserCheck,
+  Building2,
+  RefreshCcw,
+  Coins,
+  ArrowRight
+} from 'lucide-react';
 import api from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -40,44 +47,57 @@ const Dashboard: React.FC = () => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div>
+    <div className="dashboard-container">
       <div className="page-header">
-        <div>
-          <h1>Dashboard</h1>
-          <p>Welcome to your admin dashboard</p>
-        </div>
+        <h1>Dashboard</h1>
+        <p>Overview of Townly's platform activity</p>
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card">
+        <div className="card stat-card">
+          <div className="icon-wrapper">
+            <UserCheck size={32} />
+          </div>
           <h3>Pending KYC</h3>
           <div className="number">{stats.pendingKyc}</div>
         </div>
-        <div className="stat-card">
+
+        <div className="card stat-card">
+          <div className="icon-wrapper">
+            <Building2 size={32} />
+          </div>
           <h3>Pending Properties</h3>
           <div className="number">{stats.pendingProperties}</div>
         </div>
-        <div className="stat-card">
+
+        <div className="card stat-card">
+          <div className="icon-wrapper">
+            <RefreshCcw size={32} />
+          </div>
           <h3>Property Updates</h3>
           <div className="number">{stats.pendingUpdates}</div>
         </div>
-        <div className="stat-card">
+
+        <div className="card stat-card">
+          <div className="icon-wrapper">
+            <Coins size={32} />
+          </div>
           <h3>Token Requests</h3>
           <div className="number">{stats.pendingTokenRequests}</div>
         </div>
       </div>
 
       <div className="card">
-        <h3 style={{ marginBottom: '16px' }}>Quick Actions</h3>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn btn-primary" onClick={() => window.location.href = '/kyc'}>
-            Review KYC
+        <h3 style={{ marginBottom: '24px', fontSize: '18px', fontWeight: '700' }}>Quick Actions</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <button className="btn btn-outline" onClick={() => window.location.href = '/kyc'}>
+            Review KYC <ArrowRight size={16} />
           </button>
-          <button className="btn btn-primary" onClick={() => window.location.href = '/properties'}>
-            Review Properties
+          <button className="btn btn-outline" onClick={() => window.location.href = '/properties'}>
+            Review Properties <ArrowRight size={16} />
           </button>
-          <button className="btn btn-primary" onClick={() => window.location.href = '/token-requests'}>
-            Review Token Requests
+          <button className="btn btn-outline" onClick={() => window.location.href = '/token-requests'}>
+            Review Token Requests <ArrowRight size={16} />
           </button>
         </div>
       </div>

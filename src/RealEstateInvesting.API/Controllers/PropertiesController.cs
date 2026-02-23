@@ -5,6 +5,7 @@ using RealEstateInvesting.Application.Properties;
 using RealEstateInvesting.Application.Properties.Dtos;
 using System.Security.Claims;
 using RealEstateInvesting.Application.Common.Interfaces;
+using Microsoft.AspNetCore.RateLimiting;
 namespace RealEstateInvesting.Api.Controllers;
 
 [ApiController]
@@ -30,6 +31,7 @@ public class PropertiesController : ControllerBase
     // ----------------------------------------
     [HttpPost]
     [Authorize]
+    [EnableRateLimiting("PropertyCreationPolicy")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> CreateProperty(
         [FromForm] CreatePropertyMultipartDto request)

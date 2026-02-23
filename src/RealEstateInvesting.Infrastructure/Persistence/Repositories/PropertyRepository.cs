@@ -100,11 +100,23 @@ GetByOwnerIdPagedAsync(
     Guid ownerUserId,
     int page,
     int pageSize,
-    PropertyStatus? status)
+    PropertyStatus? status,
+    string? search)
     {
         var query = _context.Properties
             .Where(p => p.OwnerUserId == ownerUserId);
-
+        
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+            Console.WriteLine("=============================seach=======================" + search);
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(p =>
+                    p.Name.Contains(search) ||
+                    p.Location.Contains(search));
+            }
+        }
         if (status.HasValue)
         {
             query = query.Where(p => p.Status == status.Value);

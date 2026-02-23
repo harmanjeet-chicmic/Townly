@@ -222,10 +222,12 @@ public class InvestmentService
                 await _investmentRepository.GetTotalSharesInvestedAsync(property.Id);
 
             var availableShares = property.TotalUnits - investedShares;
+
             if (dto.Shares > 10000)
-            {
-                throw new BusinessException(ErrorCodes.ExcessShares, "cannot buy more than 10000 shares");
-            }
+                throw new BusinessException(
+                    ErrorCodes.ExcessShares,
+                    "Cannot buy more than 10000 shares.");
+
             if (dto.Shares <= 0)
                 throw new BusinessException(
                     ErrorCodes.InsufficientShares,
@@ -240,29 +242,43 @@ public class InvestmentService
             var pricePerShareUsd =
                 property.ApprovedValuation / property.TotalUnits;
 
+            var investmentUsd =
+                decimal.Round(dto.Shares * pricePerShareUsd, 2);
+
             var ethUsdRate = await _priceFeed.GetEthUsdPriceAsync();
             if (ethUsdRate <= 0)
                 throw new BusinessException(
                     ErrorCodes.InvalidEthPrice,
                     ErrorMessages.InvalidEthPrice);
 
-            // 5️⃣ Token check & deduction
-            var totalUsd = decimal.Round(dto.Shares * pricePerShareUsd, 2);
-            var requiredTokensEth = decimal.Round(totalUsd / ethUsdRate, 8);
+            // 🔥 Flat Platform Fee (0.05 ETH)
+            const decimal PlatformFeeEth = 0.05m;
 
+            var investmentEth =
+                decimal.Round(investmentUsd / ethUsdRate, 8);
+
+            var platformFeeEth = PlatformFeeEth;
+
+            var platformFeeUsd =
+                decimal.Round(platformFeeEth * ethUsdRate, 2);
+
+            var totalRequiredEth =
+                decimal.Round(investmentEth + platformFeeEth, 8);
+
+            // 5️⃣ Token check & deduction
             var tokenBalance =
                 await _userTokenBalanceRepository.GetByUserIdAsync(userId);
 
-            if (tokenBalance == null || tokenBalance.Available < requiredTokensEth)
+            if (tokenBalance == null || tokenBalance.Available < totalRequiredEth)
                 throw new BusinessException(
                     ErrorCodes.InsufficientTokens,
                     ErrorMessages.InsufficientTokens);
 
-            tokenBalance.Deduct(requiredTokensEth);
+            tokenBalance.Deduct(totalRequiredEth);
 
             var tokenTx = TokenTransaction.Create(
                 userId: userId,
-                amount: requiredTokensEth,
+                amount: totalRequiredEth,
                 type: "Deduct",
                 reference: $"Property:{property.Id}");
 
@@ -280,23 +296,27 @@ public class InvestmentService
 
             // 7️⃣ Ledger transactions
             var transactions = new List<Transaction>
-            {
-                Transaction.CreateInvestment(
-                    userId: userId,
-                    propertyId: property.Id,
-                    amountUsd: investment.TotalAmount,
-                    ethAmount: investment.EthAmountAtExecution,
-                    ethUsdRate: investment.EthUsdRateAtExecution,
-                    referenceId: investment.Id),
+{
+    // 🔹 Investor (Investment - type 1)
+    Transaction.CreateWithEth(
+        userId: userId,
+        propertyId: property.Id,
+        type: TransactionType.Investment,
+        amountUsd: investmentUsd,
+        ethAmount: investmentEth,
+        ethUsdRate: ethUsdRate,
+        referenceId: investment.Id),
 
-                Transaction.CreateInvestment(
-                    userId: property.OwnerUserId,
-                    propertyId: property.Id,
-                    amountUsd: investment.TotalAmount,
-                    ethAmount: investment.EthAmountAtExecution,
-                    ethUsdRate: investment.EthUsdRateAtExecution,
-                    referenceId: investment.Id)
-            };
+    // 🔹 Owner (Income - type 2)
+    Transaction.CreateWithEth(
+        userId: property.OwnerUserId,
+        propertyId: property.Id,
+        type: TransactionType.RentalIncome,
+        amountUsd: investmentUsd,
+        ethAmount: investmentEth,
+        ethUsdRate: ethUsdRate,
+        referenceId: investment.Id)
+};
 
             await _transactionRepository.AddRangeAsync(transactions);
 
@@ -311,7 +331,15 @@ public class InvestmentService
             // 9️⃣ Commit
             await _unitOfWork.CommitAsync();
 
-            // 🔔 Sold-out notification
+            // 🔔 Owner notified
+            await _notificationService.CreateAsync(
+                property.OwnerUserId,
+                NotificationType.InvestmentReceived,
+                "New Investment Received",
+                $"You received a new investment of ${investmentUsd:N2} in \"{property.Name}\".",
+                property.Id);
+
+            // 🔔 Sold-out notification (your existing logic)
             if (isSoldOut)
             {
                 await _notificationService.CreateAsync(
@@ -321,7 +349,6 @@ public class InvestmentService
                     $"Your property \"{property.Name}\" is now fully sold out.",
                     property.Id);
             }
-
             return investment.Id;
         }
         catch
@@ -330,4 +357,5 @@ public class InvestmentService
             throw;
         }
     }
+
 }

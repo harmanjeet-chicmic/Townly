@@ -23,7 +23,6 @@ public class AnalyticsBackgroundService : BackgroundService
             await Task.Delay(TimeSpan.FromMinutes(60), stoppingToken);
         }
     }
-
     private async Task RunAnalyticsAsync()
     {
         using var scope = _scopeFactory.CreateScope();

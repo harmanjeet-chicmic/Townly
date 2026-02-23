@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Domain.Entities;
-
+using RealEstateInvesting.Domain.Enums;
 namespace RealEstateInvesting.Infrastructure.Persistence.Repositories;
 
 public class TransactionRepository : ITransactionRepository
@@ -19,11 +19,30 @@ public class TransactionRepository : ITransactionRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Transaction>> GetByUserIdAsync(Guid userId)
+    public async Task<(IEnumerable<Transaction> Items, int TotalCount)>
+GetByUserIdPagedAsync(
+    Guid userId,
+    int page,
+    int pageSize,
+    TransactionType? type)
     {
-        return await _context.Transactions
-            .Where(t => t.UserId == userId)
+        var query = _context.Transactions
+            .Where(t => t.UserId == userId);
+
+        if (type.HasValue)
+        {
+            query = query.Where(t => t.Type == type.Value);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderByDescending(t => t.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        return (items, totalCount);
     }
+
 }

@@ -1,3 +1,4 @@
+using RealEstateInvesting.Application.Common.Dtos;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Investments.Dtos;
 
@@ -7,34 +8,40 @@ public class InvestmentQueryService
 {
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IPropertyRepository _propertyRepository;
-
+    private readonly IAnalyticsSnapshotRepository _snapshotRepo;
+    private readonly IEthPriceService _ethPriceService;
 
     public InvestmentQueryService(
         IInvestmentRepository investmentRepository,
-        IPropertyRepository propertyRepository)
+        IPropertyRepository propertyRepository,
+        IAnalyticsSnapshotRepository snapshotRepo,
+        IEthPriceService ethPriceService)
     {
         _investmentRepository = investmentRepository;
         _propertyRepository = propertyRepository;
+        _snapshotRepo = snapshotRepo;
+        _ethPriceService = ethPriceService;
     }
 
-    public async Task<object> GetMyInvestmentsAsync(
+    public async Task<PagedResult<MyInvestmentDto>> GetMyInvestmentsAsync(
         Guid userId,
         int page,
-        int pageSize)
+        int pageSize,
+        string? search,
+        string? propertyType)
     {
         var (investments, totalCount) =
             await _investmentRepository
-                .GetByUserIdPagedAsync(userId, page, pageSize);
+                .GetByUserIdPagedAsync(userId, page, pageSize, search, propertyType);
 
         if (!investments.Any())
         {
-            return new
+            return new PagedResult<MyInvestmentDto>
             {
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = 0,
-                HasMore = false,
-                Items = new List<MyInvestmentDto>()
+                HasMore = false
             };
         }
 
@@ -48,37 +55,81 @@ public class InvestmentQueryService
 
         var propertyLookup = properties.ToDictionary(p => p.Id);
 
-        var items = investments.Select(i =>
-        {
-            var property = propertyLookup[i.PropertyId];
+        var snapshots =
+            await _snapshotRepo.GetLatestPropertySnapshotsAsync(propertyIds);
 
-            return new MyInvestmentDto
+        var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
+
+        var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
+
+        var grouped = investments.GroupBy(i => i.PropertyId);
+
+        var items = new List<MyInvestmentDto>();
+
+        foreach (var group in grouped)
+        {
+            if (!propertyLookup.TryGetValue(group.Key, out var property))
+                continue;
+
+            snapshotMap.TryGetValue(group.Key, out var snapshot);
+
+            var totalShares = group.Sum(i => i.SharesPurchased);
+            var totalAmountUsd = group.Sum(i => i.TotalAmount);
+            var investedEth = group.Sum(i => i.EthAmountAtExecution);
+
+            decimal currentValueEth = 0;
+            decimal monthlyIncomeEth = 0;
+
+            if (snapshot != null && ethUsdRate > 0)
             {
-                InvestmentId = i.Id,
+                var pricePerShareEth =
+                    snapshot.PricePerShare / ethUsdRate;
+
+                currentValueEth =
+                    totalShares * pricePerShareEth;
+
+                monthlyIncomeEth =
+                    totalShares *
+                    pricePerShareEth *
+                    property.AnnualYieldPercent / 12m;
+            }
+
+            var totalReturnEth = currentValueEth - investedEth;
+
+            items.Add(new MyInvestmentDto
+            {
                 PropertyId = property.Id,
                 PropertyName = property.Name,
                 PropertyImageUrl = property.ImageUrl,
                 Location = property.Location,
+                PropertyType = property.PropertyType,
 
-                SharesPurchased = i.SharesPurchased,
+                SharesPurchased = totalShares,
 
-                PricePerShareUsd = i.PricePerShareAtPurchase,
-                TotalAmountUsd = i.TotalAmount,
+                TotalAmountUsd = totalAmountUsd,
+                TotalInvestedEth = Math.Round(investedEth, 6),
 
-                EthAmountAtExecution = i.EthAmountAtExecution,
-                EthUsdRateAtExecution = i.EthUsdRateAtExecution,
+                CurrentValueEth = Math.Round(currentValueEth, 6),
+                TotalReturnEth = Math.Round(totalReturnEth, 6),
 
-                InvestedAt = i.CreatedAt
-            };
-        });
+                MonthlyIncomeEth = Math.Round(monthlyIncomeEth, 6),
 
-        return new
+                AnnualYieldPercent = property.AnnualYieldPercent,
+                RiskScore = snapshot?.RiskScore,
+
+                InvestedAt = group.Max(x => x.CreatedAt)
+            });
+        }
+
+        return new PagedResult<MyInvestmentDto>
         {
             Page = page,
             PageSize = pageSize,
             TotalCount = totalCount,
             HasMore = page * pageSize < totalCount,
             Items = items
+                .OrderByDescending(x => x.CurrentValueEth)
+                .ToList()
         };
     }
 
@@ -93,5 +144,4 @@ public class InvestmentQueryService
             TotalSharesOwned = investments.Sum(i => i.SharesPurchased)
         };
     }
-
 }
