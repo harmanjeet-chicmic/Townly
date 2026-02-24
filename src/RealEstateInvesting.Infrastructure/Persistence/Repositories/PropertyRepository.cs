@@ -214,7 +214,7 @@ GetByOwnerIdPagedAsync(
     public async Task<PropertyWithSoldUnits?> GetDetailsWithSoldUnitsAsync(Guid propertyId)
     {
         return await _context.Properties
-            .Where(p => p.Id == propertyId && p.Status == PropertyStatus.Active)
+            .Where(p => p.Id == propertyId &&( p.Status == PropertyStatus.Active || p.Status == PropertyStatus.SoldOut))
             .Select(p => new PropertyWithSoldUnits
             {
                 Id = p.Id,

@@ -1,5 +1,4 @@
 namespace RealEstateInvesting.Application.Properties.Dtos;
-
 public class MarketplacePropertyDto
 {
     public Guid Id { get; set; }
@@ -16,6 +15,4 @@ public class MarketplacePropertyDto
      public decimal? RiskScore { get; set; }
      public decimal PricePerUnitEth { get; set; }
      
-
-
 }

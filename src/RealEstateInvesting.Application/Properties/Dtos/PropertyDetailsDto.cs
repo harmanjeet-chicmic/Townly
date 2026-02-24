@@ -10,9 +10,12 @@ public class PropertyDetailsDto
     public string Location { get; set; } = default!;
     public string PropertyType { get; set; } = default!;
     public string? ImageUrl { get; set; }
-     public PropertyStatus Status { get; set; }
-     public string? RejectionReason { get; set; }
-     
+    public PropertyStatus Status { get; set; }
+    public string? RejectionReason { get; set; }
+
+    public int? TokensOwned { get; set; }
+    public decimal? InvestedEth { get; set; }
+
 
     public decimal TotalValue { get; set; }
     public int TotalUnits { get; set; }
@@ -23,6 +26,6 @@ public class PropertyDetailsDto
     public decimal? DemandScore { get; set; }
     public decimal PricePerUnitEth { get; set; }
     public decimal? UserInvestmentAmount { get; set; }
-    public decimal? UserInvestedAmountEth {get;set;}
+    public decimal? UserInvestedAmountEth { get; set; }
 
 }

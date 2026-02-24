@@ -3,7 +3,7 @@ using RealEstateInvesting.Domain.Enums;
 namespace RealEstateInvesting.Application.Properties.Dtos;
 
 public class MyPropertyDto
-{
+{   
     public Guid Id { get; set; }
 
     public string Name { get; set; } = default!;

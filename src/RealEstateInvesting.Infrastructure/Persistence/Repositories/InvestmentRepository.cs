@@ -179,6 +179,17 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
 
         return total;
     }
+    public async Task<int> GetUserTokensOwnedAsync(
+    Guid userId,
+    Guid propertyId)
+{
+    return await _context.Investments
+        .Where(i =>
+            !i.IsDeleted &&
+            i.UserId == userId &&
+            i.PropertyId == propertyId)
+        .SumAsync(i => i.SharesPurchased);
+}
 
 }
 

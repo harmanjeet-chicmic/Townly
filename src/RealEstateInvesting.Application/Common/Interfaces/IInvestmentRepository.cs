@@ -9,6 +9,7 @@ public interface IInvestmentRepository
     Task<int> GetTotalSharesInvestedAsync(Guid propertyId);
 
     Task<IEnumerable<Investment>> GetByUserIdAsync(Guid userId);
+    Task<int> GetUserTokensOwnedAsync(Guid userId, Guid propertyId);
     Task<decimal> GetTotalAmountInvestedAsync(Guid propertyId);
     Task<IEnumerable<Investment>> GetAllUserInvestmentsAsync();
     Task<int> GetSharesInvestedInLastDaysAsync(

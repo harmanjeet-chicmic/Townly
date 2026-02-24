@@ -174,9 +174,14 @@ public class PropertyQueryService
         var pricePerUnitEth =
             ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
         decimal? userInvestmentAmount = null;
-
+        int? tokensOwned = null;
         if (userId.HasValue)
         {
+            tokensOwned =
+        await _investmentRepository
+            .GetUserTokensOwnedAsync(
+                userId.Value,
+                propertyId);
             userInvestmentAmount =
                 await _investmentRepository
                     .GetUserInvestmentAmountAsync(
@@ -205,6 +210,7 @@ public class PropertyQueryService
             TotalUnits = property.TotalUnits,
             PricePerUnit = pricePerUnitUsd,
             PricePerUnitEth = pricePerUnitEth,
+            TokensOwned = tokensOwned,
 
             AnnualYieldPercent = property.AnnualYieldPercent,
             AvailableUnits = property.TotalUnits - property.SoldUnits,
