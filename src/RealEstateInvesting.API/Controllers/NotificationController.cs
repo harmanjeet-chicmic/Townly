@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Application.Notifications.Interfaces;
+using RealEstateInvesting.Domain.Enums;
 using System.Security.Claims;
 
 namespace RealEstateInvesting.Api.Controllers;
@@ -18,11 +19,18 @@ public class NotificationController : ControllerBase
     }
 
     [HttpGet("me")]
-    public async Task<IActionResult> GetMyNotifications()
+    public async Task<IActionResult> GetMyNotifications(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 9,
+    [FromQuery] string? search = null,
+    [FromQuery] string? notificationType = null)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var notifications = await _repo.GetByUserAsync(userId);
-        return Ok(notifications);
+
+        var result = await _repo.GetByUserAsync(
+            userId, page, pageSize, search, notificationType);
+
+        return Ok(result);
     }
 
     [HttpPost("{id:guid}/read")]
@@ -41,18 +49,23 @@ public class NotificationController : ControllerBase
     }
 
     [HttpGet("me/unread")]
-    public async Task<IActionResult> GetUnread()
+    public async Task<IActionResult> GetUnread(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 9)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var notifications = await _repo.GetUnreadByUserAsync(userId);
-        return Ok(notifications);
+
+        var result = await _repo.GetUnreadByUserAsync(
+            userId, page, pageSize);
+
+        return Ok(result);
     }
     [HttpGet("me/unread/count")]
     public async Task<IActionResult> GetCount()
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var notifications = await _repo.GetUnreadByUserAsync(userId);
-        return Ok(notifications.Count());
+        var count = await _repo.GetUnreadCountAsync(userId);
+        return Ok(count);
     }
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
@@ -81,14 +94,14 @@ public class NotificationController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteNotification(Guid id)
     {
-         
+
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var notification = await _repo.GetByIdAsync(id);
 
         if (notification == null || notification.UserId != userId)
             return NotFound();
         await _repo.DeleteAsync(notification);
-        
+
         return Ok("notification deleted sucessfully");
     }
 

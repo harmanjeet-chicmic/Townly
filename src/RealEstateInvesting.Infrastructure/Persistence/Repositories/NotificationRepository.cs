@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RealEstateInvesting.Application.Notifications.Interfaces;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Infrastructure.Persistence;
-
+using RealEstateInvesting.Application.Common.Dtos;
 namespace RealEstateInvesting.Infrastructure.Persistence.Repositories;
 
 public class NotificationRepository : INotificationRepository
@@ -19,25 +19,76 @@ public class NotificationRepository : INotificationRepository
         await _db.Notifications.AddAsync(notification);
     }
 
-    public async Task<List<Notification>> GetByUserAsync(Guid userId)
+   public async Task<PagedResult<Notification>> GetByUserAsync(
+    Guid userId,
+    int page,
+    int pageSize,
+    string? search,
+    string? notificationType)
+{
+    var query = _db.Notifications
+        .Where(n => n.UserId == userId);
+
+    if (!string.IsNullOrWhiteSpace(search))
     {
-        return await _db.Notifications
-            .Where(n => n.UserId == userId)
-            .OrderByDescending(n => n.CreatedAt)
-            .ToListAsync();
+        query = query.Where(n =>
+            n.Title.Contains(search) ||
+            n.Message.Contains(search));
     }
+
+    if (!string.IsNullOrWhiteSpace(notificationType))
+    {
+        query = query.Where(n =>
+            n.Type.ToString() == notificationType);
+    }
+
+    var totalCount = await query.CountAsync();
+
+    var items = await query
+        .OrderByDescending(n => n.CreatedAt)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    return new PagedResult<Notification>
+    {
+        Page = page,
+        PageSize = pageSize,
+        TotalCount = totalCount,
+        HasMore = (page * pageSize) < totalCount,
+        Items = items
+    };
+}
 
     public async Task<Notification?> GetByIdAsync(Guid id)
     {
         return await _db.Notifications.FirstOrDefaultAsync(n => n.Id == id);
     }
-    public async Task<List<Notification>> GetUnreadByUserAsync(Guid userId)
+    public async Task<PagedResult<Notification>> GetUnreadByUserAsync(
+    Guid userId,
+    int page,
+    int pageSize)
+{
+    var query = _db.Notifications
+        .Where(n => n.UserId == userId && !n.IsRead);
+
+    var totalCount = await query.CountAsync();
+
+    var items = await query
+        .OrderByDescending(n => n.CreatedAt)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    return new PagedResult<Notification>
     {
-        return await _db.Notifications
-            .Where(n => n.UserId == userId && !n.IsRead)
-            .OrderByDescending(n => n.CreatedAt)
-            .ToListAsync();
-    }
+        Page = page,
+        PageSize = pageSize,
+        TotalCount = totalCount,
+        HasMore = (page * pageSize) < totalCount,
+        Items = items
+    };
+}
 
     public async Task<int> GetUnreadCountAsync(Guid userId)
     {
