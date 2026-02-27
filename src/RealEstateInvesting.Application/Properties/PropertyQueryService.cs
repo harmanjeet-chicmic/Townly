@@ -407,8 +407,8 @@ public class PropertyQueryService
             ImageUrl = property.ImageUrl,
             Status = property.Status,
             RejectionReason = property.Status == PropertyStatus.Rejected
-        ? property.RejectionReason
-        : null,
+            ? property.RejectionReason
+            : null,
 
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
@@ -470,19 +470,30 @@ public class PropertyQueryService
         // 5️⃣ Fetch properties
         var relatedProperties =
             await _propertyRepository.GetByIdsAsync(relatedIds);
+        var propertyIds = relatedProperties.Select(p => p.Id).ToList();
+
+        // 🔥 NEW: Bulk fetch snapshots
+        var snapshots =
+            await _analyticsSnapshotRepository
+                .GetLatestPropertySnapshotsAsync(propertyIds);
+
+        var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
 
         // 6️⃣ ETH price
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
+
         return relatedProperties
             .Where(p => p.Status == PropertyStatus.Active)
             .Select(p =>
-            {
+            {  
+                snapshotMap.TryGetValue(p.Id, out var snapshot);
                 var pricePerUnitUsd =
                     p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
 
                 var pricePerUnitEth =
                     ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
+
 
                 return new MarketplacePropertyDto
                 {
@@ -497,7 +508,9 @@ public class PropertyQueryService
                     TotalUnits = p.TotalUnits,
                     AvailableUnits = p.TotalUnits, // sold units optional here
 
-                    PricePerUnitEth = pricePerUnitEth
+                    PricePerUnitEth = pricePerUnitEth,
+                    RiskScore = snapshot?.RiskScore
+
                 };
             });
     }

@@ -29,6 +29,8 @@ public class SubmitKycHandler
         // 2️⃣ Prevent duplicate pending KYC
         if (_currentUser.KycStatus == KycStatus.Pending)
             throw new InvalidOperationException("KYC is already under review.");
+            if (_currentUser.KycStatus == KycStatus.Approved)
+            throw new InvalidOperationException("KYC is already Approved");
         //if(command.DateOfBirth<=)
 
         var hasPending = await _kycRepository.HasPendingKycAsync(_currentUser.UserId, cancellationToken);

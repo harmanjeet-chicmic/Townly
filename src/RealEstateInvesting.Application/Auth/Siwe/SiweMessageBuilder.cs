@@ -9,14 +9,14 @@ public static class SiweMessageBuilder
         DateTime expiresAt)
     {
         return
-$@"{domain} wants you to sign in with your Ethereum account:
-{wallet}
+         $@"{domain} wants you to sign in with your Ethereum account:
+         {wallet}
 
-URI: https://{domain}
-Version: 1
-Chain ID: {chainId}
-Nonce: {nonce}
-Issued At: {issuedAt:O}
-Expiration Time: {expiresAt:O}";
+         URI: https://{domain}
+         Version: 1
+         Chain ID: {chainId}         
+         Nonce: {nonce}
+         Issued At: {issuedAt:O}
+         Expiration Time: {expiresAt:O}";
     }
 }

@@ -80,9 +80,6 @@ builder.Services.AddSingleton<IAmazonS3>(_ =>
 });
 builder.Services.AddScoped<PortfolioQueryService>();
 
-// -------------------------------
-// File Storage (Local / S3)
-// -------------------------------
 builder.Services.AddScoped<IFileStorage>(sp =>
 {
     return new S3FileStorage(

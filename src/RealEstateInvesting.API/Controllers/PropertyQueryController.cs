@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Application.Properties;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Domain.Enums;
 
 namespace RealEstateInvesting.Api.Controllers;
@@ -32,7 +31,7 @@ public class PropertyQueryController : ControllerBase
         if (User.Identity?.IsAuthenticated == true)
         {
             currentUserId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!); // your extension method
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!); 
         }
         var result = await _service.GetMarketplaceAsync(
            currentUserId, page, pageSize, search, propertyType);
@@ -60,7 +59,7 @@ public class PropertyQueryController : ControllerBase
         if (User.Identity?.IsAuthenticated == true)
         {
             currentUserId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!); // your extension method
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
         var result =    await _service.GetDetailsAsync( currentUserId , propertyId);
         return Ok(result);
@@ -73,7 +72,7 @@ public class PropertyQueryController : ControllerBase
         if (User.Identity?.IsAuthenticated == true)
         {
             currentUserId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!); // your extension method
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
         var result = await _service.GetFeaturedAsync(currentUserId);
         return Ok(result);
