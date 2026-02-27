@@ -51,6 +51,7 @@ public class PropertyService
         property.Submit();
 
         await _propertyRepository.AddAsync(property);
+        Console.WriteLine("Documents count in command: " + command.Documents.Count);
 
         if (command.Documents.Any())
         {

@@ -48,6 +48,17 @@ public class Property : BaseEntity
     {
         if (totalUnits <= 0)
             throw new InvalidOperationException("Total units must be greater than zero.");
+        if (string.IsNullOrWhiteSpace(name))
+            throw new InvalidOperationException("Name is required.");
+
+        if (initialValuation <= 0)
+            throw new InvalidOperationException("Valuation must be positive.");
+
+        if (totalUnits <= 0)
+            throw new InvalidOperationException("Total units must be greater than zero.");
+
+        if (annualYieldPercent <= 0 || annualYieldPercent > 50)
+            throw new InvalidOperationException("Yield percent must be between 0 and 50.");
 
         return new Property
         {
@@ -81,14 +92,14 @@ public class Property : BaseEntity
     {
         if (Status != PropertyStatus.PendingApproval)
             throw new InvalidOperationException("Property must be pending approval.");
-        
+
         Status = PropertyStatus.Active;
         ApprovedAt = DateTime.UtcNow;
 
         RejectionReason = null;
         ReviewedBy = null;
         ReviewedAt = null;
-        
+
         MarkUpdated();
     }
     public void MarkSoldOut()

@@ -15,13 +15,15 @@ public class PropertyQueryService
     private readonly IEthPriceService _ethPriceService;
     private readonly IEmbeddingService _embeddingService;
     private readonly IVectorStore _vectorStore;
+    private readonly IPropertyDocumentRepository _propertyDocumentRepository;
 
     public PropertyQueryService(IPropertyRepository propertyRepository,
                 IInvestmentRepository investmentRepository,
                  IAnalyticsSnapshotRepository analyticsSnapshotRepository,
                   IEthPriceService ethPriceService,
                    IEmbeddingService embeddingService,
-                IVectorStore vectorStore)
+                IVectorStore vectorStore,
+                IPropertyDocumentRepository propertyDocumentRepository)
     {
         _propertyRepository = propertyRepository;
         _investmentRepository = investmentRepository;
@@ -29,6 +31,7 @@ public class PropertyQueryService
         _ethPriceService = ethPriceService;
         _embeddingService = embeddingService;
         _vectorStore = vectorStore;
+        _propertyDocumentRepository = propertyDocumentRepository;
     }
 
     public async Task<object> GetMarketplaceAsync(
@@ -368,7 +371,7 @@ public class PropertyQueryService
         };
     }
 
-    public async Task<PropertyDetailsDto> GetMyPropertyDetailsAsync(
+    public async Task<MyPropertyDetailsDto> GetMyPropertyDetailsAsync(
     Guid userId,
     Guid propertyId)
     {
@@ -396,8 +399,16 @@ public class PropertyQueryService
         var pricePerUnitEth =
             ethUsdRate == 0 ? 0 :
             decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
+        var documents = await _propertyDocumentRepository
+    .GetByPropertyIdAsync(propertyId);
 
-        return new PropertyDetailsDto
+var documentDtos = documents.Select(d => new PropertyDocumentDto
+{
+    DocumentName = d.DocumentName,
+    DocumentUrl = d.DocumentUrl
+}).ToList();
+
+        return new MyPropertyDetailsDto
         {
             Id = property.Id,
             Name = property.Name,
@@ -407,20 +418,21 @@ public class PropertyQueryService
             ImageUrl = property.ImageUrl,
             Status = property.Status,
             RejectionReason = property.Status == PropertyStatus.Rejected
-            ? property.RejectionReason
-            : null,
+         ? property.RejectionReason
+         : null,
 
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
             PricePerUnit = pricePerUnitUsd,
             PricePerUnitEth = pricePerUnitEth,
-
             AnnualYieldPercent = property.AnnualYieldPercent,
-
             AvailableUnits = property.TotalUnits - soldUnits,
 
             RiskScore = snapshot?.RiskScore,
-            DemandScore = snapshot?.DemandScore
+            DemandScore = snapshot?.DemandScore,
+
+            // 🔥 NEW
+            Documents = documentDtos
         };
     }
 
@@ -486,7 +498,7 @@ public class PropertyQueryService
         return relatedProperties
             .Where(p => p.Status == PropertyStatus.Active)
             .Select(p =>
-            {  
+            {
                 snapshotMap.TryGetValue(p.Id, out var snapshot);
                 var pricePerUnitUsd =
                     p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
