@@ -41,22 +41,28 @@ public class PropertyUpdateService
         if (property.OwnerUserId != userId)
             throw new UnauthorizedAccessException("Not property owner.");
 
+        // 🔒 Only Active properties can request metadata update
         if (property.Status != PropertyStatus.Active)
-            throw new InvalidOperationException("Only active properties can be updated.");
+            throw new InvalidOperationException(
+                "Only active properties can request updates.");
 
+        // 🔒 Prevent multiple pending requests
         var existingPending =
             await _updateRepository.GetPendingByPropertyIdAsync(propertyId);
 
         if (existingPending != null)
-            throw new InvalidOperationException("Pending update already exists.");
+            throw new InvalidOperationException(
+                "A pending update request already exists.");
+
+        // 🔒 Validate metadata
+        if (string.IsNullOrWhiteSpace(dto.Description))
+            throw new InvalidOperationException(
+                "Description is required.");
 
         var request = PropertyUpdateRequest.Create(
             propertyId,
             userId,
-            dto.Name,
             dto.Description,
-            dto.Location,
-            dto.PropertyType,
             dto.ImageUrl
         );
 

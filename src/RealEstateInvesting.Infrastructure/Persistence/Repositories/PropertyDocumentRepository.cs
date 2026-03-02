@@ -19,10 +19,25 @@ public class PropertyDocumentRepository : IPropertyDocumentRepository
         await _context.SaveChangesAsync();
     }
     public async Task<List<PropertyDocument>> GetByPropertyIdAsync(Guid propertyId)
-{
-    return await _context.PropertyDocuments
-        .Where(d => d.PropertyId == propertyId)
-        .OrderByDescending(d => d.UploadedAt)
-        .ToListAsync();
-}
+    {
+        return await _context.PropertyDocuments
+            .Where(d => d.PropertyId == propertyId)
+            .OrderByDescending(d => d.UploadedAt)
+            .ToListAsync();
+    }
+    public async Task SoftDeleteByPropertyIdAsync(
+        Guid propertyId,
+        Guid? deletedBy = null)
+    {
+        var documents = await _context.PropertyDocuments
+            .Where(d => d.PropertyId == propertyId && !d.IsDeleted)
+            .ToListAsync();
+
+        foreach (var doc in documents)
+        {
+            doc.SoftDelete(deletedBy);
+        }
+
+        await _context.SaveChangesAsync();
+    }
 }

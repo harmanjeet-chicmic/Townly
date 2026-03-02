@@ -10,4 +10,6 @@ public interface IPropertyUpdateRequestRepository
 
     Task<PropertyUpdateRequest?> GetByIdAsync(Guid id);
     Task UpdateAsync(PropertyUpdateRequest request);
+    Task<List<Guid>> GetPendingPropertyIdsAsync(List<Guid> propertyIds);
+
 }

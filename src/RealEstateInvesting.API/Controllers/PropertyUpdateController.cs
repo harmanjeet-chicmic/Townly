@@ -22,7 +22,8 @@ public class PropertyUpdateController : ControllerBase
     public async Task<IActionResult> RequestUpdate(
         Guid propertyId,
         [FromBody] RequestPropertyUpdateDto dto)
-    {
+    {  
+        
         var userId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 

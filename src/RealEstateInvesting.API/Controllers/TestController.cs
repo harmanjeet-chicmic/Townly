@@ -6,9 +6,8 @@ namespace RealEstateInvesting.API.Controllers;
 [ApiController]
 [Route("api/test/push")]
 public class TestPushController : ControllerBase
-{
+{   
     private readonly IPushNotificationService _push;
-
     public TestPushController(IPushNotificationService push)
     {
         _push = push;
@@ -16,7 +15,8 @@ public class TestPushController : ControllerBase
 
     [HttpPost("{userId}")]
     public async Task<IActionResult> Test(Guid userId)
-    {
+    {  
+        Console.WriteLine("===================== This is Testing Controller ======================");
         await _push.SendToUserAsync(
             userId,
             "Test Notification",

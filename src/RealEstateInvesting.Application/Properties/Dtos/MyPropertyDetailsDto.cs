@@ -27,4 +27,9 @@ public class MyPropertyDetailsDto
 
     // 🔥 NEW
     public List<PropertyDocumentDto> Documents { get; set; } = new();
+    public bool HasPendingUpdateRequest { get; set; }
+    public bool CanEditFullProperty { get; set; }
+    public bool CanResubmit { get; set; }
+    public bool CanRequestUpdate { get; set; }
+    public bool CanDelete { get; set; }
 }

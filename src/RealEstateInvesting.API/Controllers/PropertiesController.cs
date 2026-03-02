@@ -6,6 +6,7 @@ using RealEstateInvesting.Application.Properties.Dtos;
 using System.Security.Claims;
 using RealEstateInvesting.Application.Common.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
+using RealEstateInvesting.Application.Properties.Dtos;
 namespace RealEstateInvesting.Api.Controllers;
 
 [ApiController]
@@ -35,10 +36,10 @@ public class PropertiesController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> CreateProperty(
         [FromForm] CreatePropertyMultipartDto request)
-    {   
+    {
         var userId = GetUserId();
-         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-         Console.WriteLine("=================PROPERTY CONTROLLER HITTED");
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        Console.WriteLine("=================PROPERTY CONTROLLER HITTED");
         Console.WriteLine($"================================Authorization Header: {authHeader}");
 
         // 1️⃣ Save image
@@ -146,4 +147,80 @@ public class PropertiesController : ControllerBase
 
         return Guid.Parse(claim);
     }
+    // [HttpPost("{propertyId:guid}/resubmit")]
+    // [Authorize]
+    // public async Task<IActionResult> Resubmit(Guid propertyId)
+    // {
+    //     var userId = Guid.Parse(
+    //         User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    //     await _propertyService.ResubmitAsync(userId, propertyId);
+
+    //     return Ok(new
+    //     {
+    //         Message = "Property resubmitted for approval."
+    //     });
+    // }
+    [HttpPost("{propertyId:guid}/resubmit")]
+    [Authorize]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> Resubmit(
+     Guid propertyId,
+     [FromForm] CreatePropertyMultipartDto request)
+    {
+        var userId = GetUserId();
+
+        // 🔹 Save image (if provided)
+        string? imageUrl = null;
+        if (request.Image != null)
+        {
+            imageUrl = await _fileStorage.SaveAsync(
+                request.Image.OpenReadStream(),
+                request.Image.ContentType,
+                request.Image.FileName,
+                "properties/images",
+                HttpContext.RequestAborted);
+        }
+
+        // 🔹 Save documents
+        var documentDtos = new List<PropertyDocumentDto>();
+
+        foreach (var doc in request.Documents)
+        {
+            var docUrl = await _fileStorage.SaveAsync(
+                doc.OpenReadStream(),
+                doc.ContentType,
+                doc.FileName,
+                "properties/documents",
+                HttpContext.RequestAborted);
+
+            documentDtos.Add(new PropertyDocumentDto
+            {
+                DocumentName = doc.FileName,
+                DocumentUrl = docUrl
+            });
+        }
+
+        // 🔹 Map to CreatePropertyCommand
+        var command = new CreatePropertyCommand
+        {
+            Name = request.Name,
+            Description = request.Description,
+            Location = request.Location,
+            PropertyType = request.PropertyType,
+            InitialValuation = request.InitialValuation,
+            TotalUnits = request.TotalUnits,
+            AnnualYieldPercent = request.AnnualYieldPercent,
+            ImageUrl = imageUrl,
+            Documents = documentDtos
+        };
+
+        await _propertyService.ResubmitAsync(userId, propertyId, command);
+
+        return Ok(new
+        {
+            Message = "Property updated and resubmitted for approval."
+        });
+    }
 }
+

@@ -44,5 +44,14 @@ public class PropertyUpdateRequestRepository : IPropertyUpdateRequestRepository
             .OrderByDescending(x => x.RequestedAt)
             .ToListAsync();
     }
-
+    public async Task<List<Guid>> GetPendingPropertyIdsAsync(List<Guid> propertyIds)
+{
+    return await _context.PropertyUpdateRequests
+        .Where(x =>
+            propertyIds.Contains(x.PropertyId) &&
+            x.Status == PropertyUpdateStatus.Pending)
+        .Select(x => x.PropertyId)
+        .Distinct()
+        .ToListAsync();
+}
 }

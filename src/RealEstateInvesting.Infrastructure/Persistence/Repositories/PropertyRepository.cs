@@ -105,7 +105,7 @@ GetByOwnerIdPagedAsync(
     {
         var query = _context.Properties
             .Where(p => p.OwnerUserId == ownerUserId);
-        
+
         if (!string.IsNullOrWhiteSpace(search))
         {
             search = search.Trim();
@@ -191,10 +191,10 @@ GetByOwnerIdPagedAsync(
     }
 
 
-    public async Task<IEnumerable<Property>> GetFeaturedAsync(int limit , Guid? CurrentUserId)
+    public async Task<IEnumerable<Property>> GetFeaturedAsync(int limit, Guid? CurrentUserId)
     {
         return await _context.Properties
-            .Where(p => p.Status == PropertyStatus.Active && p.OwnerUserId!=CurrentUserId)
+            .Where(p => p.Status == PropertyStatus.Active && p.OwnerUserId != CurrentUserId)
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit)
             .ToListAsync();
@@ -214,7 +214,7 @@ GetByOwnerIdPagedAsync(
     public async Task<PropertyWithSoldUnits?> GetDetailsWithSoldUnitsAsync(Guid propertyId)
     {
         return await _context.Properties
-            .Where(p => p.Id == propertyId &&( p.Status == PropertyStatus.Active || p.Status == PropertyStatus.SoldOut))
+            .Where(p => p.Id == propertyId && (p.Status == PropertyStatus.Active || p.Status == PropertyStatus.SoldOut))
             .Select(p => new PropertyWithSoldUnits
             {
                 Id = p.Id,

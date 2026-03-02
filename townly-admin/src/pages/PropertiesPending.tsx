@@ -10,6 +10,8 @@ const PropertiesPending: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showModifyModal, setShowModifyModal] = useState(false);
+  const [actionType, setActionType] = useState<'reject' | 'modify'>('reject');
 
   const columns = [
     { key: 'name', header: 'Property Name' },
@@ -81,6 +83,45 @@ const PropertiesPending: React.FC = () => {
     }
   };
 
+  const handleModify = async (reason: string) => {
+    if (!selectedPropertyId) return;
+    try {
+      await api.post(`/api/admin/properties/${selectedPropertyId}/modify`, { reason });
+      fetchPendingProperties();
+      setShowModifyModal(false);
+      setSelectedPropertyId(null);
+    } catch (error: any) {
+      console.error('Failed to send modification request', error.response?.data || error);
+      alert('Failed to send modification request: ' + JSON.stringify(error.response?.data));
+    }
+  };
+
+  const openRejectModal = (id: string) => {
+    setSelectedPropertyId(id);
+    setActionType('reject');
+    setShowRejectModal(true);
+  };
+
+  const openModifyModal = (id: string) => {
+    setSelectedPropertyId(id);
+    setActionType('modify');
+    setShowModifyModal(true);
+  };
+
+  const handleModalConfirm = (reason: string) => {
+    if (actionType === 'reject') {
+      handleReject(reason);
+    } else {
+      handleModify(reason);
+    }
+  };
+
+  const closeModals = () => {
+    setShowRejectModal(false);
+    setShowModifyModal(false);
+    setSelectedPropertyId(null);
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -96,21 +137,28 @@ const PropertiesPending: React.FC = () => {
         columns={columns}
         data={properties}
         onApprove={handleApprove}
-        onReject={(id) => {
-          setSelectedPropertyId(id);
-          setShowRejectModal(true);
-        }}
+        onReject={openRejectModal}
+        onModify={openModifyModal}
+        showModifyButton={true}
+        showActions={true}
       />
 
+      {/* Reject Modal */}
       <RejectModal
         isOpen={showRejectModal}
-        onClose={() => {
-          setShowRejectModal(false);
-          setSelectedPropertyId(null);
-        }}
-        onConfirm={handleReject}
+        onClose={closeModals}
+        onConfirm={handleModalConfirm}
         title="Reject Property"
         message="Please provide a reason for rejecting this property listing:"
+      />
+
+      {/* Modify Modal */}
+      <RejectModal
+        isOpen={showModifyModal}
+        onClose={closeModals}
+        onConfirm={handleModalConfirm}
+        title="Request Modifications"
+        message="Please provide details about what needs to be modified in this property listing:"
       />
     </div>
   );

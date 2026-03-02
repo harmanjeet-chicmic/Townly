@@ -53,7 +53,7 @@ public class PropertyQueryController : ControllerBase
 
     [HttpGet("{propertyId}")]
     public async Task<IActionResult> GetPropertyDetails(Guid propertyId)
-    {   
+    {     
         Guid? currentUserId = null;
 
         if (User.Identity?.IsAuthenticated == true)
@@ -125,8 +125,5 @@ public class PropertyQueryController : ControllerBase
 
         return NoContent();
     }
-
-
-
 
 }

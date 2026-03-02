@@ -398,3 +398,17 @@ tr:hover td {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+/* Add to your CSS file */
+.btn-modify {
+  background-color: #ffc107;
+  color: #212529;
+  border: none;
+  padding: 5px 10px;
+  margin: 0 5px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-modify:hover {
+  background-color: #e0a800;
+}

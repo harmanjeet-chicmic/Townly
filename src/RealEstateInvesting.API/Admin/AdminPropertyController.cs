@@ -44,6 +44,16 @@ public class AdminPropertyController : ControllerBase
 
         return Ok();
     }
+
+    [HttpPost("{propertyId:guid}/modify")]
+    public async Task<IActionResult> modify(Guid propertyId , [FromBody] RejectPropertyRequest request)
+    {    
+        Console.WriteLine("=============MODIFY API HITTED============");
+        var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _service.ModifyRequest(propertyId , adminId , request.Reason);
+        return Ok();
+        
+    }
     [HttpGet("update-requests/pending")]
     public async Task<IActionResult> GetPendingUpdateRequests()
     {

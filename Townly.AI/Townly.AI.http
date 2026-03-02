@@ -1,0 +1,6 @@
+@Townly.AI_HostAddress = http://localhost:5186
+
+GET {{Townly.AI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

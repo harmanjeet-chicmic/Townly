@@ -2,7 +2,7 @@ using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Domain.Enums;
-
+using RealEstateInvesting.Application.Properties.Dtos;
 namespace RealEstateInvesting.Application.Properties;
 
 public class PropertyService
@@ -24,12 +24,12 @@ public class PropertyService
     public async Task<Guid> CreatePropertyAsync(
         Guid userId,
         CreatePropertyCommand command)
-    {     
-        
+    {
+
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found.");
-        Console.WriteLine("=========================== kyc statuds========"+user.KycStatus);
-        Console.WriteLine("=================User ID==================="+user.Id);
+        Console.WriteLine("=========================== kyc statuds========" + user.KycStatus);
+        Console.WriteLine("=================User ID===================" + user.Id);
         if (user.KycStatus != KycStatus.Approved)
             throw new InvalidOperationException("KYC approval required.");
 
@@ -65,5 +65,67 @@ public class PropertyService
         }
 
         return property.Id;
+    }
+    // public async Task ResubmitAsync(Guid userId, Guid propertyId)
+    // {
+    //     var property = await _propertyRepository.GetByIdAsync(propertyId)
+    //         ?? throw new InvalidOperationException("Property not found.");
+
+    //     if (property.OwnerUserId != userId)
+    //         throw new UnauthorizedAccessException("Not property owner.");
+
+    //     property.Resubmit();
+
+    //     await _propertyRepository.UpdateAsync(property);
+    // }
+
+    public async Task ResubmitAsync(
+    Guid userId,
+    Guid propertyId,
+    CreatePropertyCommand command)
+    {
+        var property = await _propertyRepository.GetByIdAsync(propertyId)
+            ?? throw new InvalidOperationException("Property not found.");
+
+        if (property.OwnerUserId != userId)
+            throw new UnauthorizedAccessException("Not property owner.");
+
+        // 🔒 Only allow in correct states
+        if (property.Status != PropertyStatus.PendingApproval &&
+            property.Status != PropertyStatus.ModificationRequired)
+            throw new InvalidOperationException(
+                "Only pending or modification required properties can be resubmitted.");
+
+        // 🔹 Update property fields
+        property.UpdateBeforeActivation(
+            command.Name,
+            command.Description,
+            command.Location,
+            command.PropertyType,
+            command.ImageUrl,
+            command.InitialValuation,
+            command.TotalUnits,
+            command.AnnualYieldPercent
+        );
+
+        // 🔹 Replace documents (clean approach)
+        await _propertyDocumentRepository
+     .SoftDeleteByPropertyIdAsync(propertyId, userId);
+
+        if (command.Documents.Any())
+        {
+            var docs = command.Documents.Select(d =>
+                PropertyDocument.Create(
+                    property.Id,
+                    d.DocumentName,
+                    d.DocumentUrl));
+
+            await _propertyDocumentRepository.AddRangeAsync(docs);
+        }
+
+        // 🔹 Reset workflow state
+        property.Resubmit();
+
+        await _propertyRepository.UpdateAsync(property);
     }
 }

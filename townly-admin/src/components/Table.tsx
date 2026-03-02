@@ -11,7 +11,9 @@ interface TableProps {
   data: any;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
+  onModify?: (id: string) => void;
   showActions?: boolean;
+  showModifyButton?: boolean;
 }
 
 const Table: React.FC<TableProps> = ({
@@ -19,7 +21,9 @@ const Table: React.FC<TableProps> = ({
   data,
   onApprove,
   onReject,
+  onModify,
   showActions = true,
+  showModifyButton = false,
 }) => {
   // Ensure data is an array
   const safeData = React.useMemo(() => {
@@ -101,10 +105,25 @@ const Table: React.FC<TableProps> = ({
                               onApprove(itemId);
                             }}
                             className="btn btn-success"
+                            title="Approve this item"
                           >
                             ✓ Approve
                           </button>
                         )}
+                        
+                        {showModifyButton && onModify && itemId && (
+                          <button
+                            onClick={() => {
+                              console.log('Modify clicked with ID:', itemId);
+                              onModify(itemId);
+                            }}
+                            className="btn btn-warning"
+                            title="Request modifications"
+                          >
+                            ✎ Modify
+                          </button>
+                        )}
+                        
                         {onReject && itemId && (
                           <button
                             onClick={() => {
@@ -112,6 +131,7 @@ const Table: React.FC<TableProps> = ({
                               onReject(itemId);
                             }}
                             className="btn btn-danger"
+                            title="Reject this item"
                           >
                             ✗ Reject
                           </button>

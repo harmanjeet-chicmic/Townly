@@ -125,6 +125,22 @@ public class Property : BaseEntity
 
         MarkUpdated();
     }
+    public void ModifyRequest(Guid adminUserId, string reason)
+    {
+        if (Status != PropertyStatus.PendingApproval)
+            throw new InvalidOperationException(
+                "Only pending approval properties can be marked as modification required.");
+
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new InvalidOperationException("Modification reason is required.");
+
+        Status = PropertyStatus.ModificationRequired;
+        ReviewedBy = adminUserId;
+        ReviewedAt = DateTime.UtcNow;
+        RejectionReason = reason;
+
+        MarkUpdated();
+    }
     // ---------------------------
     // Metadata Update (Admin Approved)
     // ---------------------------
@@ -148,6 +164,94 @@ public class Property : BaseEntity
 
         MarkUpdated();
     }
+    // public void MarkUpdatePending()
+    // {
+    //     if (Status != PropertyStatus.Active &&
+    //         Status != PropertyStatus.SoldOut)
+    //         throw new InvalidOperationException(
+    //             "Only active or sold properties can request update.");
 
+    //     Status = PropertyStatus.Updatepending;
+
+    //     ReviewedBy = null;
+    //     ReviewedAt = null;
+    //     RejectionReason = null;
+
+    //     MarkUpdated();
+    // }
+
+
+
+    public void UpdateBeforeActivation(
+      string name,
+      string description,
+      string location,
+      string propertyType,
+      string? imageUrl,
+      decimal initialValuation,
+      int totalUnits,
+      decimal annualYieldPercent)
+    {
+        if (Status == PropertyStatus.Active ||
+            Status == PropertyStatus.SoldOut ||
+            Status == PropertyStatus.Rejected)
+            throw new InvalidOperationException(
+                "This property can no longer be fully edited.");
+
+        Name = name;
+        Description = description;
+        Location = location;
+        PropertyType = propertyType;
+        ImageUrl = imageUrl;
+        InitialValuation = initialValuation;
+        ApprovedValuation = initialValuation;
+        TotalUnits = totalUnits;
+        AnnualYieldPercent = annualYieldPercent;
+
+        MarkUpdated();
+    }
+
+    public void Resubmit()
+    {
+        if (Status != PropertyStatus.PendingApproval &&
+            Status != PropertyStatus.ModificationRequired)
+            throw new InvalidOperationException(
+                "Only pending or modification required properties can be resubmitted.");
+
+        Status = PropertyStatus.PendingApproval;
+
+        ReviewedBy = null;
+        ReviewedAt = null;
+        RejectionReason = null;
+
+        MarkUpdated();
+    }
+    public void ApplyApprovedMetadataUpdate(
+    string description,
+    string? imageUrl)
+    {
+        if (Status != PropertyStatus.Active)
+            throw new InvalidOperationException(
+                "Only active properties can apply metadata updates.");
+
+        if (string.IsNullOrWhiteSpace(description))
+            throw new InvalidOperationException("Description is required.");
+
+        Description = description;
+        ImageUrl = imageUrl;
+
+        MarkUpdated();
+    }
+    public bool IsHiddenFromOwner { get; private set; }
+
+    public void HideFromOwner()
+    {
+        if (Status != PropertyStatus.SoldOut)
+            throw new InvalidOperationException(
+                "Only sold out properties can be hidden.");
+
+        IsHiddenFromOwner = true;
+        MarkUpdated();
+    }
 
 }

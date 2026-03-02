@@ -14,11 +14,7 @@ public class PropertyUpdateRequest : BaseEntity
     public Guid PropertyId { get; private set; }
     public Guid RequestedByUserId { get; private set; }
 
-    // Metadata snapshot
-    public string Name { get; private set; } = default!;
     public string Description { get; private set; } = default!;
-    public string Location { get; private set; } = default!;
-    public string PropertyType { get; private set; } = default!;
     public string? ImageUrl { get; private set; }
 
     public PropertyUpdateStatus Status { get; private set; } = PropertyUpdateStatus.Pending;
@@ -30,20 +26,14 @@ public class PropertyUpdateRequest : BaseEntity
     public static PropertyUpdateRequest Create(
         Guid propertyId,
         Guid userId,
-        string name,
         string description,
-        string location,
-        string propertyType,
         string? imageUrl)
     {
         return new PropertyUpdateRequest
         {
             PropertyId = propertyId,
             RequestedByUserId = userId,
-            Name = name,
             Description = description,
-            Location = location,
-            PropertyType = propertyType,
             ImageUrl = imageUrl,
             RequestedAt = DateTime.UtcNow,
             Status = PropertyUpdateStatus.Pending

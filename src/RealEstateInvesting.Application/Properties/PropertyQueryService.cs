@@ -16,6 +16,7 @@ public class PropertyQueryService
     private readonly IEmbeddingService _embeddingService;
     private readonly IVectorStore _vectorStore;
     private readonly IPropertyDocumentRepository _propertyDocumentRepository;
+    private readonly IPropertyUpdateRequestRepository _updateRepository;
 
     public PropertyQueryService(IPropertyRepository propertyRepository,
                 IInvestmentRepository investmentRepository,
@@ -23,7 +24,8 @@ public class PropertyQueryService
                   IEthPriceService ethPriceService,
                    IEmbeddingService embeddingService,
                 IVectorStore vectorStore,
-                IPropertyDocumentRepository propertyDocumentRepository)
+                IPropertyDocumentRepository propertyDocumentRepository,
+                 IPropertyUpdateRequestRepository updateRepository)
     {
         _propertyRepository = propertyRepository;
         _investmentRepository = investmentRepository;
@@ -32,6 +34,7 @@ public class PropertyQueryService
         _embeddingService = embeddingService;
         _vectorStore = vectorStore;
         _propertyDocumentRepository = propertyDocumentRepository;
+        _updateRepository = updateRepository;
     }
 
     public async Task<object> GetMarketplaceAsync(
@@ -309,6 +312,10 @@ public class PropertyQueryService
         }
 
         var propertyIds = properties.Select(p => p.Id).ToList();
+        var pendingUpdatePropertyIds =
+    await _updateRepository.GetPendingPropertyIdsAsync(propertyIds);
+
+        var pendingUpdateSet = pendingUpdatePropertyIds.ToHashSet();
         var soldUnitsMap =
       await _investmentRepository
           .GetSoldUnitsForPropertiesAsync(propertyIds);
@@ -356,7 +363,8 @@ public class PropertyQueryService
          InvestmentProgressPercent = progressPercent,
 
          PricePerUnitEth = pricePerUnitEth,
-         RiskScore = snapshot?.RiskScore
+         RiskScore = snapshot?.RiskScore,
+         HasPendingUpdateRequest = pendingUpdateSet.Contains(p.Id),
      };
  });
 
@@ -372,26 +380,36 @@ public class PropertyQueryService
     }
 
     public async Task<MyPropertyDetailsDto> GetMyPropertyDetailsAsync(
-    Guid userId,
-    Guid propertyId)
+     Guid userId,
+     Guid propertyId)
     {
         var property = await _propertyRepository.GetByIdAsync(propertyId)
             ?? throw new InvalidOperationException("Property not found.");
 
-        // 🔒 SECURITY CHECK
+        // 🔒 Ownership check
         if (property.OwnerUserId != userId)
-            throw new UnauthorizedAccessException("This property does not belong to you.");
+            throw new UnauthorizedAccessException(
+                "This property does not belong to you.");
 
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
-        // 🔥 Use existing repository method
+        // 🔥 Sold units
         var soldUnits =
             await _investmentRepository.GetTotalSharesInvestedAsync(propertyId);
 
+        // 🔥 Analytics snapshot
         var snapshot =
             await _analyticsSnapshotRepository
                 .GetLatestPropertySnapshotAsync(propertyId);
 
+        // 🔥 Check pending update request
+        var pendingUpdate =
+            await _updateRepository
+                .GetPendingByPropertyIdAsync(propertyId);
+
+        var hasPendingUpdateRequest = pendingUpdate != null;
+
+        // 🔥 Price calculations
         var pricePerUnitUsd =
             property.TotalUnits == 0 ? 0 :
             property.ApprovedValuation / property.TotalUnits;
@@ -399,14 +417,36 @@ public class PropertyQueryService
         var pricePerUnitEth =
             ethUsdRate == 0 ? 0 :
             decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
-        var documents = await _propertyDocumentRepository
-    .GetByPropertyIdAsync(propertyId);
 
-var documentDtos = documents.Select(d => new PropertyDocumentDto
-{
-    DocumentName = d.DocumentName,
-    DocumentUrl = d.DocumentUrl
-}).ToList();
+        // 🔥 Documents
+        var documents = await _propertyDocumentRepository
+            .GetByPropertyIdAsync(propertyId);
+
+        var documentDtos = documents.Select(d => new PropertyDocumentDto
+        {
+            DocumentName = d.DocumentName,
+            DocumentUrl = d.DocumentUrl
+        }).ToList();
+
+        // ==============================
+        // 🔐 Capability Flags
+        // ==============================
+
+        bool canEditFullProperty =
+            property.Status == PropertyStatus.Draft ||
+            property.Status == PropertyStatus.PendingApproval ||
+            property.Status == PropertyStatus.ModificationRequired;
+
+        bool canResubmit =
+            property.Status == PropertyStatus.ModificationRequired;
+
+        bool canRequestUpdate =
+            property.Status == PropertyStatus.Active &&
+            !hasPendingUpdateRequest;
+
+        bool canDelete =
+            property.Status != PropertyStatus.Active &&
+            soldUnits == 0;
 
         return new MyPropertyDetailsDto
         {
@@ -417,9 +457,11 @@ var documentDtos = documents.Select(d => new PropertyDocumentDto
             PropertyType = property.PropertyType,
             ImageUrl = property.ImageUrl,
             Status = property.Status,
-            RejectionReason = property.Status == PropertyStatus.Rejected
-         ? property.RejectionReason
-         : null,
+            // RejectionReason =
+            //     property.Status == PropertyStatus.Rejected
+            //         ? property.RejectionReason
+            //         : null,
+            RejectionReason = property.RejectionReason,
 
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
@@ -431,8 +473,16 @@ var documentDtos = documents.Select(d => new PropertyDocumentDto
             RiskScore = snapshot?.RiskScore,
             DemandScore = snapshot?.DemandScore,
 
-            // 🔥 NEW
-            Documents = documentDtos
+            Documents = documentDtos,
+
+            // 🔥 Update Visibility
+            HasPendingUpdateRequest = hasPendingUpdateRequest,
+
+            // 🔐 Capability Flags
+            CanEditFullProperty = canEditFullProperty,
+            CanResubmit = canResubmit,
+            CanRequestUpdate = canRequestUpdate,
+            CanDelete = canDelete
         };
     }
 
@@ -526,30 +576,68 @@ var documentDtos = documents.Select(d => new PropertyDocumentDto
                 };
             });
     }
+    // public async Task DeletePropertyAsync(Guid userId, Guid propertyId)
+    // {
+    //     var property = await _propertyRepository.GetByIdAsync(propertyId)
+    //         ?? throw new InvalidOperationException("Property not found.");
+
+    //     // 🔒 Ownership check
+    //     if (property.OwnerUserId != userId)
+    //         throw new UnauthorizedAccessException("You cannot delete this property.");
+
+    //     // 🔥 NEW RULE: Only certain statuses allowed
+    //     if (property.Status == PropertyStatus.Active)
+    //         throw new InvalidOperationException(
+    //             "Active properties cannot be deleted.");
+
+    //     // 🔥 Check if any shares sold (extra safety)
+    //     var soldShares =
+    //         await _investmentRepository.GetTotalSharesInvestedAsync(propertyId);
+
+    //     if (soldShares > 0)
+    //         throw new InvalidOperationException(
+    //             "Cannot delete property because shares have already been sold.");
+
+    //     // ✅ Safe to delete
+    //     await _propertyRepository.DeleteAsync(property);
+    // }
     public async Task DeletePropertyAsync(Guid userId, Guid propertyId)
     {
         var property = await _propertyRepository.GetByIdAsync(propertyId)
             ?? throw new InvalidOperationException("Property not found.");
 
-        // 🔒 Ownership check
         if (property.OwnerUserId != userId)
-            throw new UnauthorizedAccessException("You cannot delete this property.");
+            throw new UnauthorizedAccessException(
+                "You cannot delete this property.");
 
-        // 🔥 NEW RULE: Only certain statuses allowed
+        var soldUnits =
+            await _investmentRepository
+                .GetTotalSharesInvestedAsync(propertyId);
+
+        // 🔵 SoldOut → Hide only
+        if (property.Status == PropertyStatus.SoldOut)
+        {
+            property.HideFromOwner();
+            await _propertyRepository.UpdateAsync(property);
+            return;
+        }
+
+        // 🔴 Active → Block
         if (property.Status == PropertyStatus.Active)
             throw new InvalidOperationException(
                 "Active properties cannot be deleted.");
 
-        // 🔥 Check if any shares sold (extra safety)
-        var soldShares =
-            await _investmentRepository.GetTotalSharesInvestedAsync(propertyId);
+        // 🟢 Pending / ModificationRequired / Rejected
+        if (property.Status == PropertyStatus.PendingApproval ||
+            property.Status == PropertyStatus.ModificationRequired ||
+            property.Status == PropertyStatus.Rejected)
+        {
+            property.SoftDelete(userId);
+            await _propertyRepository.UpdateAsync(property);
+            return;
+        }
 
-        if (soldShares > 0)
-            throw new InvalidOperationException(
-                "Cannot delete property because shares have already been sold.");
-
-        // ✅ Safe to delete
-        await _propertyRepository.DeleteAsync(property);
+        throw new InvalidOperationException("Invalid delete operation.");
     }
 
 

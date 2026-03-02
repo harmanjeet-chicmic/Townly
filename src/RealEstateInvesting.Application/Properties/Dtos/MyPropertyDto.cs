@@ -26,5 +26,6 @@ public class MyPropertyDto
     public decimal TotalAmountInvestedUsd { get; set; }
     public decimal? RiskScore { get; set; }
     public decimal PricePerUnitEth { get; set; }
+    public bool HasPendingUpdateRequest { get; set; }
 
 } 
