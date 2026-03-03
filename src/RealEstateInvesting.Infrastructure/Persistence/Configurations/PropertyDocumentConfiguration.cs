@@ -15,7 +15,10 @@ public class PropertyDocumentConfiguration : IEntityTypeConfiguration<PropertyDo
         builder.Property(d => d.PropertyId)
             .IsRequired();
 
-        builder.Property(d => d.DocumentName)
+        builder.Property(d => d.Title)
+            .IsRequired()
+            .HasMaxLength(200);
+        builder.Property(d => d.FileName)
             .IsRequired()
             .HasMaxLength(200);
 

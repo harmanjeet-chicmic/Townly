@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Http;
-
+using RealEstateInvesting.API.Dtos.Properties;
 namespace RealEstateInvesting.API.Dtos.Properties;
 
 public class CreatePropertyMultipartDto
@@ -18,5 +18,5 @@ public class CreatePropertyMultipartDto
     public IFormFile? Image { get; set; }
 
     // Multiple documents
-    public List<IFormFile> Documents { get; set; } = new();
+      public List<PropertyDocumentUploadDto> Documents { get; set; } = new();
 }

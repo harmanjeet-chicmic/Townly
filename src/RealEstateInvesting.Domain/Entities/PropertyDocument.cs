@@ -6,7 +6,12 @@ public class PropertyDocument : BaseEntity
 {
     public Guid PropertyId { get; private set; }
 
-    public string DocumentName { get; private set; } = default!;
+    // 🔥 Business display name (Registry, NOC, etc.)
+    public string Title { get; private set; } = default!;
+
+    // 🔥 Actual stored file name
+    public string FileName { get; private set; } = default!;
+
     public string DocumentUrl { get; private set; } = default!;
 
     public DateTime UploadedAt { get; private set; }
@@ -15,11 +20,15 @@ public class PropertyDocument : BaseEntity
 
     public static PropertyDocument Create(
         Guid propertyId,
-        string documentName,
+        string title,
+        string fileName,
         string documentUrl)
     {
-        if (string.IsNullOrWhiteSpace(documentName))
-            throw new InvalidOperationException("Document name is required.");
+        if (string.IsNullOrWhiteSpace(title))
+            throw new InvalidOperationException("Document title is required.");
+
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new InvalidOperationException("File name is required.");
 
         if (string.IsNullOrWhiteSpace(documentUrl))
             throw new InvalidOperationException("Document URL is required.");
@@ -27,7 +36,8 @@ public class PropertyDocument : BaseEntity
         return new PropertyDocument
         {
             PropertyId = propertyId,
-            DocumentName = documentName,
+            Title = title,
+            FileName = fileName,
             DocumentUrl = documentUrl,
             UploadedAt = DateTime.UtcNow
         };

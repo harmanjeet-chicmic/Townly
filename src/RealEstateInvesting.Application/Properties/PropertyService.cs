@@ -2,7 +2,6 @@ using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Domain.Enums;
-using RealEstateInvesting.Application.Properties.Dtos;
 namespace RealEstateInvesting.Application.Properties;
 
 public class PropertyService
@@ -58,7 +57,8 @@ public class PropertyService
             var docs = command.Documents.Select(d =>
                 PropertyDocument.Create(
                     property.Id,
-                    d.DocumentName,
+                    d.Title,
+                    d.FileName,
                     d.DocumentUrl));
 
             await _propertyDocumentRepository.AddRangeAsync(docs);
@@ -117,7 +117,8 @@ public class PropertyService
             var docs = command.Documents.Select(d =>
                 PropertyDocument.Create(
                     property.Id,
-                    d.DocumentName,
+                    d.Title,
+                    d.FileName,
                     d.DocumentUrl));
 
             await _propertyDocumentRepository.AddRangeAsync(docs);

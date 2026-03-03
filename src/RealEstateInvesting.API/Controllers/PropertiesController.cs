@@ -79,15 +79,16 @@ public class PropertiesController : ControllerBase
         foreach (var doc in request.Documents)
         {
             var docUrl = await _fileStorage.SaveAsync(
-                doc.OpenReadStream(),
-                doc.ContentType,
-                doc.FileName,
+                doc.File.OpenReadStream(),
+                doc.File.ContentType,
+                doc.File.FileName,
                 "properties/documents",
                 HttpContext.RequestAborted);
 
             documentDtos.Add(new PropertyDocumentDto
             {
-                DocumentName = doc.FileName,
+                Title = doc.Title,
+                FileName = doc.File.FileName,
                 DocumentUrl = docUrl
             });
         }
@@ -187,15 +188,16 @@ public class PropertiesController : ControllerBase
         foreach (var doc in request.Documents)
         {
             var docUrl = await _fileStorage.SaveAsync(
-                doc.OpenReadStream(),
-                doc.ContentType,
-                doc.FileName,
+                doc.File.OpenReadStream(),
+                doc.File.ContentType,
+                doc.File.FileName,
                 "properties/documents",
                 HttpContext.RequestAborted);
 
             documentDtos.Add(new PropertyDocumentDto
             {
-                DocumentName = doc.FileName,
+                Title = doc.Title,
+                FileName = doc.File.FileName,
                 DocumentUrl = docUrl
             });
         }

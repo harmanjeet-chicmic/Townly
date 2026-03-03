@@ -424,7 +424,8 @@ public class PropertyQueryService
 
         var documentDtos = documents.Select(d => new PropertyDocumentDto
         {
-            DocumentName = d.DocumentName,
+            Title = d.Title,
+            FileName = d.FileName,
             DocumentUrl = d.DocumentUrl
         }).ToList();
 
@@ -438,7 +439,7 @@ public class PropertyQueryService
             property.Status == PropertyStatus.ModificationRequired;
 
         bool canResubmit =
-            property.Status == PropertyStatus.ModificationRequired || property.Status==PropertyStatus.PendingApproval;
+            property.Status == PropertyStatus.ModificationRequired || property.Status == PropertyStatus.PendingApproval;
 
         bool canRequestUpdate =
             property.Status == PropertyStatus.Active &&
