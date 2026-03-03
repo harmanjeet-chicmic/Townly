@@ -6,7 +6,6 @@ using RealEstateInvesting.Application.Properties.Dtos;
 using System.Security.Claims;
 using RealEstateInvesting.Application.Common.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
-using RealEstateInvesting.Application.Properties.Dtos;
 namespace RealEstateInvesting.Api.Controllers;
 
 [ApiController]
@@ -163,7 +162,7 @@ public class PropertiesController : ControllerBase
     // }
     [HttpPost("{propertyId:guid}/resubmit")]
     [Authorize]
-    [Consumes("multipart/form-data")]
+
     public async Task<IActionResult> Resubmit(
      Guid propertyId,
      [FromForm] CreatePropertyMultipartDto request)

@@ -1,3 +1,5 @@
+namespace Townly.AI.DTOs;
+
 public class AiPortfolioResponseDto
 {
     public string Summary { get; set; } = string.Empty;

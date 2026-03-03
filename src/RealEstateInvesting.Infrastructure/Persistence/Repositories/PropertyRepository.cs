@@ -96,7 +96,7 @@ public class PropertyRepository : IPropertyRepository
         return (items, totalCount);
     }
     public async Task<(IEnumerable<Property> Items, int TotalCount)>
-GetByOwnerIdPagedAsync(
+  GetByOwnerIdPagedAsync(
     Guid ownerUserId,
     int page,
     int pageSize,

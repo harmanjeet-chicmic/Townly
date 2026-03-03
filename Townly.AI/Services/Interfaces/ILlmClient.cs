@@ -1,3 +1,4 @@
+namespace Townly.AI.Services.Interfaces;
 
 public interface ILlmClient
 {

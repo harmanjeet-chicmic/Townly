@@ -121,7 +121,7 @@ public class AnalyticsQueryService
                 0,
                 DateTimeKind.Utc))
             .OrderBy(g => g.Key);
- 
+
         var result = new List<PortfolioLineChartDto>();
 
         foreach (var group in grouped)

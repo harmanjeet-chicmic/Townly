@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Application.Properties;
-using RealEstateInvesting.Application.Properties.Dtos;
+using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.API.Dtos.Properties;
 using System.Security.Claims;
 
 namespace RealEstateInvesting.Api.Controllers;
@@ -11,26 +12,41 @@ namespace RealEstateInvesting.Api.Controllers;
 public class PropertyUpdateController : ControllerBase
 {
     private readonly PropertyUpdateService _service;
+    private readonly IFileStorage _fileStorage;
 
-    public PropertyUpdateController(PropertyUpdateService service)
+    public PropertyUpdateController(PropertyUpdateService service , IFileStorage  fileStorage)
     {
         _service = service;
+        _fileStorage = fileStorage;
     }
 
     [HttpPost("{propertyId}/update-request")]
     [Authorize]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> RequestUpdate(
-        Guid propertyId,
-        [FromBody] RequestPropertyUpdateDto dto)
-    {  
-        
+     Guid propertyId,
+     [FromForm] RequestPropertyUpdateDto dto)
+    {
         var userId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        string? imageUrl = null;
+
+        if (dto.Image != null)
+        {
+            imageUrl = await _fileStorage.SaveAsync(
+                dto.Image.OpenReadStream(),
+                dto.Image.ContentType,
+                dto.Image.FileName,
+                "properties/images",
+                HttpContext.RequestAborted);
+        }
 
         var requestId = await _service.RequestUpdateAsync(
             userId,
             propertyId,
-            dto);
+            dto.Description,
+            imageUrl);
 
         return Ok(new
         {

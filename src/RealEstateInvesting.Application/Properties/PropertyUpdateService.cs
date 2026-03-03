@@ -22,9 +22,10 @@ public class PropertyUpdateService
     }
 
     public async Task<Guid> RequestUpdateAsync(
-        Guid userId,
-        Guid propertyId,
-        RequestPropertyUpdateDto dto)
+    Guid userId,
+    Guid propertyId,
+    string description,
+    string? imageUrl)
     {
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found.");
@@ -55,17 +56,15 @@ public class PropertyUpdateService
                 "A pending update request already exists.");
 
         // 🔒 Validate metadata
-        if (string.IsNullOrWhiteSpace(dto.Description))
-            throw new InvalidOperationException(
-                "Description is required.");
+        if (string.IsNullOrWhiteSpace(description))
+            throw new InvalidOperationException("Description is required.");
 
         var request = PropertyUpdateRequest.Create(
             propertyId,
             userId,
-            dto.Description,
-            dto.ImageUrl
+            description,
+            imageUrl
         );
-
         await _updateRepository.AddAsync(request);
 
         return request.Id;

@@ -438,7 +438,7 @@ public class PropertyQueryService
             property.Status == PropertyStatus.ModificationRequired;
 
         bool canResubmit =
-            property.Status == PropertyStatus.ModificationRequired;
+            property.Status == PropertyStatus.ModificationRequired || property.Status==PropertyStatus.PendingApproval;
 
         bool canRequestUpdate =
             property.Status == PropertyStatus.Active &&

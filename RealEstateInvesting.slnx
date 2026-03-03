@@ -5,4 +5,5 @@
     <Project Path="src/RealEstateInvesting.Domain/RealEstateInvesting.Domain.csproj" />
     <Project Path="src/RealEstateInvesting.Infrastructure/RealEstateInvesting.Infrastructure.csproj" />
   </Folder>
+  <Project Path="Townly.AI/Townly.AI.csproj" />
 </Solution>
