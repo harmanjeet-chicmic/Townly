@@ -14,68 +14,110 @@ public class TransactionQueryService
         _transactionRepository = transactionRepository;
         _propertyRepository = propertyRepository;
     }
-  public async Task<object> GetMyTransactionsAsync(
-    Guid userId,
-    int page,
-    int pageSize,
-    TransactionType? type)
-{
-    var (transactions, totalCount) =
-        await _transactionRepository
-            .GetByUserIdPagedAsync(userId, page, pageSize, type);
-
-    if (!transactions.Any())
+    public async Task<object> GetMyTransactionsAsync(
+      Guid userId,
+      int page,
+      int pageSize,
+      TransactionType? type)
     {
+        var (transactions, totalCount) =
+            await _transactionRepository
+                .GetByUserIdPagedAsync(userId, page, pageSize, type);
+
+        if (!transactions.Any())
+        {
+            return new
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = 0,
+                HasMore = false,
+                Items = new List<MyTransactionDto>()
+            };
+        }
+
+        var propertyIds = transactions
+            .Where(t => t.PropertyId.HasValue)
+            .Select(t => t.PropertyId!.Value)
+            .Distinct()
+            .ToList();
+
+        var properties =
+            await _propertyRepository.GetByIdsAsync(propertyIds);
+
+        var propertyDict =
+            properties.ToDictionary(p => p.Id, p => p.Name);
+
+        var items = transactions.Select(t => new MyTransactionDto
+        {
+            TransactionId = t.Id,
+            PropertyId = t.PropertyId,
+            PropertyName = t.PropertyId.HasValue &&
+                           propertyDict.ContainsKey(t.PropertyId.Value)
+                ? propertyDict[t.PropertyId.Value]
+                : null,
+
+            Type = t.Type,
+            AmountUsd = t.AmountUsd,
+            Currency = t.Currency,
+            EthAmountAtExecution = t.EthAmountAtExecution,
+            EthUsdRateAtExecution = t.EthUsdRateAtExecution,
+            AmountEth = t.EthAmountAtExecution,
+            Status = t.IsSuccessful ? "Completed" : "Pending",
+            CreatedAt = t.CreatedAt
+        });
+
         return new
         {
             Page = page,
             PageSize = pageSize,
-            TotalCount = 0,
-            HasMore = false,
-            Items = new List<MyTransactionDto>()
+            TotalCount = totalCount,
+            HasMore = page * pageSize < totalCount,
+            Items = items
         };
     }
-
-    var propertyIds = transactions
-        .Where(t => t.PropertyId.HasValue)
-        .Select(t => t.PropertyId!.Value)
-        .Distinct()
-        .ToList();
-
-    var properties =
-        await _propertyRepository.GetByIdsAsync(propertyIds);
-
-    var propertyDict =
-        properties.ToDictionary(p => p.Id, p => p.Name);
-
-    var items = transactions.Select(t => new MyTransactionDto
+    public async Task<TransactionDetailsDto?>
+GetMyTransactionDetailsAsync(Guid userId, Guid transactionId)
     {
-        TransactionId = t.Id,
-        PropertyId = t.PropertyId,
-        PropertyName = t.PropertyId.HasValue &&
-                       propertyDict.ContainsKey(t.PropertyId.Value)
-            ? propertyDict[t.PropertyId.Value]
-            : null,
+        var transaction = await
+            _transactionRepository
+                .GetByIdForUserAsync(transactionId, userId);
 
-        Type = t.Type,
-        AmountUsd = t.AmountUsd,
-        Currency = t.Currency,
-        EthAmountAtExecution = t.EthAmountAtExecution,
-        EthUsdRateAtExecution = t.EthUsdRateAtExecution,
-        AmountEth = t.EthAmountAtExecution,
-        Status = t.IsSuccessful ? "Completed" : "Pending",
-        CreatedAt = t.CreatedAt
-    });
+        if (transaction == null)
+            return null;
 
-    return new
-    {
-        Page = page,
-        PageSize = pageSize,
-        TotalCount = totalCount,
-        HasMore = page * pageSize < totalCount,
-        Items = items
-    };
-}
+        string? propertyName = null;
+
+
+        if (transaction.PropertyId.HasValue)
+        {
+            var property = await
+                _propertyRepository
+                    .GetByIdAsync(transaction.PropertyId.Value);
+
+            propertyName = property?.Name;
+        }
+
+        return new TransactionDetailsDto
+        {
+            TransactionId = transaction.Id,
+            PropertyId = transaction.PropertyId,
+            PropertyName = propertyName,
+
+            Type = transaction.Type,
+            AmountUsd = transaction.AmountUsd,
+            Currency = transaction.Currency,
+
+            EthAmountAtExecution = transaction.EthAmountAtExecution,
+
+            AmountEth = transaction.EthAmountAtExecution,
+            EthUsdRateAtExecution = transaction.EthUsdRateAtExecution,
+
+            Status = transaction.IsSuccessful ? "Completed" : "Pending",
+
+            CreatedAt = transaction.CreatedAt
+        };
+    }
 
 
 }

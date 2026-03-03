@@ -13,4 +13,6 @@ GetByUserIdPagedAsync(
     int pageSize,
     TransactionType? type);
 
+    Task<Transaction?> GetByIdForUserAsync(Guid transactionId, Guid userId);
+
 }
