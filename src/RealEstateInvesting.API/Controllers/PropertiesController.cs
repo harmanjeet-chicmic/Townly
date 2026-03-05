@@ -37,28 +37,79 @@ public class PropertiesController : ControllerBase
         [FromForm] CreatePropertyMultipartDto request)
     {
         var userId = GetUserId();
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        Console.WriteLine("=================PROPERTY CONTROLLER HITTED");
-        Console.WriteLine($"================================Authorization Header: {authHeader}");
 
-        // 1️⃣ Save image
-        // string? imageUrl = null;
-        // if (request.Image != null)
-        // {
-        //     imageUrl = await SaveFileAsync(
-        //         request.Image,
-        //         "uploads/properties/images");
-        // }
-        string? imageUrl = null;
-        if (request.Image != null)
+        Console.WriteLine("============== PROPERTY CREATION REQUEST RECEIVED ==============");
+
+        Console.WriteLine($"UserId: {userId}");
+        Console.WriteLine($"Name: {request.Name}");
+        Console.WriteLine($"Description: {request.Description}");
+        Console.WriteLine($"Location: {request.Location}");
+        Console.WriteLine($"PropertyType: {request.PropertyType}");
+        Console.WriteLine($"InitialValuation: {request.InitialValuation}");
+        Console.WriteLine($"TotalUnits: {request.TotalUnits}");
+        Console.WriteLine($"AnnualYieldPercent: {request.AnnualYieldPercent}");
+
+        Console.WriteLine($"Image Present: {request.Image != null}");
+        Console.WriteLine($"Documents Count: {request.Documents?.Count}");
+
+        // Log raw form keys (debugging frontend issues)
+        foreach (var key in Request.Form.Keys)
         {
-            imageUrl = await _fileStorage.SaveAsync(
-                request.Image.OpenReadStream(),
-                request.Image.ContentType,
-                request.Image.FileName,
-                "properties/images",
-                HttpContext.RequestAborted);
+            Console.WriteLine($"FORM KEY RECEIVED: {key}");
         }
+
+        Console.WriteLine("===============================================================");
+
+        // ----------------------------------------
+        // VALIDATION SECTION
+        // ----------------------------------------
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { message = "Property name is required." });
+
+        if (string.IsNullOrWhiteSpace(request.Description))
+            return BadRequest(new { message = "Property description is required." });
+
+        if (string.IsNullOrWhiteSpace(request.Location))
+            return BadRequest(new { message = "Property location is required." });
+
+        if (string.IsNullOrWhiteSpace(request.PropertyType))
+            return BadRequest(new { message = "Property type is required." });
+
+        if (request.InitialValuation <= 0)
+            return BadRequest(new { message = "Initial valuation must be greater than zero." });
+
+        if (request.TotalUnits <= 0)
+            return BadRequest(new { message = "Total units must be greater than zero." });
+
+        if (request.AnnualYieldPercent <= 0)
+            return BadRequest(new { message = "Annual yield percent must be greater than zero." });
+
+        if (request.Image == null)
+            return BadRequest(new { message = "Property image is required." });
+
+        if (request.Documents == null || !request.Documents.Any())
+            return BadRequest(new { message = "At least one property document is required." });
+
+        foreach (var doc in request.Documents)
+        {
+            if (string.IsNullOrWhiteSpace(doc.Title))
+                return BadRequest(new { message = "Document title is required." });
+
+            if (doc.File == null || doc.File.Length == 0)
+                return BadRequest(new { message = "Document file is required." });
+        }
+
+        // ----------------------------------------
+        // SAVE IMAGE
+        // ----------------------------------------
+
+        string? imageUrl = await _fileStorage.SaveAsync(
+            request.Image.OpenReadStream(),
+            request.Image.ContentType,
+            request.Image.FileName,
+            "properties/images",
+            HttpContext.RequestAborted);
 
 
         // 2️⃣ Save documents

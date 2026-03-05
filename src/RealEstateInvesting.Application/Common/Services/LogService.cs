@@ -7,7 +7,7 @@ namespace RealEstateInvesting.Application.Common.Services;
 public class LogService : ILogService
 {
     private readonly ILogRepository _logRepository;
-    private const int MaxLogs = 100;
+    private const int MaxLogs = 30;
 
 
     public LogService(ILogRepository logRepository)

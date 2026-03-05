@@ -283,7 +283,7 @@ app.UseCors("DevCorsPolicy");
 app.UseMiddleware<RequestDebugMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<RequestResponseLoggingMiddleware>();
+//app.UseMiddleware<RequestResponseLoggingMiddleware>();
 app.MapControllers();
 
 app.Run();

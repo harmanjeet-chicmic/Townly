@@ -6,6 +6,7 @@ public class CreatePropertyCommand
     public string Description { get; set; } = null!;
     public string Location { get; set; } = null!;
     public string PropertyType { get; set; } = null!;
+    
 
     public decimal InitialValuation { get; set; }
     public int TotalUnits { get; set; }

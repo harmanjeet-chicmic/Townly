@@ -27,8 +27,10 @@ public class PropertyService
 
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found.");
+        
         Console.WriteLine("=========================== kyc statuds========" + user.KycStatus);
         Console.WriteLine("=================User ID===================" + user.Id);
+        
         if (user.KycStatus != KycStatus.Approved)
             throw new InvalidOperationException("KYC approval required.");
 
@@ -48,7 +50,7 @@ public class PropertyService
         );
 
         property.Submit();
-
+        Console.WriteLine("=============================property creation===================");
         await _propertyRepository.AddAsync(property);
         Console.WriteLine("Documents count in command: " + command.Documents.Count);
 
