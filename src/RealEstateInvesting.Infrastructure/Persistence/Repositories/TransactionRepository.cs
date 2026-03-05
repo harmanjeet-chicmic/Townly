@@ -47,10 +47,10 @@ GetByUserIdPagedAsync(
     public async Task<Transaction?> GetByIdForUserAsync(
     Guid transactionId,
     Guid userId)
-{
-    return await _context.Transactions
-        .Where(t => t.Id == transactionId && t.UserId == userId)
-        .FirstOrDefaultAsync();
-}
+    {
+        return await _context.Transactions
+            .Where(t => t.Id == transactionId && t.UserId == userId)
+            .FirstOrDefaultAsync();
+    }
 
 }

@@ -169,6 +169,7 @@ public class PropertyQueryService
         var property =
             await _propertyRepository.GetDetailsWithSoldUnitsAsync(propertyId)
             ?? throw new InvalidOperationException("Property not found.");
+    
 
         var snapshot =
             await _analyticsSnapshotRepository

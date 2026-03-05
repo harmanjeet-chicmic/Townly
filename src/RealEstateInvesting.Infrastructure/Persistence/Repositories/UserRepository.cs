@@ -25,4 +25,10 @@ public class UserRepository : IUserRepository
         _context.Users.Update(user);
         await _context.SaveChangesAsync(cancellationToken);
     }
+    public async Task<List<User>> GetByIdsAsync(IEnumerable<Guid> userIds)
+    {
+        return await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToListAsync();
+    }
 }

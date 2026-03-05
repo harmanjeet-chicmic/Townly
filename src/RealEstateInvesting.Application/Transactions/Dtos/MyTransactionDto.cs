@@ -20,6 +20,8 @@ public class MyTransactionDto
     public decimal? EthAmountAtExecution { get; set; }
     public decimal? EthUsdRateAtExecution { get; set; }
     public string Status { get; set; } = default!;
+    public string? FromWalletAddress { get; set; }
+    public string? ToWalletAddress { get; set; }
 
 
     public DateTime CreatedAt { get; set; }

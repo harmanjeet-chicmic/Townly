@@ -52,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminKycService, AdminKycService>();
         services.AddScoped<IGetMyKycStatusReadService, KycStatusReadService>();
         services.AddScoped<IHealthCheckService, HealthCheckService>();
+        services.AddScoped<ILogRepository, LogRepository>();
 
         return services;
     }

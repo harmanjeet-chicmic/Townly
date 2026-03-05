@@ -7,6 +7,8 @@ using RealEstateInvesting.Application.Portfolio;
 using RealEstateInvesting.Application.Notifications;
 using RealEstateInvesting.Application.Health.Handlers;
 using RealEstateInvesting.Application.Properties.InvestmentInfo;
+using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.Common.Services;
 namespace RealEstateInvesting.Application;
 
 public static class DependencyInjection
@@ -41,6 +43,7 @@ public static class DependencyInjection
 
         services.AddScoped<GetHealthStatusHandler>();
         services.AddScoped<PropertyInvestmentInfoService>();
+        services.AddScoped<ILogService, LogService>();
 
         return services;
     }

@@ -19,7 +19,7 @@ using RealEstateInvesting.Application.Portfolio;
 using RealEstateInvesting.Infrastructure.VectorSearch;
 using RealEstateInvesting.Application.AdminAuth;
 using RealEstateInvesting.Application.AdminAuth.Interfaces;
-
+using RealEstateInvesting.Api.Middleware;
 using RealEstateInvesting.Infrastructure.Security;
 
 using RealEstateInvesting.Application.Admin.Properties;
@@ -283,7 +283,7 @@ app.UseCors("DevCorsPolicy");
 app.UseMiddleware<RequestDebugMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
 app.MapControllers();
 
 app.Run();

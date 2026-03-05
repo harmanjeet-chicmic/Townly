@@ -25,18 +25,14 @@ public class AppDbContext : DbContext
     public DbSet<UserPortfolioSnapshot> UserPortfolioSnapshots
         => Set<UserPortfolioSnapshot>();
     public DbSet<AdminUser> Admins { get; set; } = default!;
-    
+    public DbSet<Log> Logs { get; set; }
+
 
     // 🔥 ADD THESE
     public DbSet<TokenRequest> TokenRequests => Set<TokenRequest>();
     public DbSet<UserTokenBalance> UserTokenBalances => Set<UserTokenBalance>();
     public DbSet<TokenTransaction> TokenTransactions => Set<TokenTransaction>();
-     public DbSet<UserDeviceToken> UserDeviceTokens { get; set; } = default!;
-
-
-
-
-
+    public DbSet<UserDeviceToken> UserDeviceTokens { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
