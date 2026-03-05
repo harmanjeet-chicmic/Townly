@@ -5,7 +5,7 @@ namespace RealEstateInvesting.Infrastructure.Kyc;
 
 public class KycFileStorageService : IKycFileStorageService
 {
-    private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png" };
+    private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png" , ".pdf" };
     private readonly IWebHostEnvironment _environment;
 
     public KycFileStorageService(IWebHostEnvironment environment)
