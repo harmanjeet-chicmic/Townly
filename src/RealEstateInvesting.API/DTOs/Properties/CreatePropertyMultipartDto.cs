@@ -13,6 +13,7 @@ public class CreatePropertyMultipartDto
     public decimal InitialValuation { get; set; }
     public int TotalUnits { get; set; }
     public decimal AnnualYieldPercent { get; set; }
+    public decimal RentalIncome { get; set; }
 
     // Files
     public IFormFile? Image { get; set; }

@@ -464,6 +464,7 @@ public class PropertyQueryService
             //         ? property.RejectionReason
             //         : null,
             RejectionReason = property.RejectionReason,
+            RentalIncomeHistory = property.RentalIncomeHistory,
 
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,

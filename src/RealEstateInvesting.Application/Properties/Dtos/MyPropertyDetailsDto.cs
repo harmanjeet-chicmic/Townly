@@ -24,6 +24,7 @@ public class MyPropertyDetailsDto
 
     public decimal? RiskScore { get; set; }
     public decimal? DemandScore { get; set; }
+     public decimal RentalIncomeHistory { get; set; }
 
     // 🔥 NEW
     public List<PropertyDocumentDto> Documents { get; set; } = new();

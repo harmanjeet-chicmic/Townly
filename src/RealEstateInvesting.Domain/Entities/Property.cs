@@ -20,6 +20,7 @@ public class Property : BaseEntity
     public decimal ApprovedValuation { get; private set; }
     public int TotalUnits { get; private set; }
     public decimal AnnualYieldPercent { get; private set; }
+    public decimal RentalIncomeHistory { get; private set; }
 
     // Lifecycle
     public PropertyStatus Status { get; private set; } = PropertyStatus.Draft;
@@ -44,7 +45,8 @@ public class Property : BaseEntity
         string? imageUrl,
         decimal initialValuation,
         int totalUnits,
-        decimal annualYieldPercent)
+        decimal annualYieldPercent,
+        decimal rentalIncomeHistory)
     {
         if (totalUnits <= 0)
             throw new InvalidOperationException("Total units must be greater than zero.");
@@ -71,6 +73,7 @@ public class Property : BaseEntity
             InitialValuation = initialValuation,
             ApprovedValuation = initialValuation,
             TotalUnits = totalUnits,
+            RentalIncomeHistory = rentalIncomeHistory,
             AnnualYieldPercent = annualYieldPercent,
             Status = PropertyStatus.Draft
         };

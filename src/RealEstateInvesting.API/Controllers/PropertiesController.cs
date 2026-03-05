@@ -156,6 +156,7 @@ public class PropertiesController : ControllerBase
             TotalUnits = request.TotalUnits,
             AnnualYieldPercent = request.AnnualYieldPercent,
             ImageUrl = imageUrl,
+            RentalIncomeHistory = request.RentalIncome,
             Documents = documentDtos
         };
 

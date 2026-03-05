@@ -46,7 +46,9 @@ public class PropertyService
             imageUrl: command.ImageUrl,
             initialValuation: command.InitialValuation,
             totalUnits: command.TotalUnits,
-            annualYieldPercent: command.AnnualYieldPercent
+            annualYieldPercent: command.AnnualYieldPercent,
+            rentalIncomeHistory: command.RentalIncomeHistory
+            
         );
 
         property.Submit();
