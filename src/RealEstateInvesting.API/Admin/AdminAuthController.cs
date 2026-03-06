@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Application.AdminAuth.DTOs;
 using RealEstateInvesting.Application.AdminAuth.Interfaces;
-
 namespace RealEstateInvesting.Api.Controllers.Admin;
 
 [ApiController]

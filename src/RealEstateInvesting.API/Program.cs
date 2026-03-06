@@ -34,6 +34,7 @@ using RealEstateInvesting.API.RequestDebugMiddleware;
 using RealEstateInvesting.Application.Tokens.Requests;
 using RealEstateInvesting.Application.Tokens.Balance;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.OpenApi;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -97,7 +98,20 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+    });
+});
 //----------------------------------------------------------------
 // 🔐 JWT 
 
@@ -124,10 +138,10 @@ builder.Services.AddAuthentication(options =>
 
         ClockSkew = TimeSpan.Zero
     };
-     options.Events = new JwtBearerEvents
+    options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
-        {   
+        {
 
             Console.WriteLine("=======jwt middleware hitted========");
             var authHeader = context.Request.Headers["Authorization"].ToString();
@@ -255,8 +269,8 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: userId,
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,                  
-                Window = TimeSpan.FromHours(1),     
+                PermitLimit = 10,
+                Window = TimeSpan.FromHours(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
             });
@@ -275,10 +289,11 @@ app.UseMiddleware<RealEstateInvesting.API.Middleware.ExceptionMiddleware>();
 app.UseCors("AllowAll");
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI();
+
 }
+app.MapOpenApi();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();
