@@ -9,7 +9,7 @@ public class AnalyticsQueryService
     private readonly IAnalyticsSnapshotRepository _snapshotRepository;
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IPropertyRepository _propertyRepository;
-    private readonly ILogger logger;
+   
     private readonly IEthPriceService _ethPriceService;
     public AnalyticsQueryService(IAnalyticsSnapshotRepository snapshotRepository,
     IInvestmentRepository investmentRepository,
@@ -29,7 +29,7 @@ public class AnalyticsQueryService
 
         var snapshots =
             await _snapshotRepository.GetPropertySnapshotsAsync(propertyId, fromUtc);
-        logger.InfoFormat("this is logging");
+        
 
         return snapshots.Select(s => new PropertyAnalyticsTrendDto
         {
