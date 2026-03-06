@@ -87,7 +87,7 @@ public class PropertyQueryService
                 PricePerUnitEth = pricePerUnitEth,
 
                 // 🔥 Analytics
-                RiskScore = snapshot?.RiskScore
+                RiskScore = snapshot?.RiskScore ?? 5
             };
         });
 
@@ -145,7 +145,7 @@ public class PropertyQueryService
                 AvailableUnits = p.TotalUnits - p.SoldUnits,
 
                 PricePerUnitEth = pricePerUnitEth,
-                RiskScore = snapshot?.RiskScore
+                RiskScore = snapshot?.RiskScore ?? 5
             };
         }).ToList();
 
@@ -222,7 +222,7 @@ public class PropertyQueryService
             AnnualYieldPercent = property.AnnualYieldPercent,
             AvailableUnits = property.TotalUnits - property.SoldUnits,
 
-            RiskScore = snapshot?.RiskScore,
+            RiskScore = snapshot?.RiskScore ?? 5,
             DemandScore = snapshot?.DemandScore,
             UserInvestmentAmount = userInvestmentAmount,
             UserInvestedAmountEth = userInvestmentAmountEth
@@ -280,7 +280,7 @@ public class PropertyQueryService
                 AvailableUnits = availableUnits,   // ✅ FIXED
 
                 PricePerUnitEth = pricePerUnitEth,
-                RiskScore = snapshot?.RiskScore
+                RiskScore = snapshot?.RiskScore ?? 5
             };
         });
     }
@@ -364,7 +364,7 @@ public class PropertyQueryService
          InvestmentProgressPercent = progressPercent,
 
          PricePerUnitEth = pricePerUnitEth,
-         RiskScore = snapshot?.RiskScore,
+        RiskScore = snapshot?.RiskScore ?? 5,
          HasPendingUpdateRequest = pendingUpdateSet.Contains(p.Id),
      };
  });
@@ -473,7 +473,7 @@ public class PropertyQueryService
             AnnualYieldPercent = property.AnnualYieldPercent,
             AvailableUnits = property.TotalUnits - soldUnits,
 
-            RiskScore = snapshot?.RiskScore,
+           RiskScore = snapshot?.RiskScore ?? 5,
             DemandScore = snapshot?.DemandScore,
 
             Documents = documentDtos,
@@ -574,7 +574,7 @@ public class PropertyQueryService
                     AvailableUnits = p.TotalUnits, // sold units optional here
 
                     PricePerUnitEth = pricePerUnitEth,
-                    RiskScore = snapshot?.RiskScore
+                    RiskScore = snapshot?.RiskScore ?? 5
 
                 };
             });
