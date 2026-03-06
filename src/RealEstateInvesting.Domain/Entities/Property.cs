@@ -193,7 +193,8 @@ public class Property : BaseEntity
       string? imageUrl,
       decimal initialValuation,
       int totalUnits,
-      decimal annualYieldPercent)
+      decimal annualYieldPercent,
+      decimal rentalIncomeHistory)
     {
         if (Status == PropertyStatus.Active ||
             Status == PropertyStatus.SoldOut ||
@@ -210,6 +211,7 @@ public class Property : BaseEntity
         ApprovedValuation = initialValuation;
         TotalUnits = totalUnits;
         AnnualYieldPercent = annualYieldPercent;
+        RentalIncomeHistory = rentalIncomeHistory;
 
         MarkUpdated();
     }

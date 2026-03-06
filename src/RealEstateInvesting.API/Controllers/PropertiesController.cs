@@ -265,7 +265,8 @@ public class PropertiesController : ControllerBase
             TotalUnits = request.TotalUnits,
             AnnualYieldPercent = request.AnnualYieldPercent,
             ImageUrl = imageUrl,
-            Documents = documentDtos
+            Documents = documentDtos,
+            RentalIncomeHistory = request.RentalIncome
         };
 
         await _propertyService.ResubmitAsync(userId, propertyId, command);

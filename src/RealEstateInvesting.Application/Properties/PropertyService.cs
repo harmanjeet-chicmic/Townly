@@ -109,7 +109,8 @@ public class PropertyService
             command.ImageUrl,
             command.InitialValuation,
             command.TotalUnits,
-            command.AnnualYieldPercent
+            command.AnnualYieldPercent,
+            command.RentalIncomeHistory
         );
 
         // 🔹 Replace documents (clean approach)
