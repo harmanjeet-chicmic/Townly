@@ -68,6 +68,15 @@ public class AnalyticsSnapshotRepository : IAnalyticsSnapshotRepository
                 .First())
             .ToListAsync();
     }
+    public async Task<UserPortfolioSnapshot?> GetLastUserSnapshotBeforeAsync(
+    Guid userId,
+    DateTime beforeUtc)
+    {
+        return await _context.UserPortfolioSnapshots
+            .Where(x => x.UserId == userId && x.SnapshotAt < beforeUtc)
+            .OrderByDescending(x => x.SnapshotAt)
+            .FirstOrDefaultAsync();
+    }
 
 
 }

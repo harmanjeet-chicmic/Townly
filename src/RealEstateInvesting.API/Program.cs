@@ -21,7 +21,7 @@ using RealEstateInvesting.Application.AdminAuth;
 using RealEstateInvesting.Application.AdminAuth.Interfaces;
 using RealEstateInvesting.Api.Middleware;
 using RealEstateInvesting.Infrastructure.Security;
-
+using Serilog;
 using RealEstateInvesting.Application.Admin.Properties;
 using RealEstateInvesting.Application.Admin.Properties.Interfaces;
 using RealEstateInvesting.Infrastructure.Admin.Properties;
@@ -46,13 +46,16 @@ if (!string.IsNullOrWhiteSpace(firebasePath))
         firebasePath
     );
 }
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/webapi-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
+// Replace default logging with Serilog
+builder.Host.UseSerilog();
 FirebaseInitializer.Initialize(firebasePath);
-// var hasher = new PasswordHasher<AdminUser>();
-// var hash = hasher.HashPassword(null!, "Admin@123");
-// Console.WriteLine("============================================================");
-// Console.WriteLine(hash);
-// Console.WriteLine("======================================");
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddControllers(options =>

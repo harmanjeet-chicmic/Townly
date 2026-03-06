@@ -10,13 +10,16 @@ public class AnalyticsQueryService
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IPropertyRepository _propertyRepository;
     private readonly ILogger logger;
+    private readonly IEthPriceService _ethPriceService;
     public AnalyticsQueryService(IAnalyticsSnapshotRepository snapshotRepository,
     IInvestmentRepository investmentRepository,
-    IPropertyRepository propertyRepository)
+    IPropertyRepository propertyRepository,
+    IEthPriceService ethPriceService)
     {
         _snapshotRepository = snapshotRepository;
         _investmentRepository = investmentRepository;
         _propertyRepository = propertyRepository;
+        _ethPriceService = ethPriceService;
     }
 
     public async Task<IEnumerable<PropertyAnalyticsTrendDto>>
@@ -102,16 +105,17 @@ public class AnalyticsQueryService
         });
     }
     public async Task<IEnumerable<PortfolioLineChartDto>>
-    GetPortfolioLineAsync(Guid userId, int hours)
+  GetPortfolioLineAsync(Guid userId, int hours)
     {
-        var fromUtc = DateTime.UtcNow.AddHours(-hours);
+        var now = DateTime.UtcNow;
+        var fromUtc = now.AddHours(-hours);
+         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
         var snapshots =
             await _snapshotRepository
                 .GetUserPortfolioSnapshotsAsync(userId, fromUtc);
 
-        // Group by hour bucket
-        var grouped = snapshots
+        var snapshotMap = snapshots
             .GroupBy(s => new DateTime(
                 s.SnapshotAt.Year,
                 s.SnapshotAt.Month,
@@ -120,21 +124,42 @@ public class AnalyticsQueryService
                 0,
                 0,
                 DateTimeKind.Utc))
-            .OrderBy(g => g.Key);
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(x => x.SnapshotAt).First());
 
         var result = new List<PortfolioLineChartDto>();
 
-        foreach (var group in grouped)
+        // 🔹 get last snapshot BEFORE range
+        var previous =
+            await _snapshotRepository.GetLastUserSnapshotBeforeAsync(userId, fromUtc);
+
+        decimal lastValueUsd  = previous?.PortfolioValue ?? 0;
+
+        for (int i = hours; i >= 0; i--)
         {
-            // Take latest snapshot of that hour
-            var latest = group
-                .OrderByDescending(s => s.SnapshotAt)
-                .First();
+            var bucket = new DateTime(
+                now.Year,
+                now.Month,
+                now.Day,
+                now.Hour,
+                0,
+                0,
+                DateTimeKind.Utc).AddHours(-i);
+
+            if (snapshotMap.TryGetValue(bucket, out var snapshot))
+            {
+                lastValueUsd  = snapshot.PortfolioValue;
+            }
+            var valueEth =
+            ethUsdRate == 0 ? 0 :
+            decimal.Round(lastValueUsd / ethUsdRate, 8);
+
 
             result.Add(new PortfolioLineChartDto
             {
-                Label = group.Key.ToString("HH:mm"),
-                Value = latest.PortfolioValue
+                Label = bucket.ToString("HH:mm"),
+                Value = valueEth
             });
         }
 

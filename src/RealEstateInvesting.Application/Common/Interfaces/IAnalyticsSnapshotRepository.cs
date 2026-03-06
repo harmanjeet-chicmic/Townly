@@ -18,6 +18,9 @@ public interface IAnalyticsSnapshotRepository
     Task<PropertyAnalyticsSnapshot?> GetLatestPropertySnapshotAsync(Guid propertyId);
     Task<IEnumerable<PropertyAnalyticsSnapshot>>
     GetLatestPropertySnapshotsAsync(IEnumerable<Guid> propertyIds);
+    Task<UserPortfolioSnapshot?> GetLastUserSnapshotBeforeAsync(
+    Guid userId,
+    DateTime beforeUtc);
 
 
 }
