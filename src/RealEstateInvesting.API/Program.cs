@@ -54,7 +54,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 // Replace default logging with Serilog
-builder.Host.UseSerilog();
+//builder.Host.UseSerilog();
 FirebaseInitializer.Initialize(firebasePath);
 
 builder.Services.AddOpenApi();

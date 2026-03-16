@@ -1,8 +1,7 @@
 import axios from 'axios';
+const API_BASE_URL = 'https://tonwly.runasp.net/';
 
- const API_BASE_URL = 'https://tonwly.runasp.net/';
-
- //const API_BASE_URL = 'https://uncombinable-nonscholastic-layton.ngrok-free.dev';
+//const API_BASE_URL = 'http://localhost:5168';
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -13,15 +12,15 @@ const api = axios.create({
 // Add token and ngrok bypass header to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  
+
   // Add ngrok bypass header
   config.headers['ngrok-skip-browser-warning'] = 'true';
-  
+
   // Add authorization if token exists
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   return config;
 });
 

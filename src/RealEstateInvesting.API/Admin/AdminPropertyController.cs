@@ -19,13 +19,24 @@ public class AdminPropertyController : ControllerBase
         _service = service;
     }
 
+    // [HttpGet("pending")]
+    // public async Task<IActionResult> GetPending()
+    // {
+    //     var result = await _service.GetPendingAsync();
+    //     return Ok(result);
+    // }
     [HttpGet("pending")]
-    public async Task<IActionResult> GetPending()
+    public async Task<IActionResult> GetPending([FromQuery] AdminPropertyQuery query)
     {
-        var result = await _service.GetPendingAsync();
+        var result = await _service.GetPendingAsync(query);
         return Ok(result);
     }
-
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] AdminPropertyQuery query)
+    {
+        var result = await _service.GetAllAsync(query);
+        return Ok(result);
+    }
     [HttpPost("{propertyId:guid}/approve")]
     public async Task<IActionResult> Approve(Guid propertyId)
     {
@@ -46,13 +57,13 @@ public class AdminPropertyController : ControllerBase
     }
 
     [HttpPost("{propertyId:guid}/modify")]
-    public async Task<IActionResult> modify(Guid propertyId , [FromBody] RejectPropertyRequest request)
-    {    
+    public async Task<IActionResult> modify(Guid propertyId, [FromBody] RejectPropertyRequest request)
+    {
         Console.WriteLine("=============MODIFY API HITTED============");
         var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _service.ModifyRequest(propertyId , adminId , request.Reason);
+        await _service.ModifyRequest(propertyId, adminId, request.Reason);
         return Ok();
-        
+
     }
     [HttpGet("update-requests/pending")]
     public async Task<IActionResult> GetPendingUpdateRequests()

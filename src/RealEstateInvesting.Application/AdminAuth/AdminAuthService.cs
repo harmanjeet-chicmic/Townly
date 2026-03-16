@@ -31,8 +31,8 @@ public class AdminAuthService : IAdminAuthService
 
         return new AdminAuthResponse
         {
-            AccessToken = _jwtService.GenerateAdminToken(admin),
-            ExpiresAt = DateTime.UtcNow.AddHours(6)
+            Token = _jwtService.GenerateAdminToken(admin),
+            // ExpiresAt = DateTime.UtcNow.AddHours(6)
         };
     }
 }
