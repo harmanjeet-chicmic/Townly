@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RealEstateInvesting.API.Contracts;
 using RealEstateInvesting.Application.AdminAuth.DTOs;
 using RealEstateInvesting.Application.AdminAuth.Interfaces;
 
@@ -16,9 +17,15 @@ public class AdminAuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(AdminLoginRequest request)
+    public async Task<IActionResult> Login([FromBody] AdminLoginRequest request)
     {
         var result = await _authService.LoginAsync(request);
-        return Ok(result);
+
+        var response = AdminApiResponse<AdminAuthResponse>.Success(
+            result,
+            "Admin login successful"
+        );
+
+        return Ok(response);
     }
 }
