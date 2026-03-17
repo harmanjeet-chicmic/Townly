@@ -34,6 +34,10 @@ using RealEstateInvesting.API.RequestDebugMiddleware;
 using RealEstateInvesting.Application.Tokens.Requests;
 using RealEstateInvesting.Application.Tokens.Balance;
 using Microsoft.AspNetCore.RateLimiting;
+using RealEstateInvesting.Application.Admin.Users;
+using RealEstateInvesting.Application.Admin.Users.Interfaces;
+using RealEstateInvesting.Infrastructure.Admin.Users;
+
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -71,6 +75,9 @@ var awsSection = builder.Configuration.GetSection("AWS");
 builder.Services.AddScoped<PortfolioQueryService>();
 builder.Services.AddScoped<IAdminPropertyService, AdminPropertyService>();
 builder.Services.AddScoped<IAdminPropertyRepository, AdminPropertyRepository>();
+
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
+builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 builder.Services.AddScoped<GetMyKycStatusHandler>();
 
 builder.Services.AddSingleton<IAmazonS3>(_ =>
@@ -94,7 +101,7 @@ builder.Services.AddScoped<IFileStorage>(sp =>
 });
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
