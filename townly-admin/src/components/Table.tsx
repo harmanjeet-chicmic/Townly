@@ -12,6 +12,7 @@ interface TableProps {
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
   onModify?: (id: string) => void;
+  onRowClick?: (item: any) => void; // New prop for row click
   showActions?: boolean;
   showModifyButton?: boolean;
 }
@@ -22,6 +23,7 @@ const Table: React.FC<TableProps> = ({
   onApprove,
   onReject,
   onModify,
+  onRowClick,
   showActions = true,
   showModifyButton = false,
 }) => {
@@ -37,38 +39,18 @@ const Table: React.FC<TableProps> = ({
 
   // Get the correct ID based on what's available in the item
   const getItemId = (item: any): string | undefined => {
-    // Log what keys are available (remove in production)
-    console.log('Getting ID from item:', item);
-    
-    // For property updates, it MUST be updateRequestId
-    if (item.updateRequestId) {
-      console.log('✅ Using updateRequestId:', item.updateRequestId);
-      return item.updateRequestId;
-    }
-    
-    // Fallbacks for other pages
-    if (item.kycId) {
-      console.log('✅ Using kycId:', item.kycId);
-      return item.kycId;
-    }
-    
-    if (item.propertyId && !item.updateRequestId) {
-      console.log('⚠️ Using propertyId (might be wrong for updates):', item.propertyId);
-      return item.propertyId;
-    }
-    
-    if (item.requestId) {
-      console.log('✅ Using requestId:', item.requestId);
-      return item.requestId;
-    }
-    
-    if (item.id) {
-      console.log('✅ Using id:', item.id);
-      return item.id;
-    }
-    
-    console.warn('❌ No ID found in item:', item);
+    if (item.updateRequestId) return item.updateRequestId;
+    if (item.kycId) return item.kycId;
+    if (item.propertyId) return item.propertyId;
+    if (item.requestId) return item.requestId;
+    if (item.id) return item.id;
     return undefined;
+  };
+
+  const handleRowClick = (item: any) => {
+    if (onRowClick) {
+      onRowClick(item);
+    }
   };
 
   return (
@@ -87,7 +69,12 @@ const Table: React.FC<TableProps> = ({
             safeData.map((item, index) => {
               const itemId = getItemId(item);
               return (
-                <tr key={itemId || index}>
+                <tr
+                  key={itemId || index}
+                  onClick={() => handleRowClick(item)}
+                  style={onRowClick ? { cursor: 'pointer' } : undefined}
+                  className={onRowClick ? 'clickable-row' : ''}
+                >
                   {columns.map((col) => (
                     <td key={col.key}>
                       {col.render
@@ -96,7 +83,7 @@ const Table: React.FC<TableProps> = ({
                     </td>
                   ))}
                   {showActions && (
-                    <td>
+                    <td onClick={(e) => e.stopPropagation()}> {/* Prevent row click when clicking actions */}
                       <div className="action-buttons">
                         {onApprove && itemId && (
                           <button
@@ -110,7 +97,7 @@ const Table: React.FC<TableProps> = ({
                             ✓ Approve
                           </button>
                         )}
-                        
+
                         {showModifyButton && onModify && itemId && (
                           <button
                             onClick={() => {
@@ -123,7 +110,7 @@ const Table: React.FC<TableProps> = ({
                             ✎ Modify
                           </button>
                         )}
-                        
+
                         {onReject && itemId && (
                           <button
                             onClick={() => {

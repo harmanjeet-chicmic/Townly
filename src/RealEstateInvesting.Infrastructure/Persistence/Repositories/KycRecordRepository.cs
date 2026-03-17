@@ -29,4 +29,11 @@ public class KycRecordRepository : IKycRecordRepository
         await _context.KycRecords.AddAsync(kycRecord, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
+    public async Task<KycRecord?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.KycRecords
+            .Where(k => k.UserId == userId)
+            .OrderByDescending(k => k.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

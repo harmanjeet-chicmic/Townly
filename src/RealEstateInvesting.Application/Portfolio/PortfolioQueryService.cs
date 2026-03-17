@@ -4,20 +4,20 @@ using RealEstateInvesting.Application.Portfolio.Dtos;
 namespace RealEstateInvesting.Application.Portfolio;
 
 public class PortfolioQueryService
-{   
-     private readonly IInvestmentRepository _investmentRepository;
+{
+    private readonly IInvestmentRepository _investmentRepository;
     private readonly IPropertyRepository _propertyRepository;
     private readonly IAnalyticsSnapshotRepository _snapshotRepo;
-     private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
+    private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
     private readonly IEthPriceService _ethPriceService;
 
     public PortfolioQueryService(
         IAnalyticsSnapshotRepository snapshotRepo,
-        IEthPriceService ethPriceService ,
+        IEthPriceService ethPriceService,
          IInvestmentRepository investmentRepository,
         IPropertyRepository propertyRepository,
         IAnalyticsSnapshotRepository analyticsSnapshotRepository)
-    {    
+    {
         _investmentRepository = investmentRepository;
         _propertyRepository = propertyRepository;
         _snapshotRepo = snapshotRepo;
@@ -42,8 +42,10 @@ public class PortfolioQueryService
         // 🔥 ETH price (cached / resilient)
         var ethUsd = await _ethPriceService.GetEthUsdPriceAsync();
 
-        var totalInvestedEth =
-            ethUsd == 0 ? 0 : snapshot.TotalInvested / ethUsd;
+        // 🔥 REAL ETH invested (historical truth)
+        var investments = await _investmentRepository.GetByUserIdAsync(userId);
+
+        var totalInvestedEth = investments.Sum(i => i.EthAmountAtExecution);
 
         var currentValueEth =
             ethUsd == 0 ? 0 : snapshot.PortfolioValue / ethUsd;
@@ -52,10 +54,10 @@ public class PortfolioQueryService
             currentValueEth - totalInvestedEth;
 
         var totalReturnPercent =
-            snapshot.TotalInvested == 0
-                ? 0
-                : (snapshot.PortfolioValue - snapshot.TotalInvested)
-                    / snapshot.TotalInvested * 100;
+     totalInvestedEth == 0
+         ? 0
+         : (currentValueEth - totalInvestedEth)
+             / totalInvestedEth * 100;
 
         var monthlyIncomeEth =
             ethUsd == 0 ? 0 : snapshot.MonthlyIncome / ethUsd;

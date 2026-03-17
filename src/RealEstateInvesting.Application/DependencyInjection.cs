@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<GetHealthStatusHandler>();
         services.AddScoped<PropertyInvestmentInfoService>();
         services.AddScoped<ILogService, LogService>();
+        
 
         return services;
     }
