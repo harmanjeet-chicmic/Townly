@@ -1,11 +1,9 @@
 using Amazon;
 using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using RealEstateInvesting.Api.Middleware;
 using RealEstateInvesting.API.Filters;
 using RealEstateInvesting.API.RequestDebugMiddleware;
 using RealEstateInvesting.Application;
@@ -38,18 +36,6 @@ using RealEstateInvesting.Infrastructure.Storage;
 using RealEstateInvesting.Infrastructure.VectorSearch;
 using Serilog;
 using System.Text;
-using RealEstateInvesting.Application.Notifications.Interfaces;
-using RealEstateInvesting.Application.Notifications;
-using RealEstateInvesting.Application.Kyc.Handlers;
-using RealEstateInvesting.Application;
-using RealEstateInvesting.API.RequestDebugMiddleware;
-using RealEstateInvesting.Application.Tokens.Requests;
-using RealEstateInvesting.Application.Tokens.Balance;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.OpenApi;
-using RealEstateInvesting.Application.Admin.Users;
-using RealEstateInvesting.Application.Admin.Users.Interfaces;
-using RealEstateInvesting.Infrastructure.Admin.Users;
 
 using System.Threading.RateLimiting;
 
