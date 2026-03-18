@@ -50,7 +50,7 @@ public class AdminUserRepository : IAdminUserRepository
 
         var users = await dbQuery
             .OrderByDescending(u => u.CreatedAt)
-            .Skip((query.Page - 1) * query.PageSize)
+            .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync();
 

@@ -14,9 +14,10 @@ using Amazon.S3;
 using RealEstateInvesting.Infrastructure.Storage;
 using RealEstateInvesting.Infrastructure.Push;
 using RealEstateInvesting.Infrastructure.Pricing;
+using RealEstateInvesting.Infrastructure.VectorSearch;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Caching.Memory;
 using RealEstateInvesting.Application.Portfolio;
-using RealEstateInvesting.Infrastructure.VectorSearch;
 using RealEstateInvesting.Application.AdminAuth;
 using RealEstateInvesting.Application.AdminAuth.Interfaces;
 using RealEstateInvesting.Api.Middleware;
@@ -29,6 +30,9 @@ using System.Text;
 using RealEstateInvesting.Application.Notifications.Interfaces;
 using RealEstateInvesting.Application.Notifications;
 using RealEstateInvesting.Application.Kyc.Handlers;
+using RealEstateInvesting.Application.Admin.Kyc.Interfaces;
+using RealEstateInvesting.Application.Admin.Kyc;
+using RealEstateInvesting.Infrastructure.Admin.Kyc;
 using RealEstateInvesting.Application;
 using RealEstateInvesting.API.RequestDebugMiddleware;
 using RealEstateInvesting.Application.Tokens.Requests;
@@ -39,6 +43,7 @@ using RealEstateInvesting.Application.Admin.Users.Interfaces;
 using RealEstateInvesting.Infrastructure.Admin.Users;
 
 using System.Threading.RateLimiting;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 var firebasePath = builder.Configuration["Firebase:ServiceAccountPath"];
@@ -72,39 +77,27 @@ builder.Services.AddControllers(options =>
 // AWS S3 Configuration
 // -------------------------------
 var awsSection = builder.Configuration.GetSection("AWS");
-builder.Services.AddScoped<PortfolioQueryService>();
-builder.Services.AddScoped<IAdminPropertyService, AdminPropertyService>();
-builder.Services.AddScoped<IAdminPropertyRepository, AdminPropertyRepository>();
-
-builder.Services.AddScoped<IAdminUserService, AdminUserService>();
-builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
-builder.Services.AddScoped<GetMyKycStatusHandler>();
-
-builder.Services.AddSingleton<IAmazonS3>(_ =>
-{
-    return new AmazonS3Client(
-        awsSection["AccessKey"],
-        awsSection["SecretKey"],
-        RegionEndpoint.GetBySystemName(awsSection["Region"])
-    );
-});
-builder.Services.AddScoped<PortfolioQueryService>();
-
-builder.Services.AddScoped<IFileStorage>(sp =>
-{
-    return new S3FileStorage(
-        sp.GetRequiredService<IAmazonS3>(),
-        awsSection["BucketName"]!,
-        awsSection["BasePrefix"]!,
-        awsSection["Region"]!
-    );
-});
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddScoped<IAdminUserService, AdminUserService>();
+builder.Services.AddVectorSearch(builder.Configuration);
+
+builder.Services.AddHostedService<AnalyticsBackgroundService>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+    });
+});
 //----------------------------------------------------------------
 // 🔐 JWT 
 
@@ -177,72 +170,12 @@ builder.Services.AddCors(options =>
             });
     });
 });
-// Application services
-builder.Services.AddScoped<PropertyService>();
-builder.Services.AddScoped<PropertyUpdateService>();
-builder.Services.AddScoped<PropertyQueryService>();
-builder.Services.AddScoped<IInvestmentRepository, InvestmentRepository>();
-builder.Services.AddScoped<InvestmentService>();
-
-builder.Services.AddScoped<InvestmentQueryService>();
-builder.Services.AddScoped<TransactionQueryService>();
-
-// Repositories
-builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IPropertyDocumentRepository, PropertyDocumentRepository>();
-builder.Services.AddScoped<IPropertyUpdateRequestRepository, PropertyUpdateRequestRepository>();
-builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
-
-builder.Services.AddScoped<IAnalyticsSnapshotRepository, AnalyticsSnapshotRepository>();
-builder.Services.AddScoped<AnalyticsQueryService>();
-builder.Services.AddHostedService<AnalyticsBackgroundService>();
-builder.Services.AddMemoryCache();
-
-builder.Services.AddHttpClient<CoinGeckoEthPriceService>();
-builder.Services.AddVectorSearch(builder.Configuration);
-
-builder.Services.AddScoped<IEthPriceService>(sp =>
-{
-    var live = sp.GetRequiredService<CoinGeckoEthPriceService>();
-    var cache = sp.GetRequiredService<IMemoryCache>();
-
-    return new CachedEthPriceService(live, cache);
-});
-// Admin auth
-builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
-builder.Services.AddScoped<IAdminRepository, AdminRepository>();
-builder.Services.AddScoped<IAdminPasswordHasher, AdminPasswordHasher>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
-
-
 // Required for CurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-// Token system repositories
-builder.Services.AddScoped<ITokenRequestRepository, TokenRequestRepository>();
-builder.Services.AddScoped<IUserTokenBalanceRepository, UserTokenBalanceRepository>();
-builder.Services.AddScoped<ITokenTransactionRepository, TokenTransactionRepository>();
 
-// Token system handlers/services
-builder.Services.AddScoped<CreateTokenRequestHandler>();
-builder.Services.AddScoped<ReviewTokenRequestHandler>();
-builder.Services.AddScoped<UserTokenBalanceService>();
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", builder =>
-    {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
-    });
-});
-builder.Services.AddVectorSearch(builder.Configuration);
+// builder.Services.AddVectorSearch(builder.Configuration); // Removed duplicate
 
 builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
@@ -271,10 +204,8 @@ builder.Services.AddRateLimiter(options =>
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
-builder.Services.AddScoped<IUserDeviceTokenRepository, UserDeviceTokenRepository>();
 
-// Infrastructure (DbContext, services, etc.)
-builder.Services.AddInfrastructure(builder.Configuration);
+// Infrastructure already added above
 
 var app = builder.Build();
 app.UseMiddleware<RealEstateInvesting.API.Middleware.ExceptionMiddleware>();

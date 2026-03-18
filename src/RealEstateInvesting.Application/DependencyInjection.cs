@@ -9,6 +9,7 @@ using RealEstateInvesting.Application.Health.Handlers;
 using RealEstateInvesting.Application.Properties.InvestmentInfo;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Common.Services;
+using RealEstateInvesting.Application.Kyc.Handlers;
 namespace RealEstateInvesting.Application;
 
 public static class DependencyInjection
@@ -44,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<GetHealthStatusHandler>();
         services.AddScoped<PropertyInvestmentInfoService>();
         services.AddScoped<ILogService, LogService>();
+        services.AddScoped<GetMyKycStatusHandler>();
         
 
         return services;

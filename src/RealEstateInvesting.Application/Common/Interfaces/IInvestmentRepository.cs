@@ -25,6 +25,8 @@ GetByUserIdPagedAsync(
 
 
     Task<int> GetUniqueInvestorCountAsync(Guid propertyId);
+    Task<int> GetTotalInvestorsCountAsync();
+    Task<int> GetTotalTokensIssuedAsync();
     Task<Dictionary<Guid, int>>
 GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds);
 

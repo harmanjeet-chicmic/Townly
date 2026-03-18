@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Application.Admin.Properties.DTOs;
 using RealEstateInvesting.Application.Admin.Properties.Interfaces;
 using System.Security.Claims;
-using RealEstateInvesting.Application.Admin.Properties.DTOs;
 
 namespace RealEstateInvesting.Api.Controllers.Admin;
 
@@ -98,5 +97,10 @@ public class AdminPropertyController : ControllerBase
         return Ok();
     }
 
-
+    [HttpGet("Details")]
+    public async Task<IActionResult> GetDetails()
+    {
+        var result = await _service.GetStatsAsync();
+        return Ok(result);
+    }
 }

@@ -62,29 +62,17 @@ public class AdminUserService : IAdminUserService
                 Properties = propertiesCount,
                 TotalInvestment = totalInvestment,
                 PortfolioValue = portfolioValue,
-                KycStatus = MapKycStatus(user.KycStatus)
+                KycStatus = (int)user.KycStatus
             });
         }
 
         return new PaginatedResponse<AdminUserPortfolioDto>
         {
             Items = result,
-            Page = query.Page,
+            Page = query.PageNumber,
             PageSize = query.PageSize,
             TotalCount = totalCount,
             TotalPages = (int)Math.Ceiling(totalCount / (double)query.PageSize)
-        };
-    }
-
-    private string MapKycStatus(KycStatus status)
-    {
-        return status switch
-        {
-            KycStatus.NotStarted => "not_started",
-            KycStatus.Pending => "pending",
-            KycStatus.Approved => "verified",
-            KycStatus.Rejected => "rejected",
-            _ => "unknown"
         };
     }
 }
