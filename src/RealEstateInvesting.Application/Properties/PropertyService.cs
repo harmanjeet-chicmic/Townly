@@ -21,11 +21,60 @@ public class PropertyService
         _propertyDocumentRepository = propertyDocumentRepository;
     }
 
-    public async Task<Guid> CreatePropertyAsync(
-        Guid userId,
-        CreatePropertyCommand command)
-    {
+    // public async Task<Guid> CreatePropertyAsync(
+    //     Guid userId,
+    //     CreatePropertyCommand command)
+    // {
 
+    //     var user = await _userRepository.GetByIdAsync(userId)
+    //         ?? throw new InvalidOperationException("User not found.");
+
+    //     Console.WriteLine("=========================== kyc statuds========" + user.KycStatus);
+    //     Console.WriteLine("=================User ID===================" + user.Id);
+
+    //     if (user.KycStatus != KycStatus.Approved)
+    //         throw new InvalidOperationException("KYC approval required.");
+
+    //     if (user.IsBlocked)
+    //         throw new InvalidOperationException("User is blocked.");
+
+    //     var property = Property.CreateDraft(
+    //         ownerUserId: userId,
+    //         name: command.Name,
+    //         description: command.Description,
+    //         location: command.Location,
+    //         propertyType: command.PropertyType,
+    //         imageUrl: command.ImageUrl,
+    //         initialValuation: command.InitialValuation,
+    //         totalUnits: command.TotalUnits,
+    //         annualYieldPercent: command.AnnualYieldPercent,
+    //         rentalIncomeHistory: command.RentalIncomeHistory
+
+    //     );
+
+    //     property.Submit();
+    //     Console.WriteLine("=============================property creation===================");
+    //     await _propertyRepository.AddAsync(property);
+    //     Console.WriteLine("Documents count in command: " + command.Documents.Count);
+
+    //     if (command.Documents.Any())
+    //     {
+    //         var docs = command.Documents.Select(d =>
+    //             PropertyDocument.Create(
+    //                 property.Id,
+    //                 d.Title,
+    //                 d.FileName,
+    //                 d.DocumentUrl));
+
+    //         await _propertyDocumentRepository.AddRangeAsync(docs);
+    //     }
+
+    //     return property.Id;
+    // }
+    public async Task<Guid> CreatePropertyAsync(
+    Guid userId,
+    CreatePropertyCommand command)
+    {
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new NotFoundException("User not found.");
         
@@ -39,23 +88,21 @@ public class PropertyService
             throw new InvalidOperationException("User is blocked.");
 
         var property = Property.CreateDraft(
-            ownerUserId: userId,
-            name: command.Name,
-            description: command.Description,
-            location: command.Location,
-            propertyType: command.PropertyType,
-            imageUrl: command.ImageUrl,
-            initialValuation: command.InitialValuation,
-            totalUnits: command.TotalUnits,
-            annualYieldPercent: command.AnnualYieldPercent,
-            rentalIncomeHistory: command.RentalIncomeHistory
-            
-        );
+     userId,
+     command.Name,
+     command.Description,
+     command.Location,
+     command.PropertyType,
+     null,
+     command.TotalPropertyValueUsd,
+     command.SquareFeet,
+     command.SellingPercentage,
+     command.SharePerSquareFeet
+ );
 
         property.Submit();
-        Console.WriteLine("=============================property creation===================");
+
         await _propertyRepository.AddAsync(property);
-        Console.WriteLine("Documents count in command: " + command.Documents.Count);
 
         if (command.Documents.Any())
         {
@@ -71,7 +118,11 @@ public class PropertyService
 
         return property.Id;
     }
-    // public async Task ResubmitAsync(Guid userId, Guid propertyId)
+
+    // public async Task ResubmitAsync(
+    // Guid userId,
+    // Guid propertyId,
+    // CreatePropertyCommand command)
     // {
     //     var property = await _propertyRepository.GetByIdAsync(propertyId)
     //         ?? throw new InvalidOperationException("Property not found.");
@@ -79,6 +130,42 @@ public class PropertyService
     //     if (property.OwnerUserId != userId)
     //         throw new UnauthorizedAccessException("Not property owner.");
 
+    //     // 🔒 Only allow in correct states
+    //     if (property.Status != PropertyStatus.PendingApproval &&
+    //         property.Status != PropertyStatus.ModificationRequired)
+    //         throw new InvalidOperationException(
+    //             "Only pending or modification required properties can be resubmitted.");
+
+    //     // 🔹 Update property fields
+    //     property.UpdateBeforeActivation(
+    //         command.Name,
+    //         command.Description,
+    //         command.Location,
+    //         command.PropertyType,
+    //         command.ImageUrl,
+    //         command.InitialValuation,
+    //         command.TotalUnits,
+    //         command.AnnualYieldPercent,
+    //         command.RentalIncomeHistory
+    //     );
+
+    //     // 🔹 Replace documents (clean approach)
+    //     await _propertyDocumentRepository
+    //  .SoftDeleteByPropertyIdAsync(propertyId, userId);
+
+    //     if (command.Documents.Any())
+    //     {
+    //         var docs = command.Documents.Select(d =>
+    //             PropertyDocument.Create(
+    //                 property.Id,
+    //                 d.Title,
+    //                 d.FileName,
+    //                 d.DocumentUrl));
+
+    //         await _propertyDocumentRepository.AddRangeAsync(docs);
+    //     }
+
+    //     // 🔹 Reset workflow state
     //     property.Resubmit();
 
     //     await _propertyRepository.UpdateAsync(property);

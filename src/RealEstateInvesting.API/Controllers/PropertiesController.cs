@@ -29,166 +29,257 @@ public class PropertiesController : ControllerBase
     // ----------------------------------------
     // Create Property (multipart/form-data)
     // ----------------------------------------
+    // [HttpPost]
+    // [Authorize]
+    // [EnableRateLimiting("PropertyCreationPolicy")]
+    // [Consumes("multipart/form-data")]
+    // public async Task<IActionResult> CreateProperty(
+    //     [FromForm] CreatePropertyMultipartDto request)
+    // {
+    //     var userId = GetUserId();
+
+    //     Console.WriteLine("============== PROPERTY CREATION REQUEST RECEIVED ==============");
+
+    //     Console.WriteLine($"UserId: {userId}");
+    //     Console.WriteLine($"Name: {request.Name}");
+    //     Console.WriteLine($"Description: {request.Description}");
+    //     Console.WriteLine($"Location: {request.Location}");
+    //     Console.WriteLine($"PropertyType: {request.PropertyType}");
+    //     Console.WriteLine($"InitialValuation: {request.InitialValuation}");
+    //     Console.WriteLine($"TotalUnits: {request.TotalUnits}");
+    //     Console.WriteLine($"AnnualYieldPercent: {request.AnnualYieldPercent}");
+
+    //     Console.WriteLine($"Image Present: {request.Image != null}");
+    //     Console.WriteLine($"Documents Count: {request.Documents?.Count}");
+
+    //     // Log raw form keys (debugging frontend issues)
+    //     foreach (var key in Request.Form.Keys)
+    //     {
+    //         Console.WriteLine($"FORM KEY RECEIVED: {key}");
+    //     }
+
+    //     Console.WriteLine("===============================================================");
+
+    //     // ----------------------------------------
+    //     // VALIDATION SECTION
+    //     // ----------------------------------------
+
+    //     if (string.IsNullOrWhiteSpace(request.Name))
+    //         return BadRequest(new { message = "Property name is required." });
+
+    //     if (string.IsNullOrWhiteSpace(request.Description))
+    //         return BadRequest(new { message = "Property description is required." });
+
+    //     if (string.IsNullOrWhiteSpace(request.Location))
+    //         return BadRequest(new { message = "Property location is required." });
+
+    //     if (string.IsNullOrWhiteSpace(request.PropertyType))
+    //         return BadRequest(new { message = "Property type is required." });
+
+    //     if (request.InitialValuation <= 0)
+    //         return BadRequest(new { message = "Initial valuation must be greater than zero." });
+
+    //     if (request.TotalUnits <= 0)
+    //         return BadRequest(new { message = "Total units must be greater than zero." });
+
+    //     if (request.AnnualYieldPercent <= 0)
+    //         return BadRequest(new { message = "Annual yield percent must be greater than zero." });
+
+    //     if (request.Image == null)
+    //         return BadRequest(new { message = "Property image is required." });
+
+    //     if (request.Documents == null || !request.Documents.Any())
+    //         return BadRequest(new { message = "At least one property document is required." });
+
+    //     foreach (var doc in request.Documents)
+    //     {
+    //         if (string.IsNullOrWhiteSpace(doc.Title))
+    //             return BadRequest(new { message = "Document title is required." });
+
+    //         if (doc.File == null || doc.File.Length == 0)
+    //             return BadRequest(new { message = "Document file is required." });
+    //     }
+
+    //     // ----------------------------------------
+    //     // SAVE IMAGE
+    //     // ----------------------------------------
+
+    //     string? imageUrl = await _fileStorage.SaveAsync(
+    //         request.Image.OpenReadStream(),
+    //         request.Image.ContentType,
+    //         request.Image.FileName,
+    //         "properties/images",
+    //         HttpContext.RequestAborted);
+
+
+    //     // 2️⃣ Save documents
+    //     var documentDtos = new List<PropertyDocumentDto>();
+
+    //     // foreach (var doc in request.Documents)
+    //     // {
+    //     //     var docUrl = await SaveFileAsync(
+    //     //         doc,
+    //     //         "uploads/properties/documents");
+
+    //     //     documentDtos.Add(new PropertyDocumentDto
+    //     //     {
+    //     //         DocumentName = doc.FileName,
+    //     //         DocumentUrl = docUrl
+    //     //     });
+    //     // }
+    //     foreach (var doc in request.Documents)
+    //     {
+    //         var docUrl = await _fileStorage.SaveAsync(
+    //             doc.File.OpenReadStream(),
+    //             doc.File.ContentType,
+    //             doc.File.FileName,
+    //             "properties/documents",
+    //             HttpContext.RequestAborted);
+
+    //         documentDtos.Add(new PropertyDocumentDto
+    //         {
+    //             Title = doc.Title,
+    //             FileName = doc.File.FileName,
+    //             DocumentUrl = docUrl
+    //         });
+    //     }
+
+
+    //     // 3️⃣ Map API DTO → Application DTO
+    //     var command = new CreatePropertyCommand
+    //     {
+    //         Name = request.Name,
+    //         Description = request.Description,
+    //         Location = request.Location,
+    //         PropertyType = request.PropertyType,
+    //         InitialValuation = request.InitialValuation,
+    //         TotalUnits = request.TotalUnits,
+    //         AnnualYieldPercent = request.AnnualYieldPercent,
+    //         ImageUrl = imageUrl,
+    //         RentalIncomeHistory = request.RentalIncome,
+    //         Documents = documentDtos
+    //     };
+
+    //     var propertyId = await _propertyService.CreatePropertyAsync(
+    //         userId,
+    //         command);
+
+    //     return Ok(new
+    //     {
+    //         PropertyId = propertyId,
+    //         Message = "Property submitted for approval."
+    //     });
+    // }
+
     [HttpPost]
     [Authorize]
     [EnableRateLimiting("PropertyCreationPolicy")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> CreateProperty(
-        [FromForm] CreatePropertyMultipartDto request)
+   [FromForm] CreatePropertyMultipartDto request)
     {
         var userId = GetUserId();
 
-        Console.WriteLine("============== PROPERTY CREATION REQUEST RECEIVED ==============");
-
-        Console.WriteLine($"UserId: {userId}");
-        Console.WriteLine($"Name: {request.Name}");
-        Console.WriteLine($"Description: {request.Description}");
-        Console.WriteLine($"Location: {request.Location}");
-        Console.WriteLine($"PropertyType: {request.PropertyType}");
-        Console.WriteLine($"InitialValuation: {request.InitialValuation}");
-        Console.WriteLine($"TotalUnits: {request.TotalUnits}");
-        Console.WriteLine($"AnnualYieldPercent: {request.AnnualYieldPercent}");
-
-        Console.WriteLine($"Image Present: {request.Image != null}");
-        Console.WriteLine($"Documents Count: {request.Documents?.Count}");
-
-        // Log raw form keys (debugging frontend issues)
-        foreach (var key in Request.Form.Keys)
-        {
-            Console.WriteLine($"FORM KEY RECEIVED: {key}");
-        }
-
-        Console.WriteLine("===============================================================");
-
-        // ----------------------------------------
-        // VALIDATION SECTION
-        // ----------------------------------------
-
         if (string.IsNullOrWhiteSpace(request.Name))
-            return BadRequest(new { message = "Property name is required." });
+            return BadRequest("Property name is required.");
 
-        if (string.IsNullOrWhiteSpace(request.Description))
-            return BadRequest(new { message = "Property description is required." });
+        if (request.TotalPropertyValueUsd <= 0)
+            return BadRequest("Invalid property value.");
 
-        if (string.IsNullOrWhiteSpace(request.Location))
-            return BadRequest(new { message = "Property location is required." });
+        if (request.SquareFeet <= 0)
+            return BadRequest("Invalid square feet.");
 
-        if (string.IsNullOrWhiteSpace(request.PropertyType))
-            return BadRequest(new { message = "Property type is required." });
-
-        if (request.InitialValuation <= 0)
-            return BadRequest(new { message = "Initial valuation must be greater than zero." });
-
-        if (request.TotalUnits <= 0)
-            return BadRequest(new { message = "Total units must be greater than zero." });
-
-        if (request.AnnualYieldPercent <= 0)
-            return BadRequest(new { message = "Annual yield percent must be greater than zero." });
-
-        if (request.Image == null)
-            return BadRequest(new { message = "Property image is required." });
-
-        if (request.Documents == null || !request.Documents.Any())
-            return BadRequest(new { message = "At least one property document is required." });
-
-        foreach (var doc in request.Documents)
-        {
-            if (string.IsNullOrWhiteSpace(doc.Title))
-                return BadRequest(new { message = "Document title is required." });
-
-            if (doc.File == null || doc.File.Length == 0)
-                return BadRequest(new { message = "Document file is required." });
-        }
-
-        // ----------------------------------------
-        // SAVE IMAGE
-        // ----------------------------------------
-
-        string? imageUrl = await _fileStorage.SaveAsync(
-            request.Image.OpenReadStream(),
-            request.Image.ContentType,
-            request.Image.FileName,
-            "properties/images",
-            HttpContext.RequestAborted);
-
-
-        // 2️⃣ Save documents
         var documentDtos = new List<PropertyDocumentDto>();
-
-        // foreach (var doc in request.Documents)
-        // {
-        //     var docUrl = await SaveFileAsync(
-        //         doc,
-        //         "uploads/properties/documents");
-
-        //     documentDtos.Add(new PropertyDocumentDto
-        //     {
-        //         DocumentName = doc.FileName,
-        //         DocumentUrl = docUrl
-        //     });
-        // }
-        foreach (var doc in request.Documents)
+        if (request.Documents != null)
         {
-            var docUrl = await _fileStorage.SaveAsync(
-                doc.File.OpenReadStream(),
-                doc.File.ContentType,
-                doc.File.FileName,
-                "properties/documents",
-                HttpContext.RequestAborted);
-
-            documentDtos.Add(new PropertyDocumentDto
+            foreach (var doc in request.Documents)
             {
-                Title = doc.Title,
-                FileName = doc.File.FileName,
-                DocumentUrl = docUrl
-            });
+                if (doc.File == null || doc.File.Length == 0)
+                    continue; 
+                var docUrl = await _fileStorage.SaveAsync(
+                    doc.File.OpenReadStream(),
+                    doc.File.ContentType,
+                    doc.File.FileName,
+                    "properties/documents",
+                    HttpContext.RequestAborted);
+
+                var title = string.IsNullOrWhiteSpace(doc.Title)
+                    ? Path.GetFileNameWithoutExtension(doc.File.FileName)
+                    : doc.Title;
+
+                documentDtos.Add(new PropertyDocumentDto
+                {
+                    Title = title,
+                    FileName = doc.File.FileName,
+                    DocumentUrl = docUrl
+                });
+            }
+        }
+        if (request.Images != null)
+        {
+            foreach (var image in request.Images)
+            {
+                var url = await _fileStorage.SaveAsync(
+                    image.OpenReadStream(),
+                    image.ContentType,
+                    image.FileName,
+                    "properties/images",
+                    HttpContext.RequestAborted);
+
+                documentDtos.Add(new PropertyDocumentDto
+                {
+                    Title = "Image",
+                    FileName = image.FileName,
+                    DocumentUrl = url
+                });
+            }
         }
 
+        if (request.Documents != null)
+        {
+            foreach (var doc in request.Documents)
+            {
+                if (doc.File == null || doc.File.Length == 0)
+                    continue;
 
-        // 3️⃣ Map API DTO → Application DTO
+                var docUrl = await _fileStorage.SaveAsync(
+                    doc.File.OpenReadStream(),
+                    doc.File.ContentType,
+                    doc.File.FileName,
+                    "properties/documents",
+                    HttpContext.RequestAborted);
+
+                var title = string.IsNullOrWhiteSpace(doc.Title)
+                    ? Path.GetFileNameWithoutExtension(doc.File.FileName)
+                    : doc.Title;
+
+                documentDtos.Add(new PropertyDocumentDto
+                {
+                    Title = title,
+                    FileName = doc.File.FileName,
+                    DocumentUrl = docUrl
+                });
+            }
+        }
+
         var command = new CreatePropertyCommand
         {
             Name = request.Name,
             Description = request.Description,
             Location = request.Location,
             PropertyType = request.PropertyType,
-            InitialValuation = request.InitialValuation,
-            TotalUnits = request.TotalUnits,
-            AnnualYieldPercent = request.AnnualYieldPercent,
-            ImageUrl = imageUrl,
-            RentalIncomeHistory = request.RentalIncome,
+            TotalPropertyValueUsd = request.TotalPropertyValueUsd,
+            SquareFeet = request.SquareFeet,
+           
+            SellingPercentage = request.SellingPercentage,
+            SharePerSquareFeet = request.SharePerSquareFeet,
             Documents = documentDtos
         };
 
-        var propertyId = await _propertyService.CreatePropertyAsync(
-            userId,
-            command);
+        var propertyId = await _propertyService.CreatePropertyAsync(userId, command);
 
-        return Ok(new
-        {
-            PropertyId = propertyId,
-            Message = "Property submitted for approval."
-        });
+        return Ok(new { PropertyId = propertyId });
     }
-
-    // ----------------------------------------
-    // Helpers
-    // ----------------------------------------
-    // private async Task<string> SaveFileAsync(
-    //     IFormFile file,
-    //     string relativeFolder)
-    // {
-    //     var rootPath = Path.Combine(_env.WebRootPath, relativeFolder);
-    //     Directory.CreateDirectory(rootPath);
-
-    //     var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-    //     var fullPath = Path.Combine(rootPath, fileName);
-
-    //     using var stream = new FileStream(fullPath, FileMode.Create);
-    //     await file.CopyToAsync(stream);
-
-    //     return $"/{relativeFolder}/{fileName}";
-    // }
 
     private Guid GetUserId()
     {
@@ -213,68 +304,68 @@ public class PropertiesController : ControllerBase
     //         Message = "Property resubmitted for approval."
     //     });
     // }
-    [HttpPost("{propertyId:guid}/resubmit")]
-    [Authorize]
+    // [HttpPost("{propertyId:guid}/resubmit")]
+    // [Authorize]
 
-    public async Task<IActionResult> Resubmit(
-     Guid propertyId,
-     [FromForm] CreatePropertyMultipartDto request)
-    {
-        var userId = GetUserId();
+    // public async Task<IActionResult> Resubmit(
+    //  Guid propertyId,
+    //  [FromForm] CreatePropertyMultipartDto request)
+    // {
+    //     var userId = GetUserId();
 
-        // 🔹 Save image (if provided)
-        string? imageUrl = null;
-        if (request.Image != null)
-        {
-            imageUrl = await _fileStorage.SaveAsync(
-                request.Image.OpenReadStream(),
-                request.Image.ContentType,
-                request.Image.FileName,
-                "properties/images",
-                HttpContext.RequestAborted);
-        }
+    //     // 🔹 Save image (if provided)
+    //     string? imageUrl = null;
+    //     if (request.Image != null)
+    //     {
+    //         imageUrl = await _fileStorage.SaveAsync(
+    //             request.Image.OpenReadStream(),
+    //             request.Image.ContentType,
+    //             request.Image.FileName,
+    //             "properties/images",
+    //             HttpContext.RequestAborted);
+    //     }
 
-        // 🔹 Save documents
-        var documentDtos = new List<PropertyDocumentDto>();
+    //     // 🔹 Save documents
+    //     var documentDtos = new List<PropertyDocumentDto>();
 
-        foreach (var doc in request.Documents)
-        {
-            var docUrl = await _fileStorage.SaveAsync(
-                doc.File.OpenReadStream(),
-                doc.File.ContentType,
-                doc.File.FileName,
-                "properties/documents",
-                HttpContext.RequestAborted);
+    //     foreach (var doc in request.Documents)
+    //     {
+    //         var docUrl = await _fileStorage.SaveAsync(
+    //             doc.File.OpenReadStream(),
+    //             doc.File.ContentType,
+    //             doc.File.FileName,
+    //             "properties/documents",
+    //             HttpContext.RequestAborted);
 
-            documentDtos.Add(new PropertyDocumentDto
-            {
-                Title = doc.Title,
-                FileName = doc.File.FileName,
-                DocumentUrl = docUrl
-            });
-        }
+    //         documentDtos.Add(new PropertyDocumentDto
+    //         {
+    //             Title = doc.Title,
+    //             FileName = doc.File.FileName,
+    //             DocumentUrl = docUrl
+    //         });
+    //     }
 
-        // 🔹 Map to CreatePropertyCommand
-        var command = new CreatePropertyCommand
-        {
-            Name = request.Name,
-            Description = request.Description,
-            Location = request.Location,
-            PropertyType = request.PropertyType,
-            InitialValuation = request.InitialValuation,
-            TotalUnits = request.TotalUnits,
-            AnnualYieldPercent = request.AnnualYieldPercent,
-            ImageUrl = imageUrl,
-            Documents = documentDtos,
-            RentalIncomeHistory = request.RentalIncome
-        };
+    //     // 🔹 Map to CreatePropertyCommand
+    //     var command = new CreatePropertyCommand
+    //     {
+    //         Name = request.Name,
+    //         Description = request.Description,
+    //         Location = request.Location,
+    //         PropertyType = request.PropertyType,
+    //         InitialValuation = request.InitialValuation,
+    //         TotalUnits = request.TotalUnits,
+    //         AnnualYieldPercent = request.AnnualYieldPercent,
+    //         ImageUrl = imageUrl,
+    //         Documents = documentDtos,
+    //         RentalIncomeHistory = request.RentalIncome
+    //     };
 
-        await _propertyService.ResubmitAsync(userId, propertyId, command);
+    //     await _propertyService.ResubmitAsync(userId, propertyId, command);
 
-        return Ok(new
-        {
-            Message = "Property updated and resubmitted for approval."
-        });
-    }
+    //     return Ok(new
+    //     {
+    //         Message = "Property updated and resubmitted for approval."
+    //     });
+    // }
 }
 
