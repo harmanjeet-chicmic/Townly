@@ -1,5 +1,4 @@
 using RealEstateInvesting.Domain.Common;
-
 namespace RealEstateInvesting.Domain.Entities;
 
 public class Investment : BaseEntity
@@ -33,8 +32,9 @@ public class Investment : BaseEntity
         if (ethUsdRate <= 0)
             throw new InvalidOperationException("Invalid ETH rate.");
 
-        var totalUsd = decimal.Round(sharesPurchased * pricePerShareUsd, 2);
-        var ethAmount = decimal.Round(totalUsd / ethUsdRate, 8);
+        var totalUsd = sharesPurchased * pricePerShareUsd;
+        var ethAmount = totalUsd / ethUsdRate;
+        Console.WriteLine("====ETH AMOUNT FROM ENTITY====" , ethAmount);
 
         return new Investment
         {

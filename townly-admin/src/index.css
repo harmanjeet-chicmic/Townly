@@ -1,32 +1,32 @@
 :root {
-  /* Premium Dark Theme Palette */
-  --primary: #10b981; /* Emerald green */
-  --primary-glow: rgba(16, 185, 129, 0.4);
-  --primary-dark: #059669;
-  --secondary: #6366f1; /* Indigo */
-  --secondary-glow: rgba(99, 102, 241, 0.4);
+  /* Ultra-Premium RWA Dark Theme Palette */
+  --primary: #D4AF37; /* Refined Gold / Amber for Fintech */
+  --primary-glow: rgba(212, 175, 55, 0.4);
+  --primary-dark: #B5952F;
+  --secondary: #FFFFFF; /* High contrast pristine white */
+  --secondary-glow: rgba(255, 255, 255, 0.1);
   
-  --background: #050608;
-  --surface: #0a0c10;
-  --card-bg: rgba(18, 22, 28, 0.7);
-  --card-border: rgba(255, 255, 255, 0.08);
+  --background: #030303; /* Deep pure dark */
+  --surface: #0a0a0a; /* Slightly elevated dark */
+  --card-bg: rgba(15, 15, 15, 0.7); /* Translucent dark for glass */
+  --card-border: rgba(255, 255, 255, 0.05); /* Extremely subtle border */
   
-  --text-primary: #f9fafb;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA; /* Zinc 400 */
+  --text-muted: #52525B; /* Zinc 600 */
   
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
   
-  --sidebar-bg: #090b0f;
-  --header-bg: rgba(9, 11, 15, 0.8);
+  --sidebar-bg: #050505;
+  --header-bg: rgba(3, 3, 3, 0.85); /* Frosty dark header */
   
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: blur(12px);
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-blur: blur(20px); /* Increased blur for premium feel */
   
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {

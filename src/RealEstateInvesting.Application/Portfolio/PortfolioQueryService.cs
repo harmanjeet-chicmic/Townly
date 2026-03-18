@@ -14,7 +14,7 @@ public class PortfolioQueryService
     public PortfolioQueryService(
         IAnalyticsSnapshotRepository snapshotRepo,
         IEthPriceService ethPriceService,
-         IInvestmentRepository investmentRepository,
+        IInvestmentRepository investmentRepository,
         IPropertyRepository propertyRepository,
         IAnalyticsSnapshotRepository analyticsSnapshotRepository)
     {
@@ -23,73 +23,118 @@ public class PortfolioQueryService
         _snapshotRepo = snapshotRepo;
         _ethPriceService = ethPriceService;
         _analyticsSnapshotRepository = analyticsSnapshotRepository;
-
     }
 
     public async Task<PortfolioOverviewDto> GetOverviewAsync(Guid userId)
     {
-        // 🔥 Latest snapshot = current portfolio state
+        // 🔥 Get latest snapshot
         var snapshot =
-            (await _snapshotRepo.GetUserPortfolioSnapshotsAsync(
-                userId,
-                DateTime.UtcNow.AddHours(-24)))
-            .OrderByDescending(s => s.SnapshotAt)
-            .FirstOrDefault();
+        (await _snapshotRepo.GetUserPortfolioSnapshotsAsync(
+        userId,
+        DateTime.UtcNow.AddHours(-24)))
+        .OrderByDescending(s => s.SnapshotAt)
+        .FirstOrDefault();
 
-        if (snapshot == null)
+
+        // 🔥 Get investments (used everywhere)
+        var investments =
+            await _investmentRepository.GetByUserIdAsync(userId);
+
+        if (!investments.Any())
             return new PortfolioOverviewDto();
 
-        // 🔥 ETH price (cached / resilient)
         var ethUsd = await _ethPriceService.GetEthUsdPriceAsync();
 
         // 🔥 REAL ETH invested (historical truth)
-        var investments = await _investmentRepository.GetByUserIdAsync(userId);
+        var totalInvestedEth =
+            investments.Sum(i => i.EthAmountAtExecution);
 
-        var totalInvestedEth = investments.Sum(i => i.EthAmountAtExecution);
+        // ✅ Declare once (fix for CS0136)
+        decimal currentValueEth = 0;
+        decimal monthlyIncomeEth = 0;
 
-        var currentValueEth =
-            ethUsd == 0 ? 0 : snapshot.PortfolioValue / ethUsd;
+        // =========================================
+        // 🔴 FALLBACK (no snapshot yet)
+        // =========================================
+        if (snapshot == null)
+        {
+            var propertyIds =
+                investments.Select(i => i.PropertyId).Distinct();
 
+            var properties =
+                await _propertyRepository.GetByIdsAsync(propertyIds);
+
+            var propertyMap =
+                properties.ToDictionary(p => p.Id);
+
+            foreach (var inv in investments)
+            {
+                if (!propertyMap.TryGetValue(inv.PropertyId, out var property))
+                    continue;
+
+                var pricePerShareUsd =
+                    property.ApprovedValuation / property.TotalUnits;
+
+                var pricePerShareEth =
+                    ethUsd == 0 ? 0 : pricePerShareUsd / ethUsd;
+
+                var valueEth =
+                    inv.SharesPurchased * pricePerShareEth;
+
+                currentValueEth += valueEth;
+
+                monthlyIncomeEth +=
+                    valueEth * property.AnnualYieldPercent / 12m;
+            }
+        }
+        // =========================================
+        // 🟢 NORMAL FLOW (snapshot exists)
+        // =========================================
+        else
+        {
+            currentValueEth =
+                ethUsd == 0 ? 0 : snapshot.PortfolioValue / ethUsd;
+
+            monthlyIncomeEth =
+                ethUsd == 0 ? 0 : snapshot.MonthlyIncome / ethUsd;
+        }
+
+        // 🔥 Common calculations
         var totalReturnEth =
             currentValueEth - totalInvestedEth;
 
         var totalReturnPercent =
-     totalInvestedEth == 0
-         ? 0
-         : (currentValueEth - totalInvestedEth)
-             / totalInvestedEth * 100;
-
-        var monthlyIncomeEth =
-            ethUsd == 0 ? 0 : snapshot.MonthlyIncome / ethUsd;
+            totalInvestedEth == 0
+                ? 0
+                : (totalReturnEth / totalInvestedEth) * 100;
 
         return new PortfolioOverviewDto
         {
-            TotalInvestedEth = decimal.Round(totalInvestedEth, 6),
-            CurrentValueEth = decimal.Round(currentValueEth, 6),
-            TotalReturnEth = decimal.Round(totalReturnEth, 6),
-            TotalReturnPercent = decimal.Round(totalReturnPercent, 2),
-            MonthlyIncomeEth = decimal.Round(monthlyIncomeEth, 6)
+            TotalInvestedEth = Math.Round(totalInvestedEth, 8),
+            CurrentValueEth = Math.Round(currentValueEth, 6),
+            TotalReturnEth = Math.Round(totalReturnEth, 6),
+            TotalReturnPercent = Math.Round(totalReturnPercent, 2),
+            MonthlyIncomeEth = Math.Round(monthlyIncomeEth, 6)
         };
+
+
     }
+
+
     public async Task<IEnumerable<PortfolioPropertyDto>> GetMyPortfolioPropertiesAsync(Guid userId)
     {
-        // 🔥 ETH price (cached internally)
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
-        // 1️⃣ User investments
         var investments = await _investmentRepository.GetByUserIdAsync(userId);
         if (!investments.Any())
             return Enumerable.Empty<PortfolioPropertyDto>();
 
-        // 2️⃣ Group by property
         var grouped = investments.GroupBy(i => i.PropertyId);
         var propertyIds = grouped.Select(g => g.Key).ToList();
 
-        // 3️⃣ Fetch properties
         var properties = await _propertyRepository.GetByIdsAsync(propertyIds);
         var propertyMap = properties.ToDictionary(p => p.Id);
 
-        // 4️⃣ Fetch latest analytics snapshots (SAFE bulk)
         var snapshots =
             await _analyticsSnapshotRepository
                 .GetLatestPropertySnapshotsAsync(propertyIds);
@@ -107,11 +152,9 @@ public class PortfolioQueryService
 
             var tokensOwned = group.Sum(i => i.SharesPurchased);
 
-            // ETH invested (historical truth)
             var investedEth =
                 group.Sum(i => i.EthAmountAtExecution);
 
-            // Current value (USD → ETH)
             decimal currentValueEth = 0;
             decimal monthlyIncomeEth = 0;
 
@@ -160,9 +203,10 @@ public class PortfolioQueryService
             });
         }
 
-        // 🔥 Industry default: sort by current value
         return result
             .OrderByDescending(p => p.CurrentValueEth)
             .ToList();
     }
+
+
 }

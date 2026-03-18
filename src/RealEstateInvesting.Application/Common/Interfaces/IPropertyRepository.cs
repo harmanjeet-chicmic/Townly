@@ -31,7 +31,7 @@ GetMarketplaceAsync(
      PropertyStatus? status,
      string? search);
 
-    Task<IEnumerable<Property>> GetFeaturedAsync(int limit , Guid? CurrentUserId);
+    Task<IEnumerable<Property>> GetFeaturedAsync(int limit, Guid? CurrentUserId);
     Task UpdateAsync(Property property);
     Task<IEnumerable<Property>> GetByIdsAsync(IEnumerable<Guid> propertyIds);
 
@@ -39,5 +39,5 @@ GetMarketplaceAsync(
 
     Task DeleteAsync(Property property);
 
-   
+
 }
