@@ -191,5 +191,19 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
         .SumAsync(i => i.SharesPurchased);
 }
 
+    public async Task<int> GetTotalInvestorsCountAsync()
+    {
+        return await _context.Investments
+            .Select(i => i.UserId)
+            .Distinct()
+            .CountAsync();
+    }
+
+    public async Task<int> GetTotalTokensIssuedAsync()
+    {
+        return await _context.Investments
+            .SumAsync(i => i.SharesPurchased);
+    }
+
 }
 

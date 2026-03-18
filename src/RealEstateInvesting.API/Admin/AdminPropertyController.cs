@@ -102,4 +102,10 @@ public class AdminPropertyController : ControllerBase
         return Ok();
     }
 
+    [HttpGet("Details")]
+    public async Task<IActionResult> GetDetails()
+    {
+        var result = await _service.GetStatsAsync();
+        return Ok(result);
+    }
 }

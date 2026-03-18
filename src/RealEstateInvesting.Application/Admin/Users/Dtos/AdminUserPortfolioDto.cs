@@ -14,5 +14,5 @@ public class AdminUserPortfolioDto
 
     public decimal PortfolioValue { get; set; }
 
-    public string KycStatus { get; set; } = default!;
+    public int KycStatus { get; set; }
 }

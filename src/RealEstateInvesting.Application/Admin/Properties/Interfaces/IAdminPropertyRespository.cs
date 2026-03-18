@@ -22,4 +22,6 @@ public interface IAdminPropertyRepository
 
     Task SaveChangesAsync();
     Task<(List<Property>, int)> GetAllAsync(AdminPropertyQuery query);
+    Task<decimal> GetTotalAssetValueAsync();
+    Task<int> GetPendingApprovalsCountAsync();
 }

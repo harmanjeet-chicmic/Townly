@@ -26,11 +26,10 @@ public class AdminKycController : ControllerBase
         _onChainKycService = onChainKycService;
     }
 
-    /// <summary>Lists in-app KYC submissions that are pending review.</summary>
-    [HttpGet("pending")]
-    public async Task<IActionResult> GetPending()
+    [HttpGet]
+    public async Task<IActionResult> GetPending([FromQuery] AdminKycQuery query)
     {
-        var result = await _service.GetPendingAsync();
+        var result = await _service.GetFilteredAsync(query);
         return Ok(result);
     }
 
@@ -48,7 +47,7 @@ public class AdminKycController : ControllerBase
     public async Task<IActionResult> Reject(Guid kycId, [FromBody] RejectKycRequest request)
     {
         var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _service.RejectAsync(kycId, adminId, request.Reason);
+        await _service.RejectAsync(kycId, adminId, request);
         return Ok();
     }
 
