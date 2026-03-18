@@ -1,0 +1,23 @@
+REPLACE THESE ADDRESSES WITH YOUR REAL VALUES
+=============================================
+
+This repo does not contain deployments/interact-state.json. The request in
+property-suite-create-request.json uses placeholder addresses. You must replace
+them with the real values from your Hardhat/Amoy setup:
+
+1. vaultIdentityAddress
+   → Use the value of "ID_Vault" from deployments/interact-state.json
+   (created when you run interact-amoy.ts and create the vault identity)
+
+2. marketplaceIdentityAddress
+   → Use the value of "ID_Marketplace" from deployments/interact-state.json
+
+3. additionalIdentities[0].walletAddress
+   → Alice's wallet address (e.g. from ethers.getSigners()[1].address)
+
+4. additionalIdentities[0].identityContractAddress
+   → Use the value of "ID_Alice" from deployments/interact-state.json
+
+After running your identity setup script, open interact-state.json and
+copy ID_Vault, ID_Marketplace, and ID_Alice into this request, then
+call POST /api/property-suite/create with the updated JSON.

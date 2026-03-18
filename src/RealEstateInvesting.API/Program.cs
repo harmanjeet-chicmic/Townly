@@ -1,43 +1,43 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using RealEstateInvesting.API.Filters;
-using RealEstateInvesting.Infrastructure;
-using RealEstateInvesting.Application.Properties;
-using RealEstateInvesting.Application.Common.Interfaces;
-using RealEstateInvesting.Infrastructure.Persistence.Repositories;
-using RealEstateInvesting.Application.Investments;
-using RealEstateInvesting.Application.Transactions;
-using RealEstateInvesting.Infrastructure.BackgroundJobs;
-using RealEstateInvesting.Application.Analytics;
 using Amazon;
 using Amazon.S3;
-using RealEstateInvesting.Infrastructure.Storage;
-using RealEstateInvesting.Infrastructure.Push;
-using RealEstateInvesting.Infrastructure.Pricing;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
-using RealEstateInvesting.Application.Portfolio;
-using RealEstateInvesting.Infrastructure.VectorSearch;
-using RealEstateInvesting.Application.AdminAuth;
-using RealEstateInvesting.Application.AdminAuth.Interfaces;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using RealEstateInvesting.Api.Middleware;
-using RealEstateInvesting.Infrastructure.Security;
-using Serilog;
+using RealEstateInvesting.API.Filters;
+using RealEstateInvesting.API.RequestDebugMiddleware;
+using RealEstateInvesting.Application;
 using RealEstateInvesting.Application.Admin.Properties;
 using RealEstateInvesting.Application.Admin.Properties.Interfaces;
-using RealEstateInvesting.Infrastructure.Admin.Properties;
-using System.Text;
-using RealEstateInvesting.Application.Notifications.Interfaces;
-using RealEstateInvesting.Application.Notifications;
-using RealEstateInvesting.Application.Kyc.Handlers;
-using RealEstateInvesting.Application;
-using RealEstateInvesting.API.RequestDebugMiddleware;
-using RealEstateInvesting.Application.Tokens.Requests;
-using RealEstateInvesting.Application.Tokens.Balance;
-using Microsoft.AspNetCore.RateLimiting;
 using RealEstateInvesting.Application.Admin.Users;
 using RealEstateInvesting.Application.Admin.Users.Interfaces;
+using RealEstateInvesting.Application.AdminAuth;
+using RealEstateInvesting.Application.AdminAuth.Interfaces;
+using RealEstateInvesting.Application.Analytics;
+using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.Investments;
+using RealEstateInvesting.Application.Kyc.Handlers;
+using RealEstateInvesting.Application.Notifications;
+using RealEstateInvesting.Application.Notifications.Interfaces;
+using RealEstateInvesting.Application.Portfolio;
+using RealEstateInvesting.Application.Properties;
+using RealEstateInvesting.Application.Tokens.Balance;
+using RealEstateInvesting.Application.Tokens.Requests;
+using RealEstateInvesting.Application.Transactions;
+using RealEstateInvesting.Infrastructure;
+using RealEstateInvesting.Infrastructure.Admin.Properties;
 using RealEstateInvesting.Infrastructure.Admin.Users;
-
+using RealEstateInvesting.Infrastructure.BackgroundJobs;
+using RealEstateInvesting.Infrastructure.Persistence.Repositories;
+using RealEstateInvesting.Infrastructure.Pricing;
+using RealEstateInvesting.Infrastructure.Push;
+using RealEstateInvesting.Infrastructure.Security;
+using RealEstateInvesting.Infrastructure.Storage;
+using RealEstateInvesting.Infrastructure.VectorSearch;
+using Serilog;
+using System.Text;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -105,8 +105,21 @@ builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-//----------------------------------------------------------------
-// 🔐 JWT 
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+    });
+});
 
 builder.Services.AddAuthentication(options =>
 {
