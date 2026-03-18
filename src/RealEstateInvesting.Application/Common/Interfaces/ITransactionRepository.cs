@@ -14,5 +14,6 @@ GetByUserIdPagedAsync(
     TransactionType? type);
 
     Task<Transaction?> GetByIdForUserAsync(Guid transactionId, Guid userId);
+    Task<decimal> GetPlatformRevenueAsync();
 
 }

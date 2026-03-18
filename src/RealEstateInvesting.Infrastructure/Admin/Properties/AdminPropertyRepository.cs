@@ -86,4 +86,17 @@ public class AdminPropertyRepository : IAdminPropertyRepository
 
     return (properties, totalCount);
 }
+
+    public async Task<decimal> GetTotalAssetValueAsync()
+    {
+        return await _db.Properties
+            .Where(p => p.Status == PropertyStatus.Active || p.Status == PropertyStatus.SoldOut)
+            .SumAsync(p => p.ApprovedValuation);
+    }
+
+    public async Task<int> GetPendingApprovalsCountAsync()
+    {
+        return await _db.Properties
+            .CountAsync(p => p.Status == PropertyStatus.PendingApproval);
+    }
 }

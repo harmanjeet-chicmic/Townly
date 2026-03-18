@@ -51,10 +51,10 @@ public static class VectorSearchDependencyInjection
         var qdrantApiKey = configuration["Qdrant:ApiKey"];
 
         if (string.IsNullOrWhiteSpace(qdrantUrl))
-            throw new InvalidOperationException("Qdrant:Url is not configured");
+            throw new Exception("Qdrant:Url is not configured");
 
         if (string.IsNullOrWhiteSpace(qdrantApiKey))
-            throw new InvalidOperationException("Qdrant:ApiKey is not configured");
+            throw new Exception("Qdrant:ApiKey is not configured");
 
         services.AddSingleton(new VectorSearchConfig
         {
@@ -69,7 +69,7 @@ public static class VectorSearchDependencyInjection
         var geminiApiKey = configuration["Gemini:ApiKey"];
 
         if (string.IsNullOrWhiteSpace(geminiApiKey))
-            throw new InvalidOperationException("Gemini:ApiKey is not configured");
+            throw new Exception("Gemini:ApiKey is not configured");
 
         services.AddScoped<IEmbeddingService, GeminiEmbeddingService>();
 

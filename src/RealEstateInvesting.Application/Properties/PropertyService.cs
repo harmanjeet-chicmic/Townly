@@ -1,3 +1,4 @@
+using RealEstateInvesting.Application.Common.Exceptions;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Entities;
@@ -26,7 +27,7 @@ public class PropertyService
     {
 
         var user = await _userRepository.GetByIdAsync(userId)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new NotFoundException("User not found.");
         
         Console.WriteLine("=========================== kyc statuds========" + user.KycStatus);
         Console.WriteLine("=================User ID===================" + user.Id);
@@ -89,7 +90,7 @@ public class PropertyService
     CreatePropertyCommand command)
     {
         var property = await _propertyRepository.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         if (property.OwnerUserId != userId)
             throw new UnauthorizedAccessException("Not property owner.");

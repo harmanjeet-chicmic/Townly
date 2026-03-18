@@ -53,4 +53,11 @@ GetByUserIdPagedAsync(
             .FirstOrDefaultAsync();
     }
 
+    public async Task<decimal> GetPlatformRevenueAsync()
+    {
+        return await _context.Transactions
+            .Where(t => t.Type == TransactionType.PlatformFee && t.IsSuccessful)
+            .SumAsync(t => t.AmountUsd);
+    }
+
 }

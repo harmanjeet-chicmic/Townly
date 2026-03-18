@@ -2,6 +2,7 @@ using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Application.Notifications.Interfaces;
 using RealEstateInvesting.Domain.Enums;
+using RealEstateInvesting.Application.Common.Exceptions;
 namespace RealEstateInvesting.Application.Tokens.Requests;
 
 public class ReviewTokenRequestHandler
@@ -25,7 +26,7 @@ public class ReviewTokenRequestHandler
     public async Task Handle(ReviewTokenRequestCommand command)
     {
         var request = await _requestRepo.GetByIdAsync(command.RequestId)
-            ?? throw new InvalidOperationException("Token request not found.");
+            ?? throw new NotFoundException("Token request not found.");
 
         if (command.Approve)
         {
