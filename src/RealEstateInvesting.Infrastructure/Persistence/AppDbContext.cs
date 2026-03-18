@@ -28,11 +28,16 @@ public class AppDbContext : DbContext
     public DbSet<Log> Logs { get; set; }
 
 
-    // 🔥 ADD THESE
+    // ADD THESE
     public DbSet<TokenRequest> TokenRequests => Set<TokenRequest>();
     public DbSet<UserTokenBalance> UserTokenBalances => Set<UserTokenBalance>();
     public DbSet<TokenTransaction> TokenTransactions => Set<TokenTransaction>();
     public DbSet<UserDeviceToken> UserDeviceTokens { get; set; } = default!;
+    public DbSet<OnChainKycAction> OnChainKycActions => Set<OnChainKycAction>();
+    public DbSet<OnChainPropertyRegistration> OnChainPropertyRegistrations => Set<OnChainPropertyRegistration>();
+    public DbSet<OnChainSharePurchase> OnChainSharePurchases => Set<OnChainSharePurchase>();
+    public DbSet<OnChainShareSale> OnChainShareSales => Set<OnChainShareSale>();
+    public DbSet<OnChainVaultSupply> OnChainVaultSupplies => Set<OnChainVaultSupply>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

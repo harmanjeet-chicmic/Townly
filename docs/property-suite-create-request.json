@@ -1,0 +1,16 @@
+{
+  "propertyId": "AMOY-RWA-013",
+  "propertyPriceUsdc": "150",
+  "mintAmount": "2000",
+  "metadataUri": "ipfs://meta-AMOY-RWA-013",
+  "vaultIdentityAddress": "0x1111111111111111111111111111111111111111",
+  "marketplaceIdentityAddress": "0x2222222222222222222222222222222222222222",
+  "identityCountryCode": 42,
+  "additionalIdentities": [
+    {
+      "walletAddress": "0x3333333333333333333333333333333333333333",
+      "identityContractAddress": "0x4444444444444444444444444444444444444444",
+      "countryCode": 42
+    }
+  ]
+}

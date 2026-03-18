@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import {  AuthResponse } from '../types';
+import { AuthResponse } from '../types';
 
 interface AuthContextType {
   token: string | null;
@@ -28,12 +28,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await api.post<AuthResponse>('/api/admin/auth/login', { email, password });
-      const { accessToken } = response.data;
-      localStorage.setItem('token', accessToken);
-      setToken(accessToken);
+      const response = await api.post('/api/admin/auth/login', { email, password });
+
+      // Extract token from the nested data object
+      const { token } = response.data.data; // Note: response.data.data.token
+
+      localStorage.setItem('token', token);
+      setToken(token);
       navigate('/dashboard');
     } catch (error) {
+      console.error('Login error:', error);
       throw new Error('Login failed');
     } finally {
       setIsLoading(false);

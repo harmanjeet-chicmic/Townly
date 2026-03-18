@@ -20,6 +20,15 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
     }
 
+    public async Task<User?> GetByWalletAddressAsync(string walletAddress, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(walletAddress)) return null;
+        var normalized = walletAddress.Trim().ToLowerInvariant();
+        if (!normalized.StartsWith("0x")) normalized = "0x" + normalized;
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.WalletAddress == normalized, cancellationToken);
+    }
+
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
         _context.Users.Update(user);

@@ -1,40 +1,42 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using RealEstateInvesting.API.Filters;
-using RealEstateInvesting.Infrastructure;
-using RealEstateInvesting.Application.Properties;
-using RealEstateInvesting.Application.Common.Interfaces;
-using RealEstateInvesting.Infrastructure.Persistence.Repositories;
-using RealEstateInvesting.Application.Investments;
-using RealEstateInvesting.Application.Transactions;
-using RealEstateInvesting.Infrastructure.BackgroundJobs;
-using RealEstateInvesting.Application.Analytics;
 using Amazon;
 using Amazon.S3;
-using RealEstateInvesting.Infrastructure.Storage;
-using RealEstateInvesting.Infrastructure.Push;
-using RealEstateInvesting.Infrastructure.Pricing;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Caching.Memory;
-using RealEstateInvesting.Application.Portfolio;
-using RealEstateInvesting.Infrastructure.VectorSearch;
-using RealEstateInvesting.Application.AdminAuth;
-using RealEstateInvesting.Application.AdminAuth.Interfaces;
-using RealEstateInvesting.Api.Middleware;
-using RealEstateInvesting.Infrastructure.Security;
-using Serilog;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using RealEstateInvesting.API.Filters;
+using RealEstateInvesting.API.RequestDebugMiddleware;
+using RealEstateInvesting.Application;
 using RealEstateInvesting.Application.Admin.Properties;
 using RealEstateInvesting.Application.Admin.Properties.Interfaces;
-using RealEstateInvesting.Infrastructure.Admin.Properties;
-using System.Text;
-using RealEstateInvesting.Application.Notifications.Interfaces;
-using RealEstateInvesting.Application.Notifications;
+using RealEstateInvesting.Application.Admin.Users;
+using RealEstateInvesting.Application.Admin.Users.Interfaces;
+using RealEstateInvesting.Application.AdminAuth;
+using RealEstateInvesting.Application.AdminAuth.Interfaces;
+using RealEstateInvesting.Application.Analytics;
+using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.Investments;
 using RealEstateInvesting.Application.Kyc.Handlers;
-using RealEstateInvesting.Application;
-using RealEstateInvesting.API.RequestDebugMiddleware;
-using RealEstateInvesting.Application.Tokens.Requests;
+using RealEstateInvesting.Application.Notifications;
+using RealEstateInvesting.Application.Notifications.Interfaces;
+using RealEstateInvesting.Application.Portfolio;
+using RealEstateInvesting.Application.Properties;
 using RealEstateInvesting.Application.Tokens.Balance;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.OpenApi;
+using RealEstateInvesting.Application.Tokens.Requests;
+using RealEstateInvesting.Application.Transactions;
+using RealEstateInvesting.Infrastructure;
+using RealEstateInvesting.Infrastructure.Admin.Properties;
+using RealEstateInvesting.Infrastructure.Admin.Users;
+using RealEstateInvesting.Infrastructure.BackgroundJobs;
+using RealEstateInvesting.Infrastructure.Persistence.Repositories;
+using RealEstateInvesting.Infrastructure.Pricing;
+using RealEstateInvesting.Infrastructure.Push;
+using RealEstateInvesting.Infrastructure.Security;
+using RealEstateInvesting.Infrastructure.Storage;
+using RealEstateInvesting.Infrastructure.VectorSearch;
+using Serilog;
+using System.Text;
+
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,6 +74,9 @@ var awsSection = builder.Configuration.GetSection("AWS");
 builder.Services.AddScoped<PortfolioQueryService>();
 builder.Services.AddScoped<IAdminPropertyService, AdminPropertyService>();
 builder.Services.AddScoped<IAdminPropertyRepository, AdminPropertyRepository>();
+
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
+builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 builder.Services.AddScoped<GetMyKycStatusHandler>();
 
 builder.Services.AddSingleton<IAmazonS3>(_ =>
@@ -95,7 +100,7 @@ builder.Services.AddScoped<IFileStorage>(sp =>
 });
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -112,8 +117,9 @@ builder.Services.AddSwaggerGen(options =>
         [new OpenApiSecuritySchemeReference("bearer", document)] = []
     });
 });
-//----------------------------------------------------------------
-// 🔐 JWT 
+
+
+
 
 builder.Services.AddAuthentication(options =>
 {
