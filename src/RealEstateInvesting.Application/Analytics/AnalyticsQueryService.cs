@@ -9,7 +9,7 @@ public class AnalyticsQueryService
     private readonly IAnalyticsSnapshotRepository _snapshotRepository;
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IPropertyRepository _propertyRepository;
-   
+
     private readonly IEthPriceService _ethPriceService;
     public AnalyticsQueryService(IAnalyticsSnapshotRepository snapshotRepository,
     IInvestmentRepository investmentRepository,
@@ -29,7 +29,7 @@ public class AnalyticsQueryService
 
         var snapshots =
             await _snapshotRepository.GetPropertySnapshotsAsync(propertyId, fromUtc);
-        
+
 
         return snapshots.Select(s => new PropertyAnalyticsTrendDto
         {
@@ -104,29 +104,26 @@ public class AnalyticsQueryService
                     : Math.Round((x.Value / totalValue) * 100, 1)
         });
     }
+
     public async Task<IEnumerable<PortfolioLineChartDto>>
-  GetPortfolioLineAsync(Guid userId, int hours)
+  GetPortfolioLineAsync(Guid userId, int days)
     {
         var now = DateTime.UtcNow;
-        var fromUtc = now.AddHours(-hours);
-         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
+        var fromUtc = now.AddDays(-days);
+
+        var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
         var snapshots =
             await _snapshotRepository
                 .GetUserPortfolioSnapshotsAsync(userId, fromUtc);
 
+        // 🔹 GROUP BY DAY (not hour)
         var snapshotMap = snapshots
-            .GroupBy(s => new DateTime(
-                s.SnapshotAt.Year,
-                s.SnapshotAt.Month,
-                s.SnapshotAt.Day,
-                s.SnapshotAt.Hour,
-                0,
-                0,
-                DateTimeKind.Utc))
+            .GroupBy(s => s.SnapshotAt.Date)
             .ToDictionary(
                 g => g.Key,
-                g => g.OrderByDescending(x => x.SnapshotAt).First());
+                g => g.OrderByDescending(x => x.SnapshotAt).First()
+            );
 
         var result = new List<PortfolioLineChartDto>();
 
@@ -134,31 +131,25 @@ public class AnalyticsQueryService
         var previous =
             await _snapshotRepository.GetLastUserSnapshotBeforeAsync(userId, fromUtc);
 
-        decimal lastValueUsd  = previous?.PortfolioValue ?? 0;
+        decimal lastValueUsd = previous?.PortfolioValue ?? 0;
 
-        for (int i = hours; i >= 0; i--)
+        // 🔹 LOOP OVER DAYS
+        for (int i = days; i >= 0; i--)
         {
-            var bucket = new DateTime(
-                now.Year,
-                now.Month,
-                now.Day,
-                now.Hour,
-                0,
-                0,
-                DateTimeKind.Utc).AddHours(-i);
+            var bucket = now.Date.AddDays(-i);
 
             if (snapshotMap.TryGetValue(bucket, out var snapshot))
             {
-                lastValueUsd  = snapshot.PortfolioValue;
+                lastValueUsd = snapshot.PortfolioValue;
             }
-            var valueEth =
-            ethUsdRate == 0 ? 0 :
-            decimal.Round(lastValueUsd / ethUsdRate, 8);
 
+            var valueEth =
+                ethUsdRate == 0 ? 0 :
+                decimal.Round(lastValueUsd / ethUsdRate, 8);
 
             result.Add(new PortfolioLineChartDto
             {
-                Label = bucket.ToString("HH:mm"),
+                Label = bucket.ToString("dd MMM"), // 🔥 e.g. "18 Mar"
                 Value = valueEth
             });
         }

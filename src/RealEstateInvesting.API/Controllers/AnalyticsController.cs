@@ -57,13 +57,13 @@ public class AnalyticsController : ControllerBase
     [HttpGet("portfolio/me/line")]
     [Authorize]
     public async Task<IActionResult> GetMyPortfolioLine(
-    [FromQuery] int hours = 7)
+    [FromQuery] int days = 7)
     {
         var userId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var result =
-            await _service.GetPortfolioLineAsync(userId, hours);
+            await _service.GetPortfolioLineAsync(userId, days);
 
         return Ok(result);
     }

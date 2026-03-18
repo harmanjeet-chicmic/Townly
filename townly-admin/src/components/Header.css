@@ -1,33 +1,35 @@
 .header {
   height: 90px;
   background: var(--header-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-bottom: 1px solid var(--card-border);
-  padding: 0 32px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Extremely subtle border */
+  padding: 0 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  sticky: top;
+  position: sticky;
+  top: 0;
   z-index: 10;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .search-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 10px 20px;
-  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 24px;
+  border-radius: 12px;
   border: 1px solid var(--card-border);
-  width: 400px;
+  width: 440px;
   transition: var(--transition-smooth);
 }
 
 .search-bar:focus-within {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   border-color: var(--primary);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
 }
 
 .search-bar input {
@@ -83,7 +85,7 @@
   align-items: center;
   gap: 16px;
   padding-left: 24px;
-  border-left: 1px solid var(--card-border);
+  border-left: 1px solid rgba(255, 255, 255, 0.05); /* Subtle border */
   cursor: pointer;
 }
 
@@ -95,30 +97,34 @@
 
 .admin-name {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: 0.02em;
 }
 
 .admin-role {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--primary);
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .admin-avatar {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--card-bg) 0%, #1f2937 100%);
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #111 0%, #000 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--card-border);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--primary);
   transition: var(--transition-smooth);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .admin-profile:hover .admin-avatar {
   border-color: var(--primary);
-  box-shadow: 0 0 15px var(--primary-glow);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 20px var(--primary-glow);
 }
