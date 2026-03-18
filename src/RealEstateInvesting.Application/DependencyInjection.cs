@@ -6,6 +6,7 @@ using RealEstateInvesting.Application.Analytics;
 using RealEstateInvesting.Application.Portfolio;
 using RealEstateInvesting.Application.Notifications;
 using RealEstateInvesting.Application.Health.Handlers;
+using RealEstateInvesting.Application.Kyc;
 using RealEstateInvesting.Application.Properties.InvestmentInfo;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Common.Services;
@@ -45,8 +46,13 @@ public static class DependencyInjection
         services.AddScoped<GetHealthStatusHandler>();
         services.AddScoped<PropertyInvestmentInfoService>();
         services.AddScoped<ILogService, LogService>();
-        services.AddScoped<GetMyKycStatusHandler>();
-        
+        services.AddScoped<GetMyKycStatusHandler>();        
+        services.AddScoped<IOnChainKycService, OnChainKycService>();
+        services.AddScoped<IPropertyRegistrationOnChainService, PropertyRegistrationOnChainService>();
+        services.AddScoped<IBuySharesOnChainService, BuySharesOnChainService>();
+        services.AddScoped<ISellSharesOnChainService, SellSharesOnChainService>();
+        services.AddScoped<ISupplyVaultOnChainService, SupplyVaultOnChainService>();
+        services.AddScoped<ICreatePropertySuiteOnChainService, CreatePropertySuiteOnChainService>();
 
         return services;
     }

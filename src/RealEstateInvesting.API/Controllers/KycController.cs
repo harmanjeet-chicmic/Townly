@@ -3,52 +3,50 @@ using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Api.DTOs;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Kyc;
-using RealEstateInvesting.Infrastructure.Kyc;
 using RealEstateInvesting.Application.Kyc.Handlers;
 using RealEstateInvesting.Application.Kyc.Queries;
+using RealEstateInvesting.Infrastructure.Kyc;
+
 namespace RealEstateInvesting.Api.Controllers;
 
+/// <summary>
+/// User KYC: submit documents (in-app), get in-app status, and Flow 1: check if current user wallet is verified on chain.
+/// </summary>
 [ApiController]
 [Route("api/kyc")]
-[Authorize] // 🔒 Wallet-authenticated users only
+[Authorize]
 public class KycController : ControllerBase
 {
     private readonly SubmitKycHandler _submitKycHandler;
     private readonly IKycFileStorageService _fileStorageService;
     private readonly ICurrentUser _currentUser;
     private readonly GetMyKycStatusHandler _getMyKycStatusHandler;
-   
-    public KycController(
-        SubmitKycHandler submitKycHandler,
-        IKycFileStorageService fileStorageService,
-        ICurrentUser currentUser,
-        GetMyKycStatusHandler getMyKycStatusHandler)
+    private readonly IIdentityRegistryContractService _identityRegistry;
+
+    public KycController(SubmitKycHandler submitKycHandler, IKycFileStorageService fileStorageService,
+        ICurrentUser currentUser, GetMyKycStatusHandler getMyKycStatusHandler, IIdentityRegistryContractService identityRegistry)
     {
         _submitKycHandler = submitKycHandler;
         _fileStorageService = fileStorageService;
         _currentUser = currentUser;
         _getMyKycStatusHandler = getMyKycStatusHandler;
+        _identityRegistry = identityRegistry;
     }
 
     [HttpPost("submit")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> SubmitKyc(
-        [FromForm] SubmitKycHttpRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> SubmitKyc([FromForm] SubmitKycHttpRequest request, CancellationToken cancellationToken)
     {
         // Extra safety (handler also checks this)
         if (_currentUser.IsBlocked)
             return Forbid("Blocked users cannot submit KYC.");
 
-        // 1️⃣ Save files via Infrastructure service
+        // Save files via Infrastructure service
         var (documentUrl, selfieUrl) =
-            await _fileStorageService.SaveKycFilesAsync(
-                _currentUser.UserId,
-                request.DocumentFile,
-                request.SelfieFile,
-                cancellationToken);
+            await _fileStorageService.SaveKycFilesAsync(_currentUser.UserId, request.DocumentFile,
+                request.SelfieFile, cancellationToken);
 
-        // 2️⃣ Build application command (pure data)
+        // Build application command (pure data)
         var command = new SubmitKycCommand
         {
             FullName = request.FullName,
@@ -67,6 +65,7 @@ public class KycController : ControllerBase
             message = "KYC submitted successfully and is under review."
         });
     }
+
     [HttpGet("me/status")]
     public async Task<IActionResult> GetMyKycStatus(
     CancellationToken cancellationToken)
@@ -78,4 +77,15 @@ public class KycController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Flow 1: Check if the current user's wallet is KYC-verified on chain (T-REX Identity Registry).</summary>
+    [HttpGet("on-chain/verified")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetOnChainVerified(CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(_currentUser.WalletAddress))
+            return BadRequest(new { message = "Wallet address not found for current user." });
+
+        var isVerified = await _identityRegistry.IsVerified(_currentUser.WalletAddress, cancellationToken);
+        return Ok(new { _currentUser.WalletAddress, isVerified });
+    }
 }

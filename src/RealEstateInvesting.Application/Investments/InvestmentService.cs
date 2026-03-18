@@ -1,139 +1,3 @@
-// using RealEstateInvesting.Application.Common.Interfaces;
-// using RealEstateInvesting.Application.Investments.Dtos;
-// using RealEstateInvesting.Domain.Entities;
-// using RealEstateInvesting.Domain.Enums;
-
-// namespace RealEstateInvesting.Application.Investments;
-
-// public class InvestmentService
-// {
-//     private readonly IUserRepository _userRepository;
-//     private readonly IPropertyRepository _propertyRepository;
-//     private readonly IInvestmentRepository _investmentRepository;
-//     private readonly ITransactionRepository _transactionRepository;
-//     private readonly IUnitOfWork _unitOfWork;
-//     private readonly IPriceFeed _priceFeed;
-
-
-
-//     public InvestmentService(
-//         IUserRepository userRepository,
-//         IPropertyRepository propertyRepository,
-//         IInvestmentRepository investmentRepository,
-//         ITransactionRepository transactionRepository,
-//         IUnitOfWork unitOfWork,
-//         IPriceFeed priceFeed)
-//     {
-//         _userRepository = userRepository;
-//         _propertyRepository = propertyRepository;
-//         _investmentRepository = investmentRepository;
-//         _transactionRepository = transactionRepository;
-//         _unitOfWork = unitOfWork;
-//         _priceFeed = priceFeed;
-//     }
-
-//     public async Task<Guid> InvestAsync(Guid userId, CreateInvestmentDto dto)
-//     {
-//         await _unitOfWork.BeginTransactionAsync();
-
-//         try
-//         {
-//             // 1️⃣ User validation
-//             var user = await _userRepository.GetByIdAsync(userId)
-//                 ?? throw new InvalidOperationException("User not found.");
-//             // Console.WriteLine("====================================== kyc status "+user.KycStatus);
-//             // Console.WriteLine("================================user id ==="+user.Id);
-
-//             if (user.KycStatus != KycStatus.Approved)
-//                 throw new InvalidOperationException("KYC approval required.");
-
-//             if (user.IsBlocked)
-//                 throw new InvalidOperationException("User is blocked.");
-
-//             // 2️⃣ Property validation
-//             var property = await _propertyRepository.GetByIdAsync(dto.PropertyId)
-//                 ?? throw new InvalidOperationException("Property not found.");
-
-//             if (property.OwnerUserId == userId)
-//                 throw new InvalidOperationException("Cannot invest in own property.");
-
-//             if (property.Status != PropertyStatus.Active)
-//                 throw new InvalidOperationException("Property is not open for investment.");
-
-//             // 3️⃣ Shares availability (checked INSIDE transaction)
-//             var investedShares =
-//                 await _investmentRepository.GetTotalSharesInvestedAsync(property.Id);
-
-//             var availableShares = property.TotalUnits - investedShares;
-
-//             if (dto.Shares <= 0)
-//                 throw new InvalidOperationException("Shares must be greater than zero.");
-
-//             if (dto.Shares > availableShares)
-//                 throw new InvalidOperationException("Not enough shares available.");
-
-//             // 4️⃣ Price per share (USD – source of truth)
-//             var pricePerShare =
-//                 property.ApprovedValuation / property.TotalUnits;
-//             var ethUsdRate = await _priceFeed.GetEthUsdPriceAsync();
-
-//             // 5️⃣ Create investment
-//             var investment = Investment.Create(
-//                 userId,
-//                 property.Id,
-//                 dto.Shares,
-//                 pricePerShare,
-//                 ethUsdRate
-//             );
-
-
-//             await _investmentRepository.AddAsync(investment);
-
-//             // 6️⃣ Create transactions (ledger entries)
-//             var transactions = new List<Transaction>
-//         {
-//             // Investor transaction
-//             Transaction.Create(
-//                 userId: userId,
-//                 type: TransactionType.Investment,
-//                 amount: investment.TotalAmount,
-//                 referenceId: investment.Id,
-//                 propertyId: property.Id,
-//                 currency: "USD"
-//             ),
-
-//             // Property owner transaction
-//             Transaction.Create(
-//                 userId: property.OwnerUserId,
-//                 type: TransactionType.Investment,
-//                 amount: investment.TotalAmount,
-//                 referenceId: investment.Id,
-//                 propertyId: property.Id,
-//                 currency: "USD"
-//             )
-//         };
-
-//             await _transactionRepository.AddRangeAsync(transactions);
-
-//             // 7️⃣ Auto mark sold out (boundary condition)
-//             if (availableShares - dto.Shares == 0)
-//             {
-//                 property.MarkSoldOut();
-//                 await _propertyRepository.UpdateAsync(property);
-//             }
-
-//             await _unitOfWork.CommitAsync();
-//             return investment.Id;
-//         }
-//         catch
-//         {
-//             await _unitOfWork.RollbackAsync();
-//             throw;
-//         }
-//     }
-
-// }
-
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Investments.Dtos;
 using RealEstateInvesting.Domain.Entities;
@@ -155,6 +19,7 @@ public class InvestmentService
     private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPriceFeed _priceFeed;
+
 
     public InvestmentService(
         IUserRepository userRepository,
@@ -238,12 +103,12 @@ public class InvestmentService
                     ErrorCodes.InsufficientShares,
                     ErrorMessages.InsufficientShares);
 
-            // 4️⃣ Price calculation (USD source of truth)
+            // 4️⃣ Price calculation (NO rounding)
             var pricePerShareUsd =
                 property.ApprovedValuation / property.TotalUnits;
 
             var investmentUsd =
-                decimal.Round(dto.Shares * pricePerShareUsd, 2);
+                dto.Shares * pricePerShareUsd;
 
             var ethUsdRate = await _priceFeed.GetEthUsdPriceAsync();
             if (ethUsdRate <= 0)
@@ -251,19 +116,18 @@ public class InvestmentService
                     ErrorCodes.InvalidEthPrice,
                     ErrorMessages.InvalidEthPrice);
 
-            // 🔥 Flat Platform Fee (0.05 ETH)
+            // 🔥 ETH calculation (FULL PRECISION)
+            var investmentEth =
+                investmentUsd / ethUsdRate;
+
+            Console.WriteLine("============invested amount from service", investmentEth);
+
+            // 🔥 Flat Platform Fee
             const decimal PlatformFeeEth = 0.05m;
 
-            var investmentEth =
-                decimal.Round(investmentUsd / ethUsdRate, 8);
-
-            var platformFeeEth = PlatformFeeEth;
-
-            var platformFeeUsd =
-                decimal.Round(platformFeeEth * ethUsdRate, 2);
-
             var totalRequiredEth =
-                decimal.Round(investmentEth + platformFeeEth, 8);
+                investmentEth + PlatformFeeEth;
+
 
             // 5️⃣ Token check & deduction
             var tokenBalance =
@@ -283,8 +147,14 @@ public class InvestmentService
                 reference: $"Property:{property.Id}");
 
             await _tokenTransactionRepository.AddAsync(tokenTx);
+            Console.WriteLine("==== DEBUG BEFORE CREATE ====");
+            Console.WriteLine($"Shares: {dto.Shares}");
+            Console.WriteLine($"PricePerShareUsd: {pricePerShareUsd}");
+            Console.WriteLine($"InvestmentUsd: {investmentUsd}");
+            Console.WriteLine($"EthUsdRate: {ethUsdRate}");
+            Console.WriteLine($"InvestmentEth (SERVICE): {investmentEth}");
 
-            // 6️⃣ Create investment
+            // 6️⃣ Create investment (single source of truth)
             var investment = Investment.Create(
                 userId,
                 property.Id,
@@ -293,30 +163,30 @@ public class InvestmentService
                 ethUsdRate);
 
             await _investmentRepository.AddAsync(investment);
+            Console.WriteLine("==== DEBUG AFTER SAVE ====");
+            Console.WriteLine($"Stored EthAmount: {investment.EthAmountAtExecution}");
 
-            // 7️⃣ Ledger transactions
+            // 7️⃣ Ledger transactions (use SAME calculated values)
             var transactions = new List<Transaction>
-{
-    // 🔹 Investor (Investment - type 1)
-    Transaction.CreateWithEth(
-        userId: userId,
-        propertyId: property.Id,
-        type: TransactionType.Investment,
-        amountUsd: investmentUsd,
-        ethAmount: investmentEth,
-        ethUsdRate: ethUsdRate,
-        referenceId: investment.Id),
+        {
+            Transaction.CreateWithEth(
+                userId: userId,
+                propertyId: property.Id,
+                type: TransactionType.Investment,
+                amountUsd: investmentUsd,
+                ethAmount: investmentEth,
+                ethUsdRate: ethUsdRate,
+                referenceId: investment.Id),
 
-    // 🔹 Owner (Income - type 2)
-    Transaction.CreateWithEth(
-        userId: property.OwnerUserId,
-        propertyId: property.Id,
-        type: TransactionType.RentalIncome,
-        amountUsd: investmentUsd,
-        ethAmount: investmentEth,
-        ethUsdRate: ethUsdRate,
-        referenceId: investment.Id)
-};
+            Transaction.CreateWithEth(
+                userId: property.OwnerUserId,
+                propertyId: property.Id,
+                type: TransactionType.RentalIncome,
+                amountUsd: investmentUsd,
+                ethAmount: investmentEth,
+                ethUsdRate: ethUsdRate,
+                referenceId: investment.Id)
+        };
 
             await _transactionRepository.AddRangeAsync(transactions);
 
@@ -331,7 +201,7 @@ public class InvestmentService
             // 9️⃣ Commit
             await _unitOfWork.CommitAsync();
 
-            // 🔔 Owner notified
+            // 🔔 Notification (USD formatted only for display)
             await _notificationService.CreateAsync(
                 property.OwnerUserId,
                 NotificationType.InvestmentReceived,
@@ -339,7 +209,6 @@ public class InvestmentService
                 $"You received a new investment of ${investmentUsd:N2} in \"{property.Name}\".",
                 property.Id);
 
-            // 🔔 Sold-out notification (your existing logic)
             if (isSoldOut)
             {
                 await _notificationService.CreateAsync(
@@ -349,6 +218,7 @@ public class InvestmentService
                     $"Your property \"{property.Name}\" is now fully sold out.",
                     property.Id);
             }
+
             return investment.Id;
         }
         catch
@@ -357,5 +227,6 @@ public class InvestmentService
             throw;
         }
     }
+
 
 }

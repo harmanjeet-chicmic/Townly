@@ -16,3 +16,19 @@ tests/**/obj
 **/appsettings.json
 **/appsettings.*.json
 
+
+# Visual Studio temp/IDE files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider IDE
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

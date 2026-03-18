@@ -1,18 +1,34 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using RealEstateInvesting.API.Filters;
-using RealEstateInvesting.Infrastructure;
-using RealEstateInvesting.Application.Properties;
-using RealEstateInvesting.Application.Common.Interfaces;
-using RealEstateInvesting.Infrastructure.Persistence.Repositories;
-using RealEstateInvesting.Application.Investments;
-using RealEstateInvesting.Application.Transactions;
-using RealEstateInvesting.Infrastructure.BackgroundJobs;
-using RealEstateInvesting.Application.Analytics;
 using Amazon;
 using Amazon.S3;
-using RealEstateInvesting.Infrastructure.Storage;
-using RealEstateInvesting.Infrastructure.Push;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using RealEstateInvesting.API.Filters;
+using RealEstateInvesting.API.RequestDebugMiddleware;
+using RealEstateInvesting.Application;
+using RealEstateInvesting.Application.Admin.Properties;
+using RealEstateInvesting.Application.Admin.Properties.Interfaces;
+using RealEstateInvesting.Application.Admin.Users;
+using RealEstateInvesting.Application.Admin.Users.Interfaces;
+using RealEstateInvesting.Application.AdminAuth;
+using RealEstateInvesting.Application.AdminAuth.Interfaces;
+using RealEstateInvesting.Application.Analytics;
+using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.Investments;
+using RealEstateInvesting.Application.Kyc.Handlers;
+using RealEstateInvesting.Application.Notifications;
+using RealEstateInvesting.Application.Notifications.Interfaces;
+using RealEstateInvesting.Application.Portfolio;
+using RealEstateInvesting.Application.Properties;
+using RealEstateInvesting.Application.Tokens.Balance;
+using RealEstateInvesting.Application.Tokens.Requests;
+using RealEstateInvesting.Application.Transactions;
+using RealEstateInvesting.Infrastructure;
+using RealEstateInvesting.Infrastructure.Admin.Properties;
+using RealEstateInvesting.Infrastructure.Admin.Users;
+using RealEstateInvesting.Infrastructure.BackgroundJobs;
+using RealEstateInvesting.Infrastructure.Persistence.Repositories;
 using RealEstateInvesting.Infrastructure.Pricing;
 using RealEstateInvesting.Infrastructure.VectorSearch;
 using System.Text.Json.Serialization;
@@ -21,11 +37,11 @@ using RealEstateInvesting.Application.Portfolio;
 using RealEstateInvesting.Application.AdminAuth;
 using RealEstateInvesting.Application.AdminAuth.Interfaces;
 using RealEstateInvesting.Api.Middleware;
+using RealEstateInvesting.Infrastructure.Push;
 using RealEstateInvesting.Infrastructure.Security;
+using RealEstateInvesting.Infrastructure.Storage;
+using RealEstateInvesting.Infrastructure.VectorSearch;
 using Serilog;
-using RealEstateInvesting.Application.Admin.Properties;
-using RealEstateInvesting.Application.Admin.Properties.Interfaces;
-using RealEstateInvesting.Infrastructure.Admin.Properties;
 using System.Text;
 using RealEstateInvesting.Application.Notifications.Interfaces;
 using RealEstateInvesting.Application.Notifications;
@@ -98,8 +114,6 @@ builder.Services.AddSwaggerGen(options =>
         [new OpenApiSecuritySchemeReference("bearer", document)] = []
     });
 });
-//----------------------------------------------------------------
-// 🔐 JWT 
 
 builder.Services.AddAuthentication(options =>
 {
@@ -124,10 +138,10 @@ builder.Services.AddAuthentication(options =>
 
         ClockSkew = TimeSpan.Zero
     };
-     options.Events = new JwtBearerEvents
+    options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
-        {   
+        {
 
             Console.WriteLine("=======jwt middleware hitted========");
             var authHeader = context.Request.Headers["Authorization"].ToString();
@@ -195,8 +209,8 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: userId,
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,                  
-                Window = TimeSpan.FromHours(1),     
+                PermitLimit = 10,
+                Window = TimeSpan.FromHours(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
             });
@@ -213,10 +227,11 @@ app.UseMiddleware<RealEstateInvesting.API.Middleware.ExceptionMiddleware>();
 app.UseCors("AllowAll");
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI();
+
 }
+app.MapOpenApi();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();

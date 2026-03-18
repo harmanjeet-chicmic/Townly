@@ -36,7 +36,8 @@ public class AdminKycRepository : IAdminKycRepository
     }
 
     public async Task SaveChangesAsync()
-    {
+    {   
+
         await _db.SaveChangesAsync();
     }
 
