@@ -287,6 +287,314 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
                     b.ToTable("Notifications", (string)null);
                 });
 
+            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.OnChainKycAction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ActionType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CountryCode")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IdentityContractAddress")
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("PerformedByAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TransactionHash")
+                        .IsRequired()
+                        .HasMaxLength(66)
+                        .HasColumnType("nvarchar(66)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("WalletAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("WalletAddress");
+
+                    b.ToTable("OnChainKycActions", (string)null);
+                });
+
+            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.OnChainPropertyRegistration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long?>("OnChainPropertyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("PerformedByAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PropertyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ToAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.Property<string>("TokenAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.Property<string>("TransactionHash")
+                        .IsRequired()
+                        .HasMaxLength(66)
+                        .HasColumnType("nvarchar(66)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Uri")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VaultAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("TransactionHash");
+
+                    b.ToTable("OnChainPropertyRegistrations", (string)null);
+                });
+
+            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.OnChainSharePurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AmountOfSharesRaw")
+                        .IsRequired()
+                        .HasMaxLength(78)
+                        .HasColumnType("nvarchar(78)");
+
+                    b.Property<string>("AmountStablecoinApprovedRaw")
+                        .IsRequired()
+                        .HasMaxLength(78)
+                        .HasColumnType("nvarchar(78)");
+
+                    b.Property<string>("ApproveTxHash")
+                        .HasMaxLength(66)
+                        .HasColumnType("nvarchar(66)");
+
+                    b.Property<string>("BuyTxHash")
+                        .IsRequired()
+                        .HasMaxLength(66)
+                        .HasColumnType("nvarchar(66)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PropertyTokenAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserWalletAddress")
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("PropertyTokenAddress");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("OnChainSharePurchases", (string)null);
+                });
+
+            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.OnChainShareSale", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AmountOfSharesRaw")
+                        .IsRequired()
+                        .HasMaxLength(78)
+                        .HasColumnType("nvarchar(78)");
+
+                    b.Property<string>("ApproveTxHash")
+                        .HasMaxLength(66)
+                        .HasColumnType("nvarchar(66)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PropertyTokenAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.Property<string>("SellTxHash")
+                        .IsRequired()
+                        .HasMaxLength(66)
+                        .HasColumnType("nvarchar(66)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserWalletAddress")
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("PropertyTokenAddress");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("OnChainShareSales", (string)null);
+                });
+
+            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.OnChainVaultSupply", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AmountMintedRaw")
+                        .IsRequired()
+                        .HasMaxLength(78)
+                        .HasColumnType("nvarchar(78)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IdentityTxHash")
+                        .HasMaxLength(66)
+                        .HasColumnType("nvarchar(66)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MintTxHash")
+                        .IsRequired()
+                        .HasMaxLength(66)
+                        .HasColumnType("nvarchar(66)");
+
+                    b.Property<Guid?>("PerformedByAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PropertyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TokenAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VaultAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("nvarchar(42)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("TokenAddress");
+
+                    b.HasIndex("VaultAddress");
+
+                    b.ToTable("OnChainVaultSupplies", (string)null);
+                });
+
             modelBuilder.Entity("RealEstateInvesting.Domain.Entities.Property", b =>
                 {
                     b.Property<Guid>("Id")

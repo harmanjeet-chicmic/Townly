@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RealEstateInvesting.API.Contracts;
 using RealEstateInvesting.Application.Admin.Properties.DTOs;
 using RealEstateInvesting.Application.Admin.Properties.Interfaces;
+using RealEstateInvesting.Application.Common.Interfaces;
 using System.Security.Claims;
-using RealEstateInvesting.Application.Admin.Properties.DTOs;
 
 namespace RealEstateInvesting.Api.Controllers.Admin;
 
+/// <summary>
+/// Admin endpoints for property lifecycle (approve, reject, etc.). For full on-chain property creation use api/property-suite/create.
+/// </summary>
 [ApiController]
 [Route("api/admin/properties")]
 [Authorize(Roles = "Admin")]
@@ -97,6 +101,5 @@ public class AdminPropertyController : ControllerBase
 
         return Ok();
     }
-
 
 }

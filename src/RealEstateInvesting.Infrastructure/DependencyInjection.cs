@@ -14,6 +14,7 @@ using RealEstateInvesting.Application.Kyc.Queries;
 using RealEstateInvesting.Infrastructure.Kyc.ReadModels;
 using RealEstateInvesting.Infrastructure.Admin.Kyc;
 using RealEstateInvesting.Application.Health.Queries;
+using RealEstateInvesting.Infrastructure.Blockchain;
 using RealEstateInvesting.Infrastructure.Health;
 namespace RealEstateInvesting.Infrastructure;
 
@@ -53,6 +54,26 @@ public static class DependencyInjection
         services.AddScoped<IGetMyKycStatusReadService, KycStatusReadService>();
         services.AddScoped<IHealthCheckService, HealthCheckService>();
         services.AddScoped<ILogRepository, LogRepository>();
+
+        // T-REX Identity Registry (on-chain KYC) + Real Estate Registry (Flow 4)
+        services.Configure<TRexOptions>(configuration.GetSection(TRexOptions.SectionName));
+        services.AddScoped<IIdentityRegistryContractService, IdentityRegistryContractService>();
+        services.AddScoped<IRealEstateRegistryContractService, RealEstateRegistryContractService>();
+        services.AddScoped<IERC20ContractService, ERC20ContractService>();
+        services.AddScoped<IRealEstateMarketplaceContractService, RealEstateMarketplaceContractService>();
+        services.AddScoped<IComplianceTokenContractService, ComplianceTokenContractService>();
+        services.AddScoped<ITREXFactoryContractService, TREXFactoryContractService>();
+        services.AddScoped<IRealEstateVaultFactoryContractService, RealEstateVaultFactoryContractService>();
+        services.AddScoped<ITokenReaderContractService, TokenReaderContractService>();
+        services.AddScoped<IModularComplianceContractService, ModularComplianceContractService>();
+        services.AddSingleton<IKycClaimTopicProvider, KycClaimTopicProvider>();
+        services.AddSingleton<IBlockchainSettings, BlockchainSettings>();
+
+        services.AddScoped<IOnChainKycActionRepository, OnChainKycActionRepository>();
+        services.AddScoped<IOnChainVaultSupplyRepository, OnChainVaultSupplyRepository>();
+        services.AddScoped<IOnChainPropertyRegistrationRepository, OnChainPropertyRegistrationRepository>();
+        services.AddScoped<IOnChainSharePurchaseRepository, OnChainSharePurchaseRepository>();
+        services.AddScoped<IOnChainShareSaleRepository, OnChainShareSaleRepository>();
 
         return services;
     }
