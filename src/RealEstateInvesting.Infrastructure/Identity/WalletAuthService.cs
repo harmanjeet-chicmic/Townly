@@ -157,6 +157,7 @@ using RealEstateInvesting.Application.Auth.Interfaces;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Infrastructure.Persistence;
 using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.Common.Exceptions;
 
 namespace RealEstateInvesting.Infrastructure.Identity;
 
@@ -225,7 +226,7 @@ public class WalletAuthService : IWalletAuthService
                 x.StartsWith("Nonce:", StringComparison.OrdinalIgnoreCase));
 
         if (line == null)
-            throw new InvalidOperationException("Nonce not found in message");
+            throw new NotFoundException("Nonce not found in message");
 
         return line.Replace("Nonce:", "").Trim();
     }

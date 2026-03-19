@@ -1,3 +1,4 @@
+using RealEstateInvesting.Application.Common.Exceptions;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Domain.Entities;
 
@@ -20,7 +21,7 @@ public class PropertyInvestmentInfoService
     {
         var property =
             await _propertyRepository.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         if (property.TotalUnits <= 0)
             throw new InvalidOperationException("Invalid property units.");

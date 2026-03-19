@@ -48,8 +48,8 @@ public class KycRecord : BaseEntity
 
     public void Approve(Guid adminUserId)
     {
-        if (Status != KycStatus.Pending)
-            throw new InvalidOperationException("Only pending KYC records can be approved.");
+        if (Status != KycStatus.Pending && Status != KycStatus.NotStarted)
+            throw new InvalidOperationException("Only pending or not started KYC records can be approved.");
 
         Status = KycStatus.Approved;
         ReviewedBy = adminUserId;
@@ -61,8 +61,8 @@ public class KycRecord : BaseEntity
 
     public void Reject(Guid adminUserId, string reason)
     {
-        if (Status != KycStatus.Pending)
-            throw new InvalidOperationException("Only pending KYC records can be rejected.");
+        if (Status != KycStatus.Pending && Status != KycStatus.NotStarted)
+            throw new InvalidOperationException("Only pending or not started KYC records can be rejected.");
 
         if (string.IsNullOrWhiteSpace(reason))
             throw new InvalidOperationException("Rejection reason is required.");

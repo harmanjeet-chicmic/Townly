@@ -59,7 +59,7 @@ public class SubmitKycHandler
 
         // 3️⃣ Load user aggregate
         var user = await _userRepository.GetByIdAsync(_currentUser.UserId, cancellationToken)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new NotFoundException("User not found.");
 
         // 4️⃣ Create immutable KYC record
         var kycRecord = KycRecord.Submit(

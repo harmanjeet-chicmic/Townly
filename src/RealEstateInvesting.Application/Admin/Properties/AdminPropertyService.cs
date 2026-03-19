@@ -194,6 +194,8 @@ using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Notifications.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Enums;
+using RealEstateInvesting.Application.Admin.Kyc.Interfaces;
+using RealEstateInvesting.Application.Common.Exceptions;
 
 namespace RealEstateInvesting.Application.Admin.Properties;
 
@@ -208,6 +210,8 @@ public class AdminPropertyService : IAdminPropertyService
     private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
     private readonly IPropertyDocumentRepository _propertyDocumentRepository;
     private readonly IOrganizationRepository  _organizationRepository;
+    private readonly IAdminKycRepository _adminKycRepository;
+    private readonly ITransactionRepository _transactionRepository;
 
     public AdminPropertyService(
         IAdminPropertyRepository propertyRepo,
@@ -219,6 +223,8 @@ public class AdminPropertyService : IAdminPropertyService
         IAnalyticsSnapshotRepository analyticsSnapshotRepository,
         IPropertyDocumentRepository propertyDocumentRepository,
         IOrganizationRepository organizationRepository)
+        IAdminKycRepository adminKycRepository,
+        ITransactionRepository transactionRepository)
     {
         _propertyRepo = propertyRepo;
         _notificationService = notificationService;
@@ -229,6 +235,8 @@ public class AdminPropertyService : IAdminPropertyService
         _analyticsSnapshotRepository = analyticsSnapshotRepository;
         _propertyDocumentRepository = propertyDocumentRepository;
         _organizationRepository= organizationRepository;
+        _adminKycRepository = adminKycRepository;
+        _transactionRepository = transactionRepository;
     }
 
     public async Task<PaginatedResponse<MyPropertyDetailsDto>> GetPendingAsync(AdminPropertyQuery query)
@@ -316,7 +324,7 @@ public class AdminPropertyService : IAdminPropertyService
     public async Task ApproveAsync(Guid propertyId, Guid adminId)
     {
         var property = await _propertyRepo.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         property.MarkAdminApproved(adminId);
 
@@ -334,7 +342,7 @@ public class AdminPropertyService : IAdminPropertyService
     public async Task RejectAsync(Guid propertyId, Guid adminId, string reason)
     {
         var property = await _propertyRepo.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         property.Reject(adminId, reason);
 
@@ -352,7 +360,7 @@ public class AdminPropertyService : IAdminPropertyService
     public async Task ModifyRequest(Guid propertyId, Guid adminId, string reason)
     {
         var property = await _propertyRepo.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         property.ModifyRequest(adminId, reason);
 
@@ -400,10 +408,10 @@ public class AdminPropertyService : IAdminPropertyService
     public async Task ApproveUpdateRequestAsync(Guid updateRequestId, Guid adminId)
     {
         var request = await _updateRepo.GetByIdAsync(updateRequestId)
-            ?? throw new InvalidOperationException("Update request not found.");
+            ?? throw new NotFoundException("Update request not found.");
 
         var property = await _propertyRepository.GetByIdAsync(request.PropertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         property.ApplyApprovedMetadataUpdate(
             request.Description,
@@ -427,10 +435,10 @@ public class AdminPropertyService : IAdminPropertyService
     public async Task RejectUpdateRequestAsync(Guid updateRequestId, Guid adminId, string reason)
     {
         var request = await _updateRepo.GetByIdAsync(updateRequestId)
-            ?? throw new InvalidOperationException("Update request not found.");
+            ?? throw new NotFoundException("Update request not found.");
 
         var property = await _propertyRepository.GetByIdAsync(request.PropertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         request.Reject();
 
@@ -523,6 +531,26 @@ public class AdminPropertyService : IAdminPropertyService
             PageSize = query.PageSize,
             TotalCount = totalCount,
             TotalPages = (int)Math.Ceiling(totalCount / (double)query.PageSize)
+        };
+    }
+
+    public async Task<AdminPropertyStatsDto> GetStatsAsync()
+    {
+        var totalAssetValue = await _propertyRepo.GetTotalAssetValueAsync();
+        var totalInvestors = await _investmentRepository.GetTotalInvestorsCountAsync();
+        var tokensIssued = await _investmentRepository.GetTotalTokensIssuedAsync();
+        var pendingKyc = await _adminKycRepository.GetPendingKycCountAsync();
+        var platformRevenue = await _transactionRepository.GetPlatformRevenueAsync();
+        var pendingPropertyApprovals = await _propertyRepo.GetPendingApprovalsCountAsync();
+
+        return new AdminPropertyStatsDto
+        {
+            TotalAssetValue = totalAssetValue,
+            TotalInvestors = totalInvestors,
+            TokensIssued = tokensIssued,
+            PendingKyc = pendingKyc,
+            PlatformRevenue = platformRevenue,
+            PendingPropertyApprovals = pendingPropertyApprovals
         };
     }
 }

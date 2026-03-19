@@ -115,4 +115,10 @@ public class AdminPropertyController : ControllerBase
         });
     }
 
+    [HttpGet("Details")]
+    public async Task<IActionResult> GetDetails()
+    {
+        var result = await _service.GetStatsAsync();
+        return Ok(result);
+    }
 }

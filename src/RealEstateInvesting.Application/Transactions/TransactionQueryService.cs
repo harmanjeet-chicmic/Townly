@@ -1,4 +1,5 @@
 using Org.BouncyCastle.Math.EC.Rfc7748;
+using RealEstateInvesting.Application.Common.Exceptions;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Transactions.Dtos;
 using RealEstateInvesting.Domain.Enums;
@@ -41,7 +42,7 @@ public class TransactionQueryService
 
         // 2️⃣ Load investor (current user)
         var investor = await _userRepository.GetByIdAsync(userId)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new NotFoundException("User not found.");
 
         var investorWallet = investor.WalletAddress;
 

@@ -2,6 +2,7 @@ using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Enums;
 using RealEstateInvesting.Application.VectorSearch;
+using RealEstateInvesting.Application.Common.Exceptions;
 
 namespace RealEstateInvesting.Application.Properties;
 
@@ -158,8 +159,8 @@ public class PropertyQueryService
 
         var property =
             await _propertyRepository.GetDetailsWithSoldUnitsAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
-
+            ?? throw new NotFoundException("Property not found.");
+    
 
         var snapshot =
             await _analyticsSnapshotRepository
@@ -388,7 +389,7 @@ public class PropertyQueryService
          Guid propertyId)
     {
         var property = await _propertyRepository.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         // 🔒 Ownership check
         if (property.OwnerUserId != userId)
@@ -496,7 +497,7 @@ public class PropertyQueryService
     {
         // 1️⃣ Get base property
         var baseProperty = await _propertyRepository.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         // 2️⃣ Build embedding text (stable + meaningful)
         var embeddingText = $"""
@@ -610,7 +611,7 @@ public class PropertyQueryService
     public async Task DeletePropertyAsync(Guid userId, Guid propertyId)
     {
         var property = await _propertyRepository.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         if (property.OwnerUserId != userId)
             throw new UnauthorizedAccessException(

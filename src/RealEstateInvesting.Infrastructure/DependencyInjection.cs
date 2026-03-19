@@ -13,9 +13,27 @@ using RealEstateInvesting.Application.Admin.Kyc.Interfaces;
 using RealEstateInvesting.Application.Kyc.Queries;
 using RealEstateInvesting.Infrastructure.Kyc.ReadModels;
 using RealEstateInvesting.Infrastructure.Admin.Kyc;
+using RealEstateInvesting.Infrastructure.Admin.Users;
+using RealEstateInvesting.Infrastructure.Health;
+using RealEstateInvesting.Infrastructure.Storage;
+using RealEstateInvesting.Infrastructure.Push;
+using RealEstateInvesting.Infrastructure.Pricing;
+using RealEstateInvesting.Infrastructure.Admin.Properties;
+using RealEstateInvesting.Infrastructure.Security;
+using RealEstateInvesting.Application.AdminAuth.Interfaces;
+using RealEstateInvesting.Application.AdminAuth;
+using RealEstateInvesting.Application.Admin.Properties.Interfaces;
+using RealEstateInvesting.Application.Admin.Properties;
+using RealEstateInvesting.Application.Admin.Users;
+using RealEstateInvesting.Application.Admin.Users.Interfaces;
+using RealEstateInvesting.Application.Notifications.Interfaces;
+using RealEstateInvesting.Application.Notifications;
 using RealEstateInvesting.Application.Health.Queries;
 using RealEstateInvesting.Infrastructure.Blockchain;
-using RealEstateInvesting.Infrastructure.Health;
+using RealEstateInvesting.Application.Tokens.Requests;
+using RealEstateInvesting.Application.Tokens.Balance;
+using Amazon.S3;
+using Microsoft.Extensions.Caching.Memory;
 namespace RealEstateInvesting.Infrastructure;
 
 public static class DependencyInjection
@@ -29,31 +47,87 @@ public static class DependencyInjection
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection")));
 
-        // HTTP context (required for CurrentUser)
-
-
-        // Auth services
+        // Auth & Identity
         services.AddScoped<IWalletNonceService, WalletNonceService>();
         services.AddScoped<IWalletAuthService, WalletAuthService>();
         services.AddScoped<IJwtService, JwtService>();
-
-        // Identity / Current user
         services.AddScoped<ICurrentUser, CurrentUser>();
+        services.AddScoped<IAdminAuthService, AdminAuthService>();
+        services.AddScoped<IAdminRepository, AdminRepository>();
+        services.AddScoped<IAdminPasswordHasher, AdminPasswordHasher>();
 
-        // Repositories
+        // Core Repositories
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IKycRecordRepository, KycRecordRepository>();
-        services.AddScoped<SubmitKycHandler>();
-        services.AddScoped<IKycFileStorageService, KycFileStorageService>();
+        services.AddScoped<IPropertyRepository, PropertyRepository>();
+        services.AddScoped<IInvestmentRepository, InvestmentRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddHttpClient<IPriceFeed, CoinGeckoPriceFeed>();
-        services.AddScoped<IAdminKycService, AdminKycService>();
 
+        // KYC System
+        services.AddScoped<IKycRecordRepository, KycRecordRepository>();
         services.AddScoped<IAdminKycRepository, AdminKycRepository>();
         services.AddScoped<IAdminKycService, AdminKycService>();
+        services.AddScoped<IKycFileStorageService, KycFileStorageService>();
         services.AddScoped<IGetMyKycStatusReadService, KycStatusReadService>();
+        services.AddScoped<SubmitKycHandler>();
+
+        // Notifications
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IPushNotificationService, PushNotificationService>();
+        services.AddScoped<IUserDeviceTokenRepository, UserDeviceTokenRepository>();
+
+        // Properties & Analytics
+        services.AddScoped<IAdminPropertyRepository, AdminPropertyRepository>();
+        services.AddScoped<IAdminPropertyService, AdminPropertyService>();
+        services.AddScoped<IPropertyDocumentRepository, PropertyDocumentRepository>();
+        services.AddScoped<IPropertyUpdateRequestRepository, PropertyUpdateRequestRepository>();
+        services.AddScoped<IAnalyticsSnapshotRepository, AnalyticsSnapshotRepository>();
+        services.AddScoped<IAdminUserRepository, AdminUserRepository>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
+        
+        // External & Infrastructure
         services.AddScoped<IHealthCheckService, HealthCheckService>();
         services.AddScoped<ILogRepository, LogRepository>();
+        services.AddHttpClient<IPriceFeed, CoinGeckoPriceFeed>();
+        services.AddMemoryCache();
+        services.AddHttpClient<CoinGeckoEthPriceService>();
+        
+        services.AddScoped<IEthPriceService>(sp =>
+        {
+            var live = sp.GetRequiredService<CoinGeckoEthPriceService>();
+            var cache = sp.GetRequiredService<IMemoryCache>();
+            return new CachedEthPriceService(live, cache);
+        });
+
+        // S3 Storage
+        var awsSection = configuration.GetSection("AWS");
+        services.AddSingleton<IAmazonS3>(_ =>
+        {
+            return new AmazonS3Client(
+                awsSection["AccessKey"],
+                awsSection["SecretKey"],
+                Amazon.RegionEndpoint.GetBySystemName(awsSection["Region"])
+            );
+        });
+
+        services.AddScoped<IFileStorage>(sp =>
+        {
+            return new S3FileStorage(
+                sp.GetRequiredService<IAmazonS3>(),
+                awsSection["BucketName"]!,
+                awsSection["BasePrefix"]!,
+                awsSection["Region"]!
+            );
+        });
+
+        // Token System
+        services.AddScoped<ITokenRequestRepository, TokenRequestRepository>();
+        services.AddScoped<IUserTokenBalanceRepository, UserTokenBalanceRepository>();
+        services.AddScoped<ITokenTransactionRepository, TokenTransactionRepository>();
+        services.AddScoped<CreateTokenRequestHandler>();
+        services.AddScoped<ReviewTokenRequestHandler>();
+        services.AddScoped<UserTokenBalanceService>();
 
         // T-REX Identity Registry (on-chain KYC) + Real Estate Registry (Flow 4)
         services.Configure<TRexOptions>(configuration.GetSection(TRexOptions.SectionName));

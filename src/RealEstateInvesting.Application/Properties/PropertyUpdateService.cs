@@ -1,3 +1,4 @@
+using RealEstateInvesting.Application.Common.Exceptions;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Entities;
@@ -28,7 +29,7 @@ public class PropertyUpdateService
     string? imageUrl)
     {
         var user = await _userRepository.GetByIdAsync(userId)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new NotFoundException("User not found.");
 
         if (user.KycStatus != KycStatus.Approved)
             throw new InvalidOperationException("KYC approval required.");
@@ -37,7 +38,7 @@ public class PropertyUpdateService
             throw new InvalidOperationException("User is blocked.");
 
         var property = await _propertyRepository.GetByIdAsync(propertyId)
-            ?? throw new InvalidOperationException("Property not found.");
+            ?? throw new NotFoundException("Property not found.");
 
         if (property.OwnerUserId != userId)
             throw new UnauthorizedAccessException("Not property owner.");

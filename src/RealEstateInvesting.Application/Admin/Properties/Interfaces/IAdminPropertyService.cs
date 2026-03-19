@@ -24,4 +24,5 @@ public interface IAdminPropertyService
         string reason);
     Task<PaginatedResponse<MyPropertyDetailsDto>> GetAllAsync(AdminPropertyQuery query);
     Task AssignToOrganizationAsync(Guid propertyId, Guid organizationId);
+    Task<AdminPropertyStatsDto> GetStatsAsync();
 }

@@ -41,7 +41,7 @@ public class QdrantVectorStore : IVectorStore
                 "application/json"));
 
         if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException(
+            throw new Exception(
                 await response.Content.ReadAsStringAsync());
 
         using var doc = JsonDocument.Parse(
@@ -76,7 +76,7 @@ public class QdrantVectorStore : IVectorStore
             request);
 
         if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException(
+            throw new Exception(
                 await response.Content.ReadAsStringAsync());
     }
 
