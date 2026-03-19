@@ -6,6 +6,7 @@ public interface IUserDeviceTokenRepository
 {
     Task<UserDeviceToken?> GetByTokenAsync(string deviceToken);
     Task<List<UserDeviceToken>> GetActiveByUserIdAsync(Guid userId);
+    Task DeactivateAllByUserIdAsync(Guid userId);
     Task AddAsync(UserDeviceToken token);
     
     Task SaveChangesAsync();

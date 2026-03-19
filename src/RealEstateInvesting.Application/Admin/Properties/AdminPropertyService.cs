@@ -270,7 +270,8 @@ public class AdminPropertyService : IAdminPropertyService
             {
                 Title = d.Title,
                 FileName = d.FileName,
-                DocumentUrl = d.DocumentUrl
+                DocumentUrl = d.DocumentUrl,
+                Type = d.Type
             }).ToList();
 
             var pricePerUnitUsd =
@@ -292,6 +293,9 @@ public class AdminPropertyService : IAdminPropertyService
                 Status = property.Status,
                 RejectionReason = property.RejectionReason,
                 RentalIncomeHistory = property.RentalIncomeHistory,
+                AdminDocuments = documentDtos
+                    .Where(d => d.Type == PropertyDocumentType.Approved || d.Type == PropertyDocumentType.Rejected)
+                    .ToList(),
 
                 TotalValue = property.ApprovedValuation,
                 TotalUnits = property.TotalUnits,
@@ -507,7 +511,8 @@ public class AdminPropertyService : IAdminPropertyService
             {
                 Title = d.Title,
                 FileName = d.FileName,
-                DocumentUrl = d.DocumentUrl
+                DocumentUrl = d.DocumentUrl,
+                Type = d.Type
             }).ToList();
 
             var pricePerUnitUsd =
@@ -529,6 +534,10 @@ public class AdminPropertyService : IAdminPropertyService
                 Status = property.Status,
                 RejectionReason = property.RejectionReason,
                 RentalIncomeHistory = property.RentalIncomeHistory,
+                AdminDocuments = documentDtos
+                    .Where(d => d.Type == PropertyDocumentType.Approved || d.Type == PropertyDocumentType.Rejected)
+                    .ToList(),
+                
 
                 TotalValue = property.ApprovedValuation,
                 TotalUnits = property.TotalUnits,

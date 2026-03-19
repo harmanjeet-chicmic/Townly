@@ -26,7 +26,17 @@ public class UserDeviceTokenRepository : IUserDeviceTokenRepository
             .Where(x => x.UserId == userId && x.IsActive)
             .ToListAsync();
     }
-    
+        public async Task DeactivateAllByUserIdAsync(Guid userId)
+    {
+        var tokens = await _context.Set<UserDeviceToken>()
+            .Where(x => x.UserId == userId && x.IsActive)
+            .ToListAsync();
+
+        foreach (var token in tokens)
+        {
+            token.Deactivate();
+        }
+    }
 
     public async Task AddAsync(UserDeviceToken token)
     {
