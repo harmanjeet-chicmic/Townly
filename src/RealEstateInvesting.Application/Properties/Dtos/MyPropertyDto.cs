@@ -25,5 +25,5 @@ public class MyPropertyDto
     public decimal? RiskScore { get; set; }
     public decimal PricePerUnitEth { get; set; }
     public bool HasPendingUpdateRequest { get; set; }
-
-} 
+    public List<PropertyDocumentDto> AdminDocuments { get; set; } = new();
+}
