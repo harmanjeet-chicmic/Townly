@@ -222,7 +222,7 @@ public class AdminPropertyService : IAdminPropertyService
         IEthPriceService ethPriceService,
         IAnalyticsSnapshotRepository analyticsSnapshotRepository,
         IPropertyDocumentRepository propertyDocumentRepository,
-        IOrganizationRepository organizationRepository)
+        IOrganizationRepository organizationRepository,
         IAdminKycRepository adminKycRepository,
         ITransactionRepository transactionRepository)
     {
