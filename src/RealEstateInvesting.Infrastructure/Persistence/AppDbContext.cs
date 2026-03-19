@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using RealEstateInvesting.Domain.Common;
 using RealEstateInvesting.Domain.Entities;
 using System.Reflection;
@@ -41,6 +41,7 @@ public class AppDbContext : DbContext
     public DbSet<OnChainShareSale> OnChainShareSales => Set<OnChainShareSale>();
     public DbSet<OnChainVaultSupply> OnChainVaultSupplies => Set<OnChainVaultSupply>();
     public DbSet<PropertyActivationRecord> PropertyActivationRecords => Set<PropertyActivationRecord>();
+    public DbSet<PropertyRegistrationJob> PropertyRegistrationJobs => Set<PropertyRegistrationJob>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

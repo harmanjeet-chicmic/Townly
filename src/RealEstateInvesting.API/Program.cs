@@ -263,10 +263,10 @@ builder.Services.AddRateLimiter(options =>
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
-builder.Services.AddScoped<IUserDeviceTokenRepository, UserDeviceTokenRepository>();
+/*builder.Services.AddScoped<IUserDeviceTokenRepository, UserDeviceTokenRepository>();
 
 // Infrastructure (DbContext, services, etc.)
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration);*/
 
 var app = builder.Build();
 app.UseMiddleware<RealEstateInvesting.API.Middleware.ExceptionMiddleware>();

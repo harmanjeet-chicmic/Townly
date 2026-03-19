@@ -16,4 +16,6 @@ public class PropertyWithSoldUnits
     public PropertyStatus Status { get; set; }
 
     public int SoldUnits { get; set; }
+    public decimal SquareFeet { get; set; }
+    public decimal SellingPercentage { get; set; }
 }

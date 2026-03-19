@@ -8,6 +8,8 @@ public class MarketplacePropertyDto
     public string PropertyType { get; set; } = default!;
     public PropertyStatus Status { get; set; } 
     public List<string> ImageUrls { get; set; } = new();
+    public string? RegistrationJobId { get; set; }
+    public string? TokenAddress { get; set; }
 
     public decimal ApprovedValuation { get; set; }
     public decimal AnnualYieldPercent { get; set; }
@@ -16,5 +18,4 @@ public class MarketplacePropertyDto
     public int AvailableUnits { get; set; }
     public decimal? RiskScore { get; set; }
     public decimal PricePerUnitEth { get; set; }
-
 }
