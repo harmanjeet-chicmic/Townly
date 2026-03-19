@@ -103,7 +103,7 @@ public class InvestmentService
                     ErrorCodes.InsufficientShares,
                     ErrorMessages.InsufficientShares);
 
-            // 4️⃣ Price calculation (NO rounding)
+            // 4️⃣ Price calculation 
             var pricePerShareUsd =
                 property.ApprovedValuation / property.TotalUnits;
 
@@ -116,20 +116,18 @@ public class InvestmentService
                     ErrorCodes.InvalidEthPrice,
                     ErrorMessages.InvalidEthPrice);
 
-            // 🔥 ETH calculation (FULL PRECISION)
+            // 🔥 ETH calculation 
             var investmentEth =
-                investmentUsd / ethUsdRate;
+                Math.Round(investmentUsd / ethUsdRate, 8);
 
             Console.WriteLine("============invested amount from service", investmentEth);
 
-            // 🔥 Flat Platform Fee
             const decimal PlatformFeeEth = 0.05m;
 
             var totalRequiredEth =
                 investmentEth + PlatformFeeEth;
 
 
-            // 5️⃣ Token check & deduction
             var tokenBalance =
                 await _userTokenBalanceRepository.GetByUserIdAsync(userId);
 
@@ -154,19 +152,19 @@ public class InvestmentService
             Console.WriteLine($"EthUsdRate: {ethUsdRate}");
             Console.WriteLine($"InvestmentEth (SERVICE): {investmentEth}");
 
-            // 6️⃣ Create investment (single source of truth)
             var investment = Investment.Create(
                 userId,
                 property.Id,
                 dto.Shares,
                 pricePerShareUsd,
-                ethUsdRate);
+                ethUsdRate,
+                investmentEth);
 
             await _investmentRepository.AddAsync(investment);
             Console.WriteLine("==== DEBUG AFTER SAVE ====");
             Console.WriteLine($"Stored EthAmount: {investment.EthAmountAtExecution}");
 
-            // 7️⃣ Ledger transactions (use SAME calculated values)
+            // 7️⃣ Ledger transactions 
             var transactions = new List<Transaction>
         {
             Transaction.CreateWithEth(
@@ -190,7 +188,7 @@ public class InvestmentService
 
             await _transactionRepository.AddRangeAsync(transactions);
 
-            // 8️⃣ Sold-out detection
+           
             if (availableShares - dto.Shares == 0)
             {
                 property.MarkSoldOut();
@@ -201,7 +199,7 @@ public class InvestmentService
             // 9️⃣ Commit
             await _unitOfWork.CommitAsync();
 
-            // 🔔 Notification (USD formatted only for display)
+          
             await _notificationService.CreateAsync(
                 property.OwnerUserId,
                 NotificationType.InvestmentReceived,

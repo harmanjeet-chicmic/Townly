@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RealEstateInvesting.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using RealEstateInvesting.Infrastructure.Persistence;
 namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260318173108_UpdateEthAmountPrecision")]
+    partial class UpdateEthAmountPrecision
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,12 +78,12 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("EthAmountAtExecution")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("decimal(18,8)");
+                        .HasPrecision(36, 18)
+                        .HasColumnType("decimal(36,18)");
 
                     b.Property<decimal>("EthUsdRateAtExecution")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("decimal(18,8)");
+                        .HasPrecision(36, 18)
+                        .HasColumnType("decimal(36,18)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -993,8 +996,8 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("EthAmountAtExecution")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("decimal(18,8)");
+                        .HasPrecision(36, 18)
+                        .HasColumnType("decimal(36,18)");
 
                     b.Property<decimal?>("EthUsdRateAtExecution")
                         .HasPrecision(18, 6)

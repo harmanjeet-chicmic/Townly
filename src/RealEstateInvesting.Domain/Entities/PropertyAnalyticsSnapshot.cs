@@ -5,17 +5,12 @@ namespace RealEstateInvesting.Domain.Entities;
 public class PropertyAnalyticsSnapshot : BaseEntity
 {
     public Guid PropertyId { get; private set; }
-
-    // Snapshot time (hour bucket)
     public DateTime SnapshotAt { get; private set; }
-
-    // Aggregates
     public int SharesSold { get; private set; }
     public decimal TotalInvested { get; private set; }
 
-    // Analytics
     public decimal DemandScore { get; private set; }
-    public decimal RiskScore { get; private set; }   // 🔥 NEW
+    public decimal RiskScore { get; private set; }   
     public decimal PricePerShare { get; private set; }
     public decimal Valuation { get; private set; }
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using RealEstateInvesting.Infrastructure.Organizations;
 using RealEstateInvesting.API.Filters;
 using RealEstateInvesting.API.RequestDebugMiddleware;
 using RealEstateInvesting.Application;
@@ -88,7 +89,8 @@ builder.Services.AddSingleton<IAmazonS3>(_ =>
     );
 });
 builder.Services.AddScoped<PortfolioQueryService>();
-
+builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+builder.Services.AddScoped<OrganizationQueryService>();
 builder.Services.AddScoped<IFileStorage>(sp =>
 {
     return new S3FileStorage(

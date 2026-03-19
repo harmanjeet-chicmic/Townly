@@ -20,5 +20,8 @@ public class InvestmentConfiguration : IEntityTypeConfiguration<Investment>
 
         builder.HasIndex(x => x.UserId);
         builder.HasIndex(x => x.PropertyId);
+        builder.Property(x => x.EthAmountAtExecution).HasPrecision(18, 8);
+        builder.Property(x => x.EthUsdRateAtExecution).HasPrecision(18, 8); 
+
     }
 }

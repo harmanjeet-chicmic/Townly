@@ -16,8 +16,8 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
                .HasPrecision(18, 2)
                .IsRequired();
 
-        builder.Property(t => t.EthAmountAtExecution)
-               .HasPrecision(18, 8);
+        builder.Property(t => t.EthAmountAtExecution).HasPrecision(18, 8);
+
 
         builder.Property(t => t.EthUsdRateAtExecution)
                .HasPrecision(18, 6);

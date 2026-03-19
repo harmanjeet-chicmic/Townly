@@ -9,17 +9,13 @@ public class MyPropertyDto
     public string Name { get; set; } = default!;
     public string Location { get; set; } = default!;
     public string PropertyType { get; set; } = default!;
-    public string? ImageUrl { get; set; }
-    
-
+    public List<string> Images { get; set; } = new();
     public PropertyStatus Status { get; set; }
 
-    // Valuation
     public decimal ApprovedValuation { get; set; }
     public int TotalUnits { get; set; }
     public decimal AnnualYieldPercent { get; set; }
 
-    // Derived (important)
     public int SoldUnits { get; set; }
     public int AvailableUnits { get; set; }
     public decimal InvestmentProgressPercent { get; set; }

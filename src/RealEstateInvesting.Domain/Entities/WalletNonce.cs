@@ -85,13 +85,12 @@ public class WalletNonce : BaseEntity
 {
     public string? WalletAddress { get; private set; }   
     public string Nonce { get; private set; } = default!;
-    public long? ChainId { get; private set; }           // 👈 nullable
+    public long? ChainId { get; private set; }           
     public DateTime ExpiresAt { get; private set; }
     public bool IsUsed { get; private set; }
 
     private WalletNonce() {}
 
-    // 🔹 Existing flow (KEEP IT)
     public static WalletNonce Create(
         string wallet,
         long chainId,
@@ -107,8 +106,6 @@ public class WalletNonce : BaseEntity
             CreatedAt = DateTime.UtcNow
         };
     }
-
-    // 🆕 Anonymous nonce (NEW)
     public static WalletNonce CreateAnonymous(string nonce)
     {
         return new WalletNonce

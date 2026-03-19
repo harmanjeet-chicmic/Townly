@@ -21,7 +21,8 @@ public class Investment : BaseEntity
     Guid propertyId,
     int sharesPurchased,
     decimal pricePerShareUsd,
-    decimal ethUsdRate)
+    decimal ethUsdRate,
+    decimal ethAmount)
     {
         if (sharesPurchased <= 0)
             throw new InvalidOperationException("Shares purchased must be greater than zero.");
@@ -33,7 +34,6 @@ public class Investment : BaseEntity
             throw new InvalidOperationException("Invalid ETH rate.");
 
         var totalUsd = sharesPurchased * pricePerShareUsd;
-        var ethAmount = totalUsd / ethUsdRate;
         Console.WriteLine("====ETH AMOUNT FROM ENTITY====" , ethAmount);
 
         return new Investment

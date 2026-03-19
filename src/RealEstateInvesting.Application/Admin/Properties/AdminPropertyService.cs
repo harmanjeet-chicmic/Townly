@@ -207,6 +207,7 @@ public class AdminPropertyService : IAdminPropertyService
     private readonly IEthPriceService _ethPriceService;
     private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
     private readonly IPropertyDocumentRepository _propertyDocumentRepository;
+    private readonly IOrganizationRepository  _organizationRepository;
 
     public AdminPropertyService(
         IAdminPropertyRepository propertyRepo,
@@ -216,7 +217,8 @@ public class AdminPropertyService : IAdminPropertyService
         IInvestmentRepository investmentRepository,
         IEthPriceService ethPriceService,
         IAnalyticsSnapshotRepository analyticsSnapshotRepository,
-        IPropertyDocumentRepository propertyDocumentRepository)
+        IPropertyDocumentRepository propertyDocumentRepository,
+        IOrganizationRepository organizationRepository)
     {
         _propertyRepo = propertyRepo;
         _notificationService = notificationService;
@@ -226,6 +228,7 @@ public class AdminPropertyService : IAdminPropertyService
         _ethPriceService = ethPriceService;
         _analyticsSnapshotRepository = analyticsSnapshotRepository;
         _propertyDocumentRepository = propertyDocumentRepository;
+        _organizationRepository= organizationRepository;
     }
 
     public async Task<PaginatedResponse<MyPropertyDetailsDto>> GetPendingAsync(AdminPropertyQuery query)
@@ -315,7 +318,7 @@ public class AdminPropertyService : IAdminPropertyService
         var property = await _propertyRepo.GetByIdAsync(propertyId)
             ?? throw new InvalidOperationException("Property not found.");
 
-        property.Activate();
+        property.MarkAdminApproved(adminId);
 
         await _propertyRepo.SaveChangesAsync();
 
@@ -323,7 +326,7 @@ public class AdminPropertyService : IAdminPropertyService
             property.OwnerUserId,
             NotificationType.PropertyApproved,
             "Property Approved",
-            $"Your property \"{property.Name}\" has been approved and is now live.",
+            $"Your property \"{property.Name}\" has been approved.",
             property.Id
         );
     }
@@ -377,6 +380,21 @@ public class AdminPropertyService : IAdminPropertyService
             ImageUrl = r.ImageUrl,
             RequestedAt = r.RequestedAt
         });
+    }
+    public async Task AssignToOrganizationAsync(Guid propertyId, Guid organizationId)
+    {
+        var property = await _propertyRepo.GetByIdAsync(propertyId)
+            ?? throw new InvalidOperationException("Property not found.");
+
+        if (property.Status != PropertyStatus.AdminApproved)
+            throw new InvalidOperationException("Property must be admin approved before assignment.");
+
+        var organization = await _organizationRepository.GetByIdAsync(organizationId)
+            ?? throw new InvalidOperationException("Organization not found.");
+
+        property.AssignToOrganization(organizationId);
+
+        await _propertyRepo.SaveChangesAsync();
     }
 
     public async Task ApproveUpdateRequestAsync(Guid updateRequestId, Guid adminId)
