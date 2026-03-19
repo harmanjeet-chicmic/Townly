@@ -408,13 +408,22 @@ public class PropertyQueryService
                 ApprovedValuation = p.ApprovedValuation,
                 TotalUnits = p.TotalUnits,
                 AnnualYieldPercent = p.AnnualYieldPercent,
-                SoldUnits = soldUnits,
-                AvailableUnits = availableUnits,
-                InvestmentProgressPercent = progressPercent,
-                PricePerUnitEth = pricePerUnitEth,
-                RiskScore = snapshot?.RiskScore ?? 5,
-                HasPendingUpdateRequest = pendingUpdateSet.Contains(p.Id),
-            };
+                 SoldUnits = soldUnits,
+                 AvailableUnits = availableUnits,
+                 InvestmentProgressPercent = progressPercent,
+                 PricePerUnitEth = pricePerUnitEth,
+                 RiskScore = snapshot?.RiskScore ?? 5,
+                 HasPendingUpdateRequest = pendingUpdateSet.Contains(p.Id),
+                 AdminDocuments = docs?
+                    .Where(d => d.Type == PropertyDocumentType.Approved || d.Type == PropertyDocumentType.Rejected)
+                    .Select(d => new PropertyDocumentDto
+                    {
+                        Title = d.Title,
+                        FileName = d.FileName,
+                        DocumentUrl = d.DocumentUrl,
+                        Type = d.Type
+                    }).ToList() ?? new List<PropertyDocumentDto>()
+             };
         });
 
         return new
@@ -476,7 +485,8 @@ public class PropertyQueryService
         {
             Title = d.Title,
             FileName = d.FileName,
-            DocumentUrl = d.DocumentUrl
+            DocumentUrl = d.DocumentUrl,
+            Type = d.Type
         }).ToList();
 
         // ==============================
@@ -528,6 +538,9 @@ public class PropertyQueryService
             DemandScore = snapshot?.DemandScore,
 
             Documents = documentDtos,
+            AdminDocuments = documentDtos
+                .Where(d => d.Type == PropertyDocumentType.Approved || d.Type == PropertyDocumentType.Rejected)
+                .ToList(),
 
             // 🔥 Update Visibility
             HasPendingUpdateRequest = hasPendingUpdateRequest,

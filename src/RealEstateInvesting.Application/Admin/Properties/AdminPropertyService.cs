@@ -210,7 +210,7 @@ public class AdminPropertyService : IAdminPropertyService
     private readonly IEthPriceService _ethPriceService;
     private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
     private readonly IPropertyDocumentRepository _propertyDocumentRepository;
-    private readonly IOrganizationRepository  _organizationRepository;
+    private readonly IOrganizationRepository _organizationRepository;
     private readonly IAdminKycRepository _adminKycRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IPropertyImageRepository _propertyImageRepository;
@@ -237,7 +237,7 @@ public class AdminPropertyService : IAdminPropertyService
         _ethPriceService = ethPriceService;
         _analyticsSnapshotRepository = analyticsSnapshotRepository;
         _propertyDocumentRepository = propertyDocumentRepository;
-        _organizationRepository= organizationRepository;
+        _organizationRepository = organizationRepository;
         _adminKycRepository = adminKycRepository;
         _propertyImageRepository = propertyImageRepository;
         _transactionRepository = transactionRepository;

@@ -1,5 +1,5 @@
-using RealEstateInvesting.Domain.Enums;
-using RealEstateInvesting.Application.Properties.Dtos;
+namespace RealEstateInvesting.Application.Properties.Dtos;
+
 public class MyPropertyDetailsDto
 {
     public Guid Id { get; set; }
@@ -31,6 +31,7 @@ public class MyPropertyDetailsDto
 
     // 🔥 NEW
     public List<PropertyDocumentDto> Documents { get; set; } = new();
+    public List<PropertyDocumentDto> AdminDocuments { get; set; } = new();
     public bool HasPendingUpdateRequest { get; set; }
     public bool CanEditFullProperty { get; set; }
     public bool CanResubmit { get; set; }
