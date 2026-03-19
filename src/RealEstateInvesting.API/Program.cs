@@ -34,6 +34,7 @@ using RealEstateInvesting.Infrastructure.Push;
 using RealEstateInvesting.Infrastructure.Security;
 using RealEstateInvesting.Infrastructure.Storage;
 using RealEstateInvesting.Infrastructure.VectorSearch;
+using RealEstateInvesting.Infrastructure.Organizations;
 using Serilog;
 using System.Text;
 
@@ -79,6 +80,7 @@ builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 builder.Services.AddScoped<GetMyKycStatusHandler>();
+builder.Services.AddScoped<OrganizationQueryService>();
 
 builder.Services.AddSingleton<IAmazonS3>(_ =>
 {

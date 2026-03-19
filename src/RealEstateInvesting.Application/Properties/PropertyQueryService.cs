@@ -216,6 +216,7 @@ public class PropertyQueryService
         }
         decimal? userInvestmentAmountEth = null;
 
+
         if (userInvestmentAmount.HasValue && ethUsdRate != 0)
         {
             userInvestmentAmountEth =
