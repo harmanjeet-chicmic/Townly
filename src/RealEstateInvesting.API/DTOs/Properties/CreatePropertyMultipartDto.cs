@@ -41,7 +41,7 @@ public class CreatePropertyMultipartDto
     public decimal SellingPercentage { get; set; }
     public decimal SharePerSquareFeet { get; set; }
 
-    public List<string>? Images { get; set; }
+    public List<IFormFile>? Images { get; set; }
 
     public List<PropertyDocumentUploadDto> Documents { get; set; } = new();
 }
@@ -49,5 +49,5 @@ public class CreatePropertyMultipartDto
 public class PropertyDocumentUploadDto
 {
     public string Title { get; set; } = default!;
-    public string File { get; set; } = default!;
+    public IFormFile File { get; set; } = default!;
 }
