@@ -81,8 +81,7 @@ public class PropertyQueryController : ControllerBase
         var userId = Guid.Parse(
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        var result = await _service.GetMyPropertiesAsync(
-            userId, page, pageSize, status, search);
+        var result = await _service.GetMyPropertiesAsync(userId, page, pageSize, status, search);
 
         return Ok(result);
     }

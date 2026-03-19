@@ -32,6 +32,8 @@ using RealEstateInvesting.Application.Health.Queries;
 using RealEstateInvesting.Infrastructure.Blockchain;
 using RealEstateInvesting.Application.Tokens.Requests;
 using RealEstateInvesting.Application.Tokens.Balance;
+using RealEstateInvesting.Application.Properties.PropertyRegistrationApi;
+using RealEstateInvesting.Infrastructure.PropertyRegistrationApi;
 using Amazon.S3;
 using Microsoft.Extensions.Caching.Memory;
 namespace RealEstateInvesting.Infrastructure;
@@ -93,6 +95,10 @@ public static class DependencyInjection
         services.AddHttpClient<IPriceFeed, CoinGeckoPriceFeed>();
         services.AddMemoryCache();
         services.AddHttpClient<CoinGeckoEthPriceService>();
+
+        // External T-REX property registration API (POST /v1/property-register)
+        services.Configure<PropertyRegistrationApiOptions>(configuration.GetSection(PropertyRegistrationApiOptions.SectionName));
+        services.AddHttpClient<IPropertyRegistrationApiClient, PropertyRegistrationApiClient>();
         
         services.AddScoped<IEthPriceService>(sp =>
         {

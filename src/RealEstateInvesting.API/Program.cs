@@ -202,20 +202,21 @@ builder.Services.AddCors(options =>
         policy
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .SetIsOriginAllowed(origin =>
-            {
-                // Allow local dev
-                if (origin == "http://127.0.0.1:5500" ||
-                    origin == "http://localhost:5500")
-                    return true;
+            .AllowAnyOrigin();
+            //.SetIsOriginAllowed(origin =>
+            //{
+            //    // Allow local dev
+            //    if (origin == "http://127.0.0.1:5500" ||
+            //        origin == "http://localhost:5500")
+            //        return true;
 
-                // Allow any ngrok HTTPS domain
-                if (origin.StartsWith("https://") &&
-                    origin.Contains("ngrok-free.dev"))
-                    return true;
+            //    // Allow any ngrok HTTPS domain
+            //    if (origin.StartsWith("https://") &&
+            //        origin.Contains("ngrok-free.dev"))
+            //        return true;
 
-                return false;
-            });
+            //    return false;
+            //});
     });
 });
 // Required for CurrentUserService
