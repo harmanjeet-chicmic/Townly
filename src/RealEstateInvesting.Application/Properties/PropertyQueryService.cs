@@ -364,8 +364,7 @@ public class PropertyQueryService
         
         // 🔥 Bulk fetch images
         var propertyImages = await _propertyImageRepository.GetByPropertyIdsAsync(propertyIds);
-        var imageMap = propertyImages.GroupBy(i => i.PropertyId)
-            .ToDictionary(g => g.Key, g => g.Select(i => i.ImageUrl).ToList());
+        var imageMap = propertyImages.GroupBy(i => i.PropertyId).ToDictionary(g => g.Key, g => g.Select(i => i.ImageUrl).ToList());
 
         var items = properties.Select(p =>
         {
