@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealEstateInvesting.Application.Properties.Dtos;
+using RealEstateInvesting.Application.Properties.PropertyRegistrationApi;
 using RealEstateInvesting.Infrastructure.Persistence;
 using RealEstateInvesting.Application.Common.Dtos;
 using RealEstateInvesting.Admin.Application.Organizations;
@@ -10,10 +11,14 @@ namespace RealEstateInvesting.Infrastructure.Organizations;
 public class OrganizationQueryService
 {
     private readonly AppDbContext _context;
+    private readonly IPropertyRegistrationApiClient _propertyRegistrationApi;
 
-    public OrganizationQueryService(AppDbContext context)
+    public OrganizationQueryService(
+        AppDbContext context,
+        IPropertyRegistrationApiClient propertyRegistrationApi)
     {
         _context = context;
+        _propertyRegistrationApi = propertyRegistrationApi;
     }
 
     public async Task<PagedResult<OrganizationRowDto>> GetAllAsync(
@@ -113,35 +118,60 @@ public class OrganizationQueryService
             Items = items
         };
     }
-    public async Task ActivatePropertyAsync(
-    Guid organizationId,
-    Guid propertyId,
-    ActivatePropertyDto dto,
-    Guid adminUserId,
-    CancellationToken ct = default)
+    /// <summary>
+    /// Activates a property: calls external T-REX property-register API, then finalizes tokenization, activates, and creates analytics snapshot.
+    /// </summary>
+    public async Task<PropertyRegisterResponseDto> ActivatePropertyAsync(Guid organizationId, Guid propertyId, ActivatePropertyDto dto,
+        Guid adminUserId, CancellationToken ct = default)
     {
-        var property = await _context.Properties
-            .FirstOrDefaultAsync(p => p.Id == propertyId, ct);
+        var property = await _context.Properties.FirstOrDefaultAsync(p => p.Id == propertyId, ct);
 
         if (property == null)
             throw new Exception("Property not found");
 
-        // 🔥 CRITICAL CHECK
         if (property.OrganizationId != organizationId)
             throw new Exception("Property does not belong to this organization");
 
-        // ✅ finalize tokenization
+        if (string.IsNullOrWhiteSpace(dto.OwnerAddress))
+            throw new ArgumentException("OwnerAddress is required for on-chain property registration.", nameof(dto));
+
+        var totalUnits = dto.TotalUnits;
+        var pricePerShare = totalUnits > 0 ? property.ApprovedValuation / totalUnits : 0m;
+
+        var registerRequest = new PropertyRegisterRequestDto
+        {
+            PropertyId = propertyId.ToString(),
+            OwnerAddress = dto.OwnerAddress.Trim(),
+            PricePerShare = ((int)pricePerShare).ToString(),
+            MintAmount = totalUnits.ToString(),
+            IpfsUri = !string.IsNullOrWhiteSpace(dto.IpfsUri) ? dto.IpfsUri : (property.ImageUrl ?? "string"),
+            PropertyName = property.Name ?? "string",
+            Description = property.Description ?? "string",
+            Location = property.Location ?? "string",
+            PropertyType = property.PropertyType ?? "string"
+        };
+
+        var apiResponse = await _propertyRegistrationApi.RegisterPropertyAsync(registerRequest, ct);
+
+        if (apiResponse.Data is not null)
+        {
+            var job = PropertyActivationRecord.Create(
+                jobId: apiResponse.Data.JobId,
+                propertyId: apiResponse.Data.PropertyId,
+                status: apiResponse.Data.Status,
+                trexDeployTxHash: apiResponse.Data.TrexDeployTxHash,
+                createdBy: adminUserId
+            );
+            _context.PropertyActivationRecords.Add(job);
+        }
+
         property.FinalizeTokenization(
             dto.TotalUnits,
             dto.RentalIncome,
             dto.AnnualYieldPercent
-          
         );
-
-        // ✅ activate
         property.Activate();
 
-        // ✅ create initial analytics snapshot with the risk score
         var snapshot = PropertyAnalyticsSnapshot.Create(
             propertyId: property.Id,
             snapshotAt: DateTime.UtcNow,
@@ -149,11 +179,13 @@ public class OrganizationQueryService
             totalInvested: 0m,
             demandScore: 0m,
             riskScore: dto.RiskScore,
-            pricePerShare: property.ApprovedValuation / dto.TotalUnits,
+            pricePerShare: pricePerShare,
             valuation: property.ApprovedValuation
         );
         _context.PropertyAnalyticsSnapshots.Add(snapshot);
 
         await _context.SaveChangesAsync(ct);
+
+        return apiResponse;
     }
 }

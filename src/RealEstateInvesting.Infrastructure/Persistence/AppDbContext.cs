@@ -40,6 +40,7 @@ public class AppDbContext : DbContext
     public DbSet<OnChainSharePurchase> OnChainSharePurchases => Set<OnChainSharePurchase>();
     public DbSet<OnChainShareSale> OnChainShareSales => Set<OnChainShareSale>();
     public DbSet<OnChainVaultSupply> OnChainVaultSupplies => Set<OnChainVaultSupply>();
+    public DbSet<PropertyActivationRecord> PropertyActivationRecords => Set<PropertyActivationRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
