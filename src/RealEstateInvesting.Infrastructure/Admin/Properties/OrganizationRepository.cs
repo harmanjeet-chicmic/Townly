@@ -2,7 +2,9 @@ using RealEstateInvesting.Application.Admin.Properties.Interfaces;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
+
+namespace RealEstateInvesting.Infrastructure.Admin.Properties;
+
 public class OrganizationRepository : IOrganizationRepository
 {
     private readonly AppDbContext _context;
@@ -17,6 +19,7 @@ public class OrganizationRepository : IOrganizationRepository
         return await _context.Organizations
             .FirstOrDefaultAsync(o => o.Id == id && !o.IsDeleted);
     }
+
     public async Task<List<Organization>> GetAllAsync(CancellationToken ct = default)
     {
         return await _context.Organizations

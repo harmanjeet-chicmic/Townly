@@ -42,10 +42,12 @@ public class AdminPropertyController : ControllerBase
         return Ok(result);
     }
     [HttpPost("{propertyId:guid}/approve")]
-    public async Task<IActionResult> Approve(Guid propertyId)
+    public async Task<IActionResult> Approve(
+        Guid propertyId,
+        [FromBody] ApprovePropertyRequest request)
     {
         var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _service.ApproveAsync(propertyId, adminId);
+        await _service.ApproveAsync(propertyId, adminId, request);
         return Ok();
     }
 
@@ -55,7 +57,7 @@ public class AdminPropertyController : ControllerBase
         [FromBody] RejectPropertyRequest request)
     {
         var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _service.RejectAsync(propertyId, adminId, request.Reason);
+        await _service.RejectAsync(propertyId, adminId, request);
 
         return Ok();
     }

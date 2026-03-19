@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using RealEstateInvesting.Infrastructure.Organizations;
 using RealEstateInvesting.API.Filters;
 using RealEstateInvesting.API.RequestDebugMiddleware;
 using RealEstateInvesting.Application;
@@ -34,35 +33,11 @@ using RealEstateInvesting.Infrastructure.Pricing;
 using RealEstateInvesting.Infrastructure.Push;
 using RealEstateInvesting.Infrastructure.Security;
 using RealEstateInvesting.Infrastructure.Storage;
-using RealEstateInvesting.Infrastructure.Push;
-using RealEstateInvesting.Infrastructure.Pricing;
 using RealEstateInvesting.Infrastructure.VectorSearch;
-using System.Text.Json.Serialization;
-using Microsoft.Extensions.Caching.Memory;
-using RealEstateInvesting.Application.Portfolio;
-using RealEstateInvesting.Application.AdminAuth;
-using RealEstateInvesting.Application.AdminAuth.Interfaces;
-using RealEstateInvesting.Api.Middleware;
-using RealEstateInvesting.Infrastructure.Security;
 using Serilog;
 using System.Text;
-using RealEstateInvesting.Application.Notifications.Interfaces;
-using RealEstateInvesting.Application.Notifications;
-using RealEstateInvesting.Application.Kyc.Handlers;
-using RealEstateInvesting.Application.Admin.Kyc.Interfaces;
-using RealEstateInvesting.Application.Admin.Kyc;
-using RealEstateInvesting.Infrastructure.Admin.Kyc;
-using RealEstateInvesting.Application;
-using RealEstateInvesting.API.RequestDebugMiddleware;
-using RealEstateInvesting.Application.Tokens.Requests;
-using RealEstateInvesting.Application.Tokens.Balance;
-using Microsoft.AspNetCore.RateLimiting;
-using RealEstateInvesting.Application.Admin.Users;
-using RealEstateInvesting.Application.Admin.Users.Interfaces;
-using RealEstateInvesting.Infrastructure.Admin.Users;
 
 using System.Threading.RateLimiting;
-using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 var firebasePath = builder.Configuration["Firebase:ServiceAccountPath"];
@@ -99,6 +74,7 @@ var awsSection = builder.Configuration.GetSection("AWS");
 builder.Services.AddScoped<PortfolioQueryService>();
 builder.Services.AddScoped<IAdminPropertyService, AdminPropertyService>();
 builder.Services.AddScoped<IAdminPropertyRepository, AdminPropertyRepository>();
+builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
@@ -113,8 +89,7 @@ builder.Services.AddSingleton<IAmazonS3>(_ =>
     );
 });
 builder.Services.AddScoped<PortfolioQueryService>();
-builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
-builder.Services.AddScoped<OrganizationQueryService>();
+
 builder.Services.AddScoped<IFileStorage>(sp =>
 {
     return new S3FileStorage(
@@ -126,9 +101,7 @@ builder.Services.AddScoped<IFileStorage>(sp =>
 });
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddVectorSearch(builder.Configuration);
-
-builder.Services.AddHostedService<AnalyticsBackgroundService>();
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -195,36 +168,73 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
-builder.Services.AddCors(options =>
+
+// Application services
+builder.Services.AddScoped<PropertyService>();
+builder.Services.AddScoped<PropertyUpdateService>();
+builder.Services.AddScoped<PropertyQueryService>();
+builder.Services.AddScoped<IInvestmentRepository, InvestmentRepository>();
+builder.Services.AddScoped<InvestmentService>();
+
+builder.Services.AddScoped<InvestmentQueryService>();
+builder.Services.AddScoped<TransactionQueryService>();
+
+// Repositories
+builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPropertyDocumentRepository, PropertyDocumentRepository>();
+builder.Services.AddScoped<IPropertyUpdateRequestRepository, PropertyUpdateRequestRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+
+builder.Services.AddScoped<IAnalyticsSnapshotRepository, AnalyticsSnapshotRepository>();
+builder.Services.AddScoped<AnalyticsQueryService>();
+builder.Services.AddHostedService<AnalyticsBackgroundService>();
+builder.Services.AddMemoryCache();
+
+builder.Services.AddHttpClient<CoinGeckoEthPriceService>();
+builder.Services.AddVectorSearch(builder.Configuration);
+
+builder.Services.AddScoped<IEthPriceService>(sp =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-        //.SetIsOriginAllowed(origin =>
-        //{
-        //    // Allow local dev
-        //    if (origin == "http://127.0.0.1:5500" ||
-        //        origin == "http://localhost:5500")
-        //        return true;
+    var live = sp.GetRequiredService<CoinGeckoEthPriceService>();
+    var cache = sp.GetRequiredService<IMemoryCache>();
 
-        //    // Allow any ngrok HTTPS domain
-        //    if (origin.StartsWith("https://") &&
-        //        origin.Contains("ngrok-free.dev"))
-        //        return true;
-
-        //    return false;
-        //});
-    });
+    return new CachedEthPriceService(live, cache);
 });
+// Admin auth
+builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IAdminPasswordHasher, AdminPasswordHasher>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+
+
 // Required for CurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+// Token system repositories
+builder.Services.AddScoped<ITokenRequestRepository, TokenRequestRepository>();
+builder.Services.AddScoped<IUserTokenBalanceRepository, UserTokenBalanceRepository>();
+builder.Services.AddScoped<ITokenTransactionRepository, TokenTransactionRepository>();
 
-// builder.Services.AddVectorSearch(builder.Configuration); // Removed duplicate
+// Token system handlers/services
+builder.Services.AddScoped<CreateTokenRequestHandler>();
+builder.Services.AddScoped<ReviewTokenRequestHandler>();
+builder.Services.AddScoped<UserTokenBalanceService>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+builder.Services.AddVectorSearch(builder.Configuration);
 
 builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
@@ -253,12 +263,13 @@ builder.Services.AddRateLimiter(options =>
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
+/*builder.Services.AddScoped<IUserDeviceTokenRepository, UserDeviceTokenRepository>();
 
-// Infrastructure already added above
+// Infrastructure (DbContext, services, etc.)
+builder.Services.AddInfrastructure(builder.Configuration);*/
 
 var app = builder.Build();
 app.UseMiddleware<RealEstateInvesting.API.Middleware.ExceptionMiddleware>();
-
 app.UseCors("AllowAll");
 if (app.Environment.IsDevelopment())
 {
@@ -269,7 +280,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseStaticFiles();
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseMiddleware<RequestDebugMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();

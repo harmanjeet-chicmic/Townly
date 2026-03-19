@@ -1,4 +1,5 @@
 using RealEstateInvesting.Domain.Common;
+using RealEstateInvesting.Domain.Enums;
 
 namespace RealEstateInvesting.Domain.Entities;
 
@@ -13,7 +14,7 @@ public class PropertyDocument : BaseEntity
     public string FileName { get; private set; } = default!;
 
     public string DocumentUrl { get; private set; } = default!;
-
+    public PropertyDocumentType Type { get; private set; }
     public DateTime UploadedAt { get; private set; }
 
     private PropertyDocument() { }
@@ -22,7 +23,8 @@ public class PropertyDocument : BaseEntity
         Guid propertyId,
         string title,
         string fileName,
-        string documentUrl)
+        string documentUrl,
+        PropertyDocumentType type = PropertyDocumentType.Property)
     {
         if (string.IsNullOrWhiteSpace(title))
             throw new InvalidOperationException("Document title is required.");
@@ -39,6 +41,7 @@ public class PropertyDocument : BaseEntity
             Title = title,
             FileName = fileName,
             DocumentUrl = documentUrl,
+            Type = type,
             UploadedAt = DateTime.UtcNow
         };
     }

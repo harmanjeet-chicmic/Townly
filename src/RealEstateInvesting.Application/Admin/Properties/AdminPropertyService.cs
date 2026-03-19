@@ -196,6 +196,7 @@ using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Enums;
 using RealEstateInvesting.Application.Admin.Kyc.Interfaces;
 using RealEstateInvesting.Application.Common.Exceptions;
+using RealEstateInvesting.Domain.Entities;
 
 namespace RealEstateInvesting.Application.Admin.Properties;
 
@@ -324,12 +325,24 @@ public class AdminPropertyService : IAdminPropertyService
         };
     }
 
-    public async Task ApproveAsync(Guid propertyId, Guid adminId)
+    public async Task ApproveAsync(Guid propertyId, Guid adminId, ApprovePropertyRequest request)
     {
         var property = await _propertyRepo.GetByIdAsync(propertyId)
             ?? throw new NotFoundException("Property not found.");
 
         property.MarkAdminApproved(adminId);
+
+        if (request.Documents != null && request.Documents.Any())
+        {
+            var documents = request.Documents.Select(doc => PropertyDocument.Create(
+                property.Id,
+                doc.Title ?? doc.FileName,
+                doc.FileName,
+                doc.DocumentUrl,
+                PropertyDocumentType.Approved)).ToList();
+
+            await _propertyDocumentRepository.AddRangeAsync(documents);
+        }
 
         await _propertyRepo.SaveChangesAsync();
 
@@ -342,12 +355,24 @@ public class AdminPropertyService : IAdminPropertyService
         );
     }
 
-    public async Task RejectAsync(Guid propertyId, Guid adminId, string reason)
+    public async Task RejectAsync(Guid propertyId, Guid adminId, RejectPropertyRequest request)
     {
         var property = await _propertyRepo.GetByIdAsync(propertyId)
             ?? throw new NotFoundException("Property not found.");
 
-        property.Reject(adminId, reason);
+        property.Reject(adminId, request.Reason);
+
+        if (request.Documents != null && request.Documents.Any())
+        {
+            var documents = request.Documents.Select(doc => PropertyDocument.Create(
+                property.Id,
+                doc.Title ?? doc.FileName,
+                doc.FileName,
+                doc.DocumentUrl,
+                PropertyDocumentType.Rejected)).ToList();
+
+            await _propertyDocumentRepository.AddRangeAsync(documents);
+        }
 
         await _propertyRepo.SaveChangesAsync();
 
@@ -355,7 +380,7 @@ public class AdminPropertyService : IAdminPropertyService
             property.OwnerUserId,
             NotificationType.PropertyRejected,
             "Property Rejected",
-            $"Your property \"{property.Name}\" was rejected. Reason: {reason}",
+            $"Your property \"{property.Name}\" was rejected. Reason: {request.Reason}",
             property.Id
         );
     }
