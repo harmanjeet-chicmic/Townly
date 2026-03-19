@@ -6,6 +6,7 @@ using RealEstateInvesting.Application.Common.Dtos;
 using RealEstateInvesting.Admin.Application.Organizations;
 using RealEstateInvesting.Application.Organizations.Dtos;
 using RealEstateInvesting.Domain.Entities;
+using RealEstateInvesting.Domain.Enums;
 namespace RealEstateInvesting.Infrastructure.Organizations;
 
 public class OrganizationQueryService
@@ -155,37 +156,41 @@ public class OrganizationQueryService
 
         if (apiResponse.Data is not null)
         {
-            var job = PropertyActivationRecord.Create(
-                jobId: apiResponse.Data.JobId,
-                propertyId: apiResponse.Data.PropertyId,
-                status: apiResponse.Data.Status,
-                trexDeployTxHash: apiResponse.Data.TrexDeployTxHash,
-                createdBy: adminUserId
+            var job = PropertyActivationRecord.Create(jobId: apiResponse.Data.JobId,
+                                                      propertyId: apiResponse.Data.PropertyId,
+                                                      status: (int)MapTrexStatus(apiResponse.Data.Status),
+                                                      trexDeployTxHash: apiResponse.Data.TrexDeployTxHash,
+                                                      createdBy: adminUserId
             );
             _context.PropertyActivationRecords.Add(job);
         }
-
-        property.FinalizeTokenization(
-            dto.TotalUnits,
-            dto.RentalIncome,
-            dto.AnnualYieldPercent
-        );
+        property.FinalizeTokenization(dto.TotalUnits, dto.RentalIncome, dto.AnnualYieldPercent);
         property.Activate();
 
-        var snapshot = PropertyAnalyticsSnapshot.Create(
-            propertyId: property.Id,
-            snapshotAt: DateTime.UtcNow,
-            sharesSold: 0,
-            totalInvested: 0m,
-            demandScore: 0m,
-            riskScore: dto.RiskScore,
-            pricePerShare: pricePerShare,
-            valuation: property.ApprovedValuation
+        var snapshot = PropertyAnalyticsSnapshot.Create(propertyId: property.Id,
+                                                        snapshotAt: DateTime.UtcNow,
+                                                        sharesSold: 0,
+                                                        totalInvested: 0m,
+                                                        demandScore: 0m,
+                                                        riskScore: dto.RiskScore,
+                                                        pricePerShare: pricePerShare,
+                                                        valuation: property.ApprovedValuation
         );
         _context.PropertyAnalyticsSnapshots.Add(snapshot);
-
         await _context.SaveChangesAsync(ct);
-
         return apiResponse;
     }
+
+    public static PropertyStatus MapTrexStatus(int trexStatusCode) => (PropertyStatusTREX)trexStatusCode switch
+    {
+        PropertyStatusTREX.COMPLETED => PropertyStatus.Active,
+        PropertyStatusTREX.PENDING_TREX => PropertyStatus.PENDING_TREX,
+        PropertyStatusTREX.TREX_DEPLOYING => PropertyStatus.TREX_DEPLOYING,
+        PropertyStatusTREX.VAULT_DEPLOYING => PropertyStatus.VAULT_DEPLOYING,
+        PropertyStatusTREX.REGISTERING => PropertyStatus.REGISTERING,
+        PropertyStatusTREX.KYC_VERIFYING => PropertyStatus.KYC_VERIFYING,
+        PropertyStatusTREX.MINTING => PropertyStatus.MINTING,
+        PropertyStatusTREX.FAILED => PropertyStatus.FAILED,
+        _ => PropertyStatus.PENDING_TREX
+    };
 }

@@ -4,8 +4,8 @@ using RealEstateInvesting.Infrastructure.Organizations;
 using RealEstateInvesting.Application.Common.Dtos;
 using RealEstateInvesting.Admin.Application.Organizations;
 using System.Security.Claims;
-
 using RealEstateInvesting.Application.Properties.Dtos;
+using RealEstateInvesting.Domain.Enums;
 namespace RealEstateInvesting.Api.Controllers;
 
 [ApiController]
@@ -52,7 +52,7 @@ public class AdminOrganizationController : ControllerBase
             {
                 result.Data.JobId,
                 result.Data.PropertyId,
-                result.Data.Status
+                Status = OrganizationQueryService.MapTrexStatus(result.Data.Status)
             }
         });
     }
