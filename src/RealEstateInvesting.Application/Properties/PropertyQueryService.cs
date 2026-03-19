@@ -1,5 +1,6 @@
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Properties.Dtos;
+using RealEstateInvesting.Application.Properties.PropertyRegistrationApi;
 using RealEstateInvesting.Domain.Enums;
 using RealEstateInvesting.Application.VectorSearch;
 using RealEstateInvesting.Application.Common.Exceptions;
@@ -8,8 +9,6 @@ namespace RealEstateInvesting.Application.Properties;
 
 public class PropertyQueryService
 {
-
-
     private readonly IPropertyRepository _propertyRepository;
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
@@ -19,6 +18,8 @@ public class PropertyQueryService
     private readonly IPropertyDocumentRepository _propertyDocumentRepository;
     private readonly IPropertyUpdateRequestRepository _updateRepository;
     private readonly IPropertyImageRepository _propertyImageRepository;
+    private readonly IPropertyRegistrationApiClient _propertyRegistrationApi;
+    private readonly IPropertyActivationRecordRepository _activationRecordRepository;
 
     public PropertyQueryService(IPropertyRepository propertyRepository,
                 IInvestmentRepository investmentRepository,
@@ -28,7 +29,9 @@ public class PropertyQueryService
                 IVectorStore vectorStore,
                 IPropertyDocumentRepository propertyDocumentRepository,
                  IPropertyUpdateRequestRepository updateRepository,
-                 IPropertyImageRepository propertyImageRepository)
+                 IPropertyImageRepository propertyImageRepository,
+                 IPropertyRegistrationApiClient propertyRegistrationApi,
+                 IPropertyActivationRecordRepository activationRecordRepository)
     {
         _propertyRepository = propertyRepository;
         _investmentRepository = investmentRepository;
@@ -39,6 +42,8 @@ public class PropertyQueryService
         _vectorStore = vectorStore;
         _propertyDocumentRepository = propertyDocumentRepository;
         _updateRepository = updateRepository;
+        _propertyRegistrationApi = propertyRegistrationApi;
+        _activationRecordRepository = activationRecordRepository;
     }
 
     public async Task<object> GetMarketplaceAsync(
@@ -116,7 +121,7 @@ public class PropertyQueryService
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
         var items = await _propertyRepository.GetMarketplaceCursorAsync(
-            limit, cursor, search, propertyType,status);
+            limit, cursor, search, propertyType, status);
 
         var propertyIds = items.Select(p => p.Id).ToList();
         var snapshots =
@@ -291,20 +296,13 @@ public class PropertyQueryService
         });
     }
 
-    public async Task<object> GetMyPropertiesAsync(
-        Guid userId,
-        int page,
-        int pageSize,
-        PropertyStatus? status,
-        string? search)
+    public async Task<object> GetMyPropertiesAsync(Guid userId, int page, int pageSize, PropertyStatus? status, string? search)
     {
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
+        var (properties, totalCount) = await _propertyRepository.GetByOwnerIdPagedAsync(userId, page, pageSize, status, search);
+        var propertyList = properties.ToList();
 
-        var (properties, totalCount) =
-            await _propertyRepository.GetByOwnerIdPagedAsync(
-                userId, page, pageSize, status, search);
-
-        if (!properties.Any())
+        if (!propertyList.Any())
         {
             return new
             {
@@ -316,81 +314,79 @@ public class PropertyQueryService
             };
         }
 
-        var propertyIds = properties.Select(p => p.Id).ToList();
+        var propertyIds = propertyList.Select(p => p.Id).ToList();
 
-       
-        var documents =
-            await _propertyDocumentRepository.GetByPropertyIdsAsync(propertyIds);
+        // Sync status from property-register/status API for non-Active properties (skip if already Active)
+        var nonActiveIds = propertyList.Where(p => p.Status != PropertyStatus.Active).Select(p => p.Id).ToList();
+        if (nonActiveIds.Count > 0)
+        {
+            var jobIdsByPropertyId = await _activationRecordRepository.GetLatestJobIdByPropertyIdsAsync(nonActiveIds);
+            foreach (var prop in propertyList.Where(p => p.Status != PropertyStatus.Active))
+            {
+                if (!jobIdsByPropertyId.TryGetValue(prop.Id, out var jobId))
+                    continue;
+                var jobStatus = await _propertyRegistrationApi.GetJobStatusAsync(jobId);
+                if (jobStatus?.Data == null)
+                    continue;
+                var mappedStatus = TrexStatusMapper.MapToPropertyStatus(jobStatus.Data.Status);
+                prop.SetRegistrationJobStatus(mappedStatus);
+                await _propertyRepository.UpdateAsync(prop);
 
-        var documentMap = documents
-            .GroupBy(d => d.PropertyId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+                // Update PropertyActivationRecords table with latest status from API
+                var activationRecord = await _activationRecordRepository.GetByJobIdAsync(jobId);
+                if (activationRecord != null)
+                {
+                    activationRecord.UpdateStatus(jobStatus.Data.Status, jobStatus.Data.TrexDeployTxHash);
+                    await _activationRecordRepository.UpdateAsync(activationRecord);
+                }
+            }
+        }
 
-        var pendingUpdatePropertyIds =
-            await _updateRepository.GetPendingPropertyIdsAsync(propertyIds);
-
+        var documents = await _propertyDocumentRepository.GetByPropertyIdsAsync(propertyIds);
+        var documentMap = documents.GroupBy(d => d.PropertyId).ToDictionary(g => g.Key, g => g.ToList());
+        var pendingUpdatePropertyIds = await _updateRepository.GetPendingPropertyIdsAsync(propertyIds);
         var pendingUpdateSet = pendingUpdatePropertyIds.ToHashSet();
-
-        var soldUnitsMap =
-            await _investmentRepository
-                .GetSoldUnitsForPropertiesAsync(propertyIds);
-
-        var snapshots =
-            await _analyticsSnapshotRepository
-                .GetLatestPropertySnapshotsAsync(propertyIds);
-
+        var soldUnitsMap = await _investmentRepository.GetSoldUnitsForPropertiesAsync(propertyIds);
+        var snapshots = await _analyticsSnapshotRepository.GetLatestPropertySnapshotsAsync(propertyIds);
         var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
+        var images = await _propertyImageRepository.GetByPropertyIdsAsync(propertyIds);
+        var imageMap = images.GroupBy(i => i.PropertyId).ToDictionary(g => g.Key, g => g.Select(x => x.ImageUrl).ToList());
 
-        var items = properties.Select(p =>
+        var items = propertyList.Select(p =>
         {
             snapshotMap.TryGetValue(p.Id, out var snapshot);
             soldUnitsMap.TryGetValue(p.Id, out var soldUnits);
-
-            // 🔥 Images extraction
-            documentMap.TryGetValue(p.Id, out var docs);
-
-            var images = docs?
-                .Where(d => d.Title == "Image")
-                .Select(d => d.DocumentUrl)
-                .ToList() ?? new List<string>();
-
+            imageMap.TryGetValue(p.Id, out var imageUrls);
             var availableUnits = p.TotalUnits - soldUnits;
-
             var progressPercent =
                 p.TotalUnits == 0 ? 0 :
                 Math.Round((decimal)soldUnits / p.TotalUnits * 100, 2);
-
             var pricePerUnitUsd =
                 p.TotalUnits == 0 ? 0 :
                 p.ApprovedValuation / p.TotalUnits;
-
             var pricePerUnitEth =
                 ethUsdRate == 0 ? 0 :
                 decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
 
-     return new MyPropertyDto
-     {
-         Id = p.Id,
-         Name = p.Name,
-         Location = p.Location,
-         PropertyType = p.PropertyType,
-         ImageUrls = _propertyImageRepository.GetByPropertyIdAsync(p.Id).Result.Select(x => x.ImageUrl).ToList(),
-
+            return new MyPropertyDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Location = p.Location,
+                PropertyType = p.PropertyType,
+                ImageUrls = imageUrls?.ToList() ?? new List<string>(),
                 Status = p.Status,
                 ApprovedValuation = p.ApprovedValuation,
                 TotalUnits = p.TotalUnits,
                 AnnualYieldPercent = p.AnnualYieldPercent,
-
                 SoldUnits = soldUnits,
                 AvailableUnits = availableUnits,
                 InvestmentProgressPercent = progressPercent,
-
-         PricePerUnitEth = pricePerUnitEth,
-         RiskScore = snapshot?.RiskScore ?? 5,
-         HasPendingUpdateRequest = pendingUpdateSet.Contains(p.Id),
-     };
- });
-
+                PricePerUnitEth = pricePerUnitEth,
+                RiskScore = snapshot?.RiskScore ?? 5,
+                HasPendingUpdateRequest = pendingUpdateSet.Contains(p.Id),
+            };
+        });
 
         return new
         {

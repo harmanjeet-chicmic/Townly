@@ -153,6 +153,7 @@ public static class DependencyInjection
         services.AddScoped<IOnChainKycActionRepository, OnChainKycActionRepository>();
         services.AddScoped<IOnChainVaultSupplyRepository, OnChainVaultSupplyRepository>();
         services.AddScoped<IOnChainPropertyRegistrationRepository, OnChainPropertyRegistrationRepository>();
+        services.AddScoped<IPropertyActivationRecordRepository, PropertyActivationRecordRepository>();
         services.AddScoped<IOnChainSharePurchaseRepository, OnChainSharePurchaseRepository>();
         services.AddScoped<IOnChainShareSaleRepository, OnChainShareSaleRepository>();
 

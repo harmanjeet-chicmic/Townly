@@ -395,6 +395,30 @@ public class Property : BaseEntity
         MarkUpdated();
     }
 
+    /// <summary>
+    /// Updates status from the property registration job status API (T-REX flow).
+    /// Use when syncing with GET /v1/property-register/status. Allows only registration-flow statuses and Active.
+    /// </summary>
+    public void SetRegistrationJobStatus(PropertyStatus status)
+    {
+        var allowed = new[]
+        {
+            PropertyStatus.Active,
+            PropertyStatus.PENDING_TREX,
+            PropertyStatus.TREX_DEPLOYING,
+            PropertyStatus.VAULT_DEPLOYING,
+            PropertyStatus.REGISTERING,
+            PropertyStatus.KYC_VERIFYING,
+            PropertyStatus.MINTING,
+            PropertyStatus.FAILED
+        };
+        if (!allowed.Contains(status))
+            throw new InvalidOperationException($"Status {status} is not a valid registration job status.");
+        Status = status;
+        if (status == PropertyStatus.Active)
+            ApprovedAt = ApprovedAt ?? DateTime.UtcNow;
+        MarkUpdated();
+    }
 
     public void Reject(Guid adminUserId, string reason)
     {

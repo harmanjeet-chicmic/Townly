@@ -105,16 +105,11 @@ public class PropertyRepository : IPropertyRepository
 
         return (items, totalCount);
     }
-    public async Task<(IEnumerable<Property> Items, int TotalCount)>
-  GetByOwnerIdPagedAsync(
-    Guid ownerUserId,
-    int page,
-    int pageSize,
-    PropertyStatus? status,
-    string? search)
+    public async Task<(IEnumerable<Property> Items, int TotalCount)>GetByOwnerIdPagedAsync( Guid ownerUserId, int page,
+                                                                                            int pageSize, PropertyStatus? status,
+                                                                                            string? search)
     {
-        var query = _context.Properties
-            .Where(p => p.OwnerUserId == ownerUserId);
+        var query = _context.Properties.Where(p => p.OwnerUserId == ownerUserId);
 
         if (!string.IsNullOrWhiteSpace(search))
         {

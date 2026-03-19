@@ -44,4 +44,15 @@ public class PropertyActivationRecord : BaseEntity
             CreatedBy = createdBy
         };
     }
+
+    /// <summary>
+    /// Updates the record with the latest status from the property-register/status API.
+    /// </summary>
+    public void UpdateStatus(int status, string? trexDeployTxHash = null)
+    {
+        Status = status;
+        if (trexDeployTxHash != null)
+            TrexDeployTxHash = trexDeployTxHash;
+        MarkUpdated();
+    }
 }

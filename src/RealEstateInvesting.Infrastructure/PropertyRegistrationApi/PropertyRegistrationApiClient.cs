@@ -39,4 +39,23 @@ public class PropertyRegistrationApiClient : IPropertyRegistrationApiClient
 
         return result;
     }
+
+    /// <inheritdoc />
+    public async Task<PropertyRegisterJobStatusResponseDto?> GetJobStatusAsync(Guid jobId, CancellationToken cancellationToken = default)
+    {
+        var statusPath = _path?.TrimEnd('/') + "/status";
+        var url = string.IsNullOrEmpty(statusPath) ? $"v1/property-register/status?jobId={jobId}" : $"{statusPath}?jobId={jobId}";
+        try
+        {
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            var result = await response.Content.ReadFromJsonAsync<PropertyRegisterJobStatusResponseDto>(cancellationToken);
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

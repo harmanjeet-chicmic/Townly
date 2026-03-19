@@ -7,6 +7,7 @@ using RealEstateInvesting.Admin.Application.Organizations;
 using RealEstateInvesting.Application.Organizations.Dtos;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Domain.Enums;
+
 namespace RealEstateInvesting.Infrastructure.Organizations;
 
 public class OrganizationQueryService
@@ -77,12 +78,10 @@ public class OrganizationQueryService
             Items = items
         };
     }
-    public async Task<PagedResult<OrganizationPropertyDto>> GetPropertiesByOrganizationAsync(
-    Guid organizationId,
-    OrganizationQuery query,
+    public async Task<PagedResult<OrganizationPropertyDto>> GetPropertiesByOrganizationAsync( Guid organizationId, OrganizationQuery query,
     CancellationToken ct = default)
     {
-        // ✅ safety defaults
+        // safety defaults
         query.Page = query.Page <= 0 ? 1 : query.Page;
         query.PageSize = query.PageSize <= 0 ? 10 : query.PageSize;
 
@@ -162,18 +161,19 @@ public class OrganizationQueryService
 
         var apiResponse = await _propertyRegistrationApi.RegisterPropertyAsync(registerRequest, ct);
 
-        if (apiResponse.Data is not null)
-        {
-            var job = PropertyActivationRecord.Create(jobId: apiResponse.Data.JobId,
-                                                      propertyId: apiResponse.Data.PropertyId,
-                                                      status: (int)MapTrexStatus(apiResponse.Data.Status),
-                                                      trexDeployTxHash: apiResponse.Data.TrexDeployTxHash,
-                                                      createdBy: adminUserId
-            );
-            _context.PropertyActivationRecords.Add(job);
-        }
         property.FinalizeTokenization(dto.TotalUnits, dto.RentalIncome, dto.AnnualYieldPercent);
-        property.Activate();
+
+        var job = PropertyActivationRecord.Create(jobId: apiResponse.Data.JobId,
+                                                  propertyId: apiResponse.Data.PropertyId,
+                                                  status: apiResponse.Data.Status,
+                                                  trexDeployTxHash: apiResponse.Data.TrexDeployTxHash,
+                                                  createdBy: adminUserId);
+        _context.PropertyActivationRecords.Add(job);
+
+        // Update Property table status from API response (e.g. PENDING_TREX, TREX_DEPLOYING, or Active when COMPLETED)
+        var mappedStatus = MapTrexStatus(apiResponse.Data.Status);
+        property.SetRegistrationJobStatus(mappedStatus);
+
 
         var snapshot = PropertyAnalyticsSnapshot.Create(propertyId: property.Id,
                                                         snapshotAt: DateTime.UtcNow,
@@ -189,16 +189,5 @@ public class OrganizationQueryService
         return apiResponse;
     }
 
-    public static PropertyStatus MapTrexStatus(int trexStatusCode) => (PropertyStatusTREX)trexStatusCode switch
-    {
-        PropertyStatusTREX.COMPLETED => PropertyStatus.Active,
-        PropertyStatusTREX.PENDING_TREX => PropertyStatus.PENDING_TREX,
-        PropertyStatusTREX.TREX_DEPLOYING => PropertyStatus.TREX_DEPLOYING,
-        PropertyStatusTREX.VAULT_DEPLOYING => PropertyStatus.VAULT_DEPLOYING,
-        PropertyStatusTREX.REGISTERING => PropertyStatus.REGISTERING,
-        PropertyStatusTREX.KYC_VERIFYING => PropertyStatus.KYC_VERIFYING,
-        PropertyStatusTREX.MINTING => PropertyStatus.MINTING,
-        PropertyStatusTREX.FAILED => PropertyStatus.FAILED,
-        _ => PropertyStatus.PENDING_TREX
-    };
+    public static PropertyStatus MapTrexStatus(int trexStatusCode) => TrexStatusMapper.MapToPropertyStatus(trexStatusCode);
 }

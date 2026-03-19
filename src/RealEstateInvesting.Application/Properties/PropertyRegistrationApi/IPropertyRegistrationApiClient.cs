@@ -11,4 +11,14 @@ public interface IPropertyRegistrationApiClient
     Task<PropertyRegisterResponseDto> RegisterPropertyAsync(
         PropertyRegisterRequestDto request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the current status of a property registration job. GET /v1/property-register/status?jobId={jobId}.
+    /// </summary>
+    /// <param name="jobId">The job ID returned when the registration was initiated.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The job status, or null if the job was not found or the API returned an error.</returns>
+    Task<PropertyRegisterJobStatusResponseDto?> GetJobStatusAsync(
+        Guid jobId,
+        CancellationToken cancellationToken = default);
 }
