@@ -360,12 +360,11 @@ public class PropertyQueryService
         var snapshots = await _analyticsSnapshotRepository.GetLatestPropertySnapshotsAsync(propertyIds);
         var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
         var images = await _propertyImageRepository.GetByPropertyIdsAsync(propertyIds);
-        var imageMap = images.GroupBy(i => i.PropertyId).ToDictionary(g => g.Key, g => g.Select(x => x.ImageUrl).ToList());
+        //var imageMap = images.GroupBy(i => i.PropertyId).ToDictionary(g => g.Key, g => g.Select(x => x.ImageUrl).ToList());
 
         // 🔥 Bulk fetch images
         var propertyImages = await _propertyImageRepository.GetByPropertyIdsAsync(propertyIds);
-        var imageMap = propertyImages.GroupBy(i => i.PropertyId)
-            .ToDictionary(g => g.Key, g => g.Select(i => i.ImageUrl).ToList());
+        var imageMap = propertyImages.GroupBy(i => i.PropertyId).ToDictionary(g => g.Key, g => g.Select(i => i.ImageUrl).ToList());
 
         var items = properties.Select(p =>
         {
