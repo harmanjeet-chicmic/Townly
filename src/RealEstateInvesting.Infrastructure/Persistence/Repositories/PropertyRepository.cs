@@ -196,6 +196,7 @@ public class PropertyRepository : IPropertyRepository
                 ApprovedValuation = p.ApprovedValuation,
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
+                Status = p.Status,
 
                 SoldUnits = _context.Investments
                     .Where(i => i.PropertyId == p.Id)
@@ -241,6 +242,7 @@ public class PropertyRepository : IPropertyRepository
                 ApprovedValuation = p.ApprovedValuation,
                 TotalUnits = p.TotalUnits,
                 AnnualYieldPercent = p.AnnualYieldPercent,
+                Status = p.Status,
 
                 SoldUnits = _context.Investments
                     .Where(i => i.PropertyId == p.Id)
