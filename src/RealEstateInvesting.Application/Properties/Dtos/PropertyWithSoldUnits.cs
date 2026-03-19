@@ -1,3 +1,4 @@
+using RealEstateInvesting.Domain.Enums;
 namespace RealEstateInvesting.Application.Properties.Dtos;
 
 public class PropertyWithSoldUnits
@@ -12,6 +13,7 @@ public class PropertyWithSoldUnits
     public decimal ApprovedValuation { get; set; }
     public int TotalUnits { get; set; }
     public decimal AnnualYieldPercent { get; set; }
+    public PropertyStatus Status { get; set; }
 
     public int SoldUnits { get; set; }
 }
