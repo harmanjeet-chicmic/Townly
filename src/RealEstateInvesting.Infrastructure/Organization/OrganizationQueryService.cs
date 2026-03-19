@@ -87,6 +87,7 @@ public class OrganizationQueryService
         query.PageSize = query.PageSize <= 0 ? 10 : query.PageSize;
 
         var baseQuery = _context.Properties
+            .Include(p => p.PropertyImages)
             .Where(p => p.OrganizationId == organizationId);
 
         var totalCount = await baseQuery.CountAsync(ct);
@@ -96,6 +97,11 @@ public class OrganizationQueryService
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(ct);
+
+        var ownerIds = properties.Select(p => p.OwnerUserId).Distinct().ToList();
+        var owners = await _context.Users
+            .Where(u => ownerIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.WalletAddress, ct);
 
         var items = properties.Select(property => new OrganizationPropertyDto
         {
@@ -107,7 +113,9 @@ public class OrganizationQueryService
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
 
-            Status = (int)property.Status
+            Status = (int)property.Status,
+            Image = property.ImageUrl ?? property.PropertyImages.FirstOrDefault()?.ImageUrl,
+            OwnerWalletAddress = owners.TryGetValue(property.OwnerUserId, out var wallet) ? wallet : null
         }).ToList();
 
         return new PagedResult<OrganizationPropertyDto>
