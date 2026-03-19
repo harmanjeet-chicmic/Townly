@@ -41,8 +41,7 @@ public class PropertyRepository : IPropertyRepository
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
-    public async Task<(IEnumerable<MarketplacePropertyReadModel> Items, int TotalCount)>
-    GetMarketplaceAsync(
+    public async Task<(IEnumerable<MarketplacePropertyReadModel> Items, int TotalCount)>GetMarketplaceAsync(
          Guid? currentUserId,
          int page,
          int pageSize,
@@ -50,8 +49,7 @@ public class PropertyRepository : IPropertyRepository
          string? propertyType,
          List<PropertyStatus>? status)
     {
-        var query = _context.Properties
-    .Where(p => p.OwnerUserId != currentUserId);
+        var query = _context.Properties.AsQueryable();
 
         if (status != null && status.Any())
         {
