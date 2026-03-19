@@ -32,12 +32,49 @@ public class PropertyRegistrationApiClient : IPropertyRegistrationApiClient
     public async Task<PropertyRegisterResponseDto> RegisterPropertyAsync(PropertyRegisterRequestDto request, CancellationToken cancellationToken = default)
     {
         var response = await _httpClient.PostAsJsonAsync(_path ?? "https://1a86-112-196-113-3.ngrok-free.app/v1/property-register", request, cancellationToken);
-        response.EnsureSuccessStatusCode();
 
-        var result = await response.Content.ReadFromJsonAsync<PropertyRegisterResponseDto>(cancellationToken)
-            ?? throw new InvalidOperationException("Property registration API returned empty response.");
+        // Try to deserialize the response body even for non-2xx responses.
+        PropertyRegisterResponseDto? result = null;
+        try
+        {
+            result = await response.Content.ReadFromJsonAsync<PropertyRegisterResponseDto>(cancellationToken);
+        }
+        catch
+        {
+            // Ignore deserialization issues and fallback to a synthetic error response below.
+        }
 
-        return result;
+        if (!response.IsSuccessStatusCode)
+        {
+            var statusCode = (int)response.StatusCode;
+            var reason = string.IsNullOrWhiteSpace(response.ReasonPhrase)
+                ? "Property registration API request failed."
+                : response.ReasonPhrase;
+
+            if (result is null)
+            {
+                return new PropertyRegisterResponseDto
+                {
+                    StatusCode = statusCode,
+                    Status = false,
+                    Message = reason,
+                    Type = "FAILED",
+                    Data = null
+                };
+            }
+
+            // Preserve any error details from the body, but force Status=false for non-2xx.
+            result.StatusCode = statusCode;
+            result.Status = false;
+            if (string.IsNullOrWhiteSpace(result.Message))
+                result.Message = reason;
+
+            return result;
+        }
+
+        // Successful HTTP response; body must exist.
+        return result
+               ?? throw new InvalidOperationException("Property registration API returned empty response.");
     }
 
     /// <inheritdoc />

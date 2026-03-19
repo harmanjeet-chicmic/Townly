@@ -159,31 +159,74 @@ public class OrganizationQueryService
             PropertyType = property.PropertyType ?? "string"
         };
 
-        var apiResponse = await _propertyRegistrationApi.RegisterPropertyAsync(registerRequest, ct);
+        PropertyRegisterResponseDto apiResponse;
+        try
+        {
+            apiResponse = await _propertyRegistrationApi.RegisterPropertyAsync(registerRequest, ct);
+        }
+        catch (Exception ex)
+        {
+            // If the external API call itself fails, mark the property as FAILED.
+            property.SetRegistrationJobStatus(PropertyStatus.FAILED);
+            await _context.SaveChangesAsync(ct);
 
-        property.FinalizeTokenization(dto.TotalUnits, dto.RentalIncome, dto.AnnualYieldPercent);
+            return new PropertyRegisterResponseDto
+            {
+                StatusCode = 500,
+                Status = false,
+                Message = $"Property registration API call failed: {ex.Message}",
+                Type = "FAILED",
+                Data = null
+            };
+        }
 
-        var job = PropertyActivationRecord.Create(jobId: apiResponse.Data.JobId,
-                                                  propertyId: apiResponse.Data.PropertyId,
-                                                  status: apiResponse.Data.Status,
-                                                  trexDeployTxHash: apiResponse.Data.TrexDeployTxHash,
-                                                  createdBy: adminUserId);
+        // If the external API returned an invalid or failed job, mark the property as FAILED.
+        if (apiResponse?.Data == null)
+        {
+            property.SetRegistrationJobStatus(PropertyStatus.FAILED);
+            await _context.SaveChangesAsync(ct);
+
+            return apiResponse ?? new PropertyRegisterResponseDto
+            {
+                StatusCode = 500,
+                Status = false,
+                Message = "Property registration API returned an empty response.",
+                Type = "FAILED",
+                Data = null
+            };
+        }
+
+        var mappedStatus = MapTrexStatus(apiResponse.Data.Status);
+
+        // Persist activation record when we have job identifiers.
+        var job = PropertyActivationRecord.Create(
+            jobId: apiResponse.Data.JobId,
+            propertyId: apiResponse.Data.PropertyId,
+            status: apiResponse.Data.Status,
+            trexDeployTxHash: apiResponse.Data.TrexDeployTxHash,
+            createdBy: adminUserId);
         _context.PropertyActivationRecords.Add(job);
 
-        // Update Property table status from API response (e.g. PENDING_TREX, TREX_DEPLOYING, or Active when COMPLETED)
-        var mappedStatus = MapTrexStatus(apiResponse.Data.Status);
+        // If the API response indicates failure (HTTP may be success, but job failed), don't finalize tokenization.
+        if (apiResponse.Status != true || mappedStatus == PropertyStatus.FAILED)
+        {
+            property.SetRegistrationJobStatus(PropertyStatus.FAILED);
+            await _context.SaveChangesAsync(ct);
+            return apiResponse;
+        }
+
+        property.FinalizeTokenization(dto.TotalUnits, dto.RentalIncome, dto.AnnualYieldPercent);
         property.SetRegistrationJobStatus(mappedStatus);
 
-
-        var snapshot = PropertyAnalyticsSnapshot.Create(propertyId: property.Id,
-                                                        snapshotAt: DateTime.UtcNow,
-                                                        sharesSold: 0,
-                                                        totalInvested: 0m,
-                                                        demandScore: 0m,
-                                                        riskScore: dto.RiskScore,
-                                                        pricePerShare: pricePerShare,
-                                                        valuation: property.ApprovedValuation
-        );
+        var snapshot = PropertyAnalyticsSnapshot.Create(
+            propertyId: property.Id,
+            snapshotAt: DateTime.UtcNow,
+            sharesSold: 0,
+            totalInvested: 0m,
+            demandScore: 0m,
+            riskScore: dto.RiskScore,
+            pricePerShare: pricePerShare,
+            valuation: property.ApprovedValuation);
         _context.PropertyAnalyticsSnapshots.Add(snapshot);
         await _context.SaveChangesAsync(ct);
         return apiResponse;
