@@ -229,6 +229,8 @@ public class PropertyQueryService
             PropertyType = property.PropertyType,
             ImageUrls = images.Select(x => x.ImageUrl).ToList(),
             Status = property.Status,
+            PropertySize = property.SquareFeet,
+            ListedPercentage = property.SellingPercentage,
 
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
@@ -359,9 +361,7 @@ public class PropertyQueryService
         var soldUnitsMap = await _investmentRepository.GetSoldUnitsForPropertiesAsync(propertyIds);
         var snapshots = await _analyticsSnapshotRepository.GetLatestPropertySnapshotsAsync(propertyIds);
         var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
-        var images = await _propertyImageRepository.GetByPropertyIdsAsync(propertyIds);
-        //var imageMap = images.GroupBy(i => i.PropertyId).ToDictionary(g => g.Key, g => g.Select(x => x.ImageUrl).ToList());
-
+        
         // 🔥 Bulk fetch images
         var propertyImages = await _propertyImageRepository.GetByPropertyIdsAsync(propertyIds);
         var imageMap = propertyImages.GroupBy(i => i.PropertyId).ToDictionary(g => g.Key, g => g.Select(i => i.ImageUrl).ToList());
@@ -503,6 +503,8 @@ public class PropertyQueryService
             PropertyType = property.PropertyType,
             ImageUrls = imageUrls,
             Status = property.Status,
+            PropertySize = property.SquareFeet,
+            ListedPercentage = property.SellingPercentage,
             // RejectionReason =
             //     property.Status == PropertyStatus.Rejected
             //         ? property.RejectionReason
