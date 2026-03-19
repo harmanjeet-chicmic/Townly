@@ -13,6 +13,9 @@ public class PropertyDetailsDto
     public PropertyStatus Status { get; set; }
     public string? RejectionReason { get; set; }
 
+    public decimal PropertySize { get; set; }
+    public decimal ListedPercentage { get; set; }
+
     public int? TokensOwned { get; set; }
     public decimal? InvestedEth { get; set; }
 

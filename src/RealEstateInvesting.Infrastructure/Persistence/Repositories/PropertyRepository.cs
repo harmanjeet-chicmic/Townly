@@ -246,7 +246,9 @@ public class PropertyRepository : IPropertyRepository
 
                 SoldUnits = _context.Investments
                     .Where(i => i.PropertyId == p.Id)
-                    .Sum(i => (int?)i.SharesPurchased) ?? 0
+                    .Sum(i => (int?)i.SharesPurchased) ?? 0,
+                SquareFeet = p.SquareFeet,
+                SellingPercentage = p.SellingPercentage
             })
             .FirstOrDefaultAsync();
     }
