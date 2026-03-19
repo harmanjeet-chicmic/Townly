@@ -18,5 +18,4 @@ public class MarketplacePropertyDto
     public int AvailableUnits { get; set; }
     public decimal? RiskScore { get; set; }
     public decimal PricePerUnitEth { get; set; }
-
 }
