@@ -114,7 +114,8 @@ public class PropertyService
                     property.Id,
                     d.Title,
                     d.FileName,
-                    d.DocumentUrl));
+                    d.DocumentUrl,
+                    PropertyDocumentType.Property));
 
             await _propertyDocumentRepository.AddRangeAsync(docs);
         }

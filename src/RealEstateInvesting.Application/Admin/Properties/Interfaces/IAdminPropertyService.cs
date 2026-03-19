@@ -8,9 +8,9 @@ public interface IAdminPropertyService
 {
     Task<PaginatedResponse<MyPropertyDetailsDto>> GetPendingAsync(AdminPropertyQuery query);
 
-    Task ApproveAsync(Guid propertyId, Guid adminId);
+    Task ApproveAsync(Guid propertyId, Guid adminId, ApprovePropertyRequest request);
 
-    Task RejectAsync(Guid propertyId, Guid adminId, string reason);
+    Task RejectAsync(Guid propertyId, Guid adminId, RejectPropertyRequest request);
 
     Task ModifyRequest(Guid propertyId, Guid adminId, string reason);
 
