@@ -10,15 +10,18 @@ public class PropertyService
     private readonly IPropertyRepository _propertyRepository;
     private readonly IUserRepository _userRepository;
     private readonly IPropertyDocumentRepository _propertyDocumentRepository;
+    private readonly IPropertyImageRepository _propertyImageRepository;
 
     public PropertyService(
         IPropertyRepository propertyRepository,
         IUserRepository userRepository,
-        IPropertyDocumentRepository propertyDocumentRepository)
+        IPropertyDocumentRepository propertyDocumentRepository,
+        IPropertyImageRepository propertyImageRepository)
     {
         _propertyRepository = propertyRepository;
         _userRepository = userRepository;
         _propertyDocumentRepository = propertyDocumentRepository;
+        _propertyImageRepository = propertyImageRepository;
     }
 
     // public async Task<Guid> CreatePropertyAsync(
@@ -114,6 +117,17 @@ public class PropertyService
                     d.DocumentUrl));
 
             await _propertyDocumentRepository.AddRangeAsync(docs);
+        }
+
+        if (command.Images.Any())
+        {
+            var images = command.Images.Select(img =>
+                PropertyImage.Create(
+                    property.Id,
+                    img.FileName,
+                    img.ImageUrl));
+
+            await _propertyImageRepository.AddRangeAsync(images);
         }
 
         return property.Id;

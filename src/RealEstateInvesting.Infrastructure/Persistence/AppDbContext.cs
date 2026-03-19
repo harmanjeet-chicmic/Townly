@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
 
     public DbSet<UserPortfolioSnapshot> UserPortfolioSnapshots
         => Set<UserPortfolioSnapshot>();
+    public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
     public DbSet<AdminUser> Admins { get; set; } = default!;
     public DbSet<Log> Logs { get; set; }
 

@@ -8,17 +8,20 @@ public class InvestmentQueryService
 {
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IPropertyRepository _propertyRepository;
+    private readonly IPropertyImageRepository _propertyImageRepository;
     private readonly IAnalyticsSnapshotRepository _snapshotRepo;
     private readonly IEthPriceService _ethPriceService;
 
     public InvestmentQueryService(
         IInvestmentRepository investmentRepository,
         IPropertyRepository propertyRepository,
+        IPropertyImageRepository propertyImageRepository,
         IAnalyticsSnapshotRepository snapshotRepo,
         IEthPriceService ethPriceService)
     {
         _investmentRepository = investmentRepository;
         _propertyRepository = propertyRepository;
+        _propertyImageRepository = propertyImageRepository;
         _snapshotRepo = snapshotRepo;
         _ethPriceService = ethPriceService;
     }
@@ -62,6 +65,18 @@ public class InvestmentQueryService
 
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
+        // 🔥 Bulk fetch images from PropertyImages table
+        var images = await _propertyImageRepository.GetByPropertyIdsAsync(propertyIds);
+        var imageMap = images.GroupBy(i => i.PropertyId)
+            .ToDictionary(g => g.Key, g => g.Select(i => i.ImageUrl).ToList());
+
+        // 🔥 Bulk fetch images that are stored in PropertyDocuments table (legacy/fallback)
+        var propertyDocs = await _propertyRepository.GetDocumentsByPropertyIdsAsync(propertyIds);
+        var docImageMap = propertyDocs
+            .Where(d => d.Title.Equals("Image", StringComparison.OrdinalIgnoreCase))
+            .GroupBy(d => d.PropertyId)
+            .ToDictionary(g => g.Key, g => g.Select(d => d.DocumentUrl).ToList());
+
         var grouped = investments.GroupBy(i => i.PropertyId);
 
         var items = new List<MyInvestmentDto>();
@@ -72,6 +87,14 @@ public class InvestmentQueryService
                 continue;
 
             snapshotMap.TryGetValue(group.Key, out var snapshot);
+            imageMap.TryGetValue(group.Key, out var propertyImages);
+            docImageMap.TryGetValue(group.Key, out var docImages);
+
+            // Merge both image sources
+            var allImages = (propertyImages ?? new List<string>())
+                .Concat(docImages ?? new List<string>())
+                .Distinct()
+                .ToList();
 
             var totalShares = group.Sum(i => i.SharesPurchased);
             var totalAmountUsd = group.Sum(i => i.TotalAmount);
@@ -100,7 +123,7 @@ public class InvestmentQueryService
             {
                 PropertyId = property.Id,
                 PropertyName = property.Name,
-                PropertyImageUrl = property.ImageUrl,
+                PropertyImageUrls = allImages,
                 Location = property.Location,
                 PropertyType = property.PropertyType,
 

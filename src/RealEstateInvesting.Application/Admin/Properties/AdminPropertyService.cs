@@ -212,6 +212,7 @@ public class AdminPropertyService : IAdminPropertyService
     private readonly IOrganizationRepository  _organizationRepository;
     private readonly IAdminKycRepository _adminKycRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IPropertyImageRepository _propertyImageRepository;
 
     public AdminPropertyService(
         IAdminPropertyRepository propertyRepo,
@@ -224,7 +225,8 @@ public class AdminPropertyService : IAdminPropertyService
         IPropertyDocumentRepository propertyDocumentRepository,
         IOrganizationRepository organizationRepository,
         IAdminKycRepository adminKycRepository,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        IPropertyImageRepository propertyImageRepository)
     {
         _propertyRepo = propertyRepo;
         _notificationService = notificationService;
@@ -236,6 +238,7 @@ public class AdminPropertyService : IAdminPropertyService
         _propertyDocumentRepository = propertyDocumentRepository;
         _organizationRepository= organizationRepository;
         _adminKycRepository = adminKycRepository;
+        _propertyImageRepository = propertyImageRepository;
         _transactionRepository = transactionRepository;
     }
 
@@ -284,7 +287,7 @@ public class AdminPropertyService : IAdminPropertyService
                 Description = property.Description,
                 Location = property.Location,
                 PropertyType = property.PropertyType,
-                ImageUrl = property.ImageUrl,
+                ImageUrls = _propertyImageRepository.GetByPropertyIdAsync(property.Id).Result.Select(x => x.ImageUrl).ToList(),
                 Status = property.Status,
                 RejectionReason = property.RejectionReason,
                 RentalIncomeHistory = property.RentalIncomeHistory,
@@ -497,7 +500,7 @@ public class AdminPropertyService : IAdminPropertyService
                 Description = property.Description,
                 Location = property.Location,
                 PropertyType = property.PropertyType,
-                ImageUrl = property.ImageUrl,
+                ImageUrls = _propertyImageRepository.GetByPropertyIdAsync(property.Id).Result.Select(x => x.ImageUrl).ToList(),
                 Status = property.Status,
                 RejectionReason = property.RejectionReason,
                 RentalIncomeHistory = property.RentalIncomeHistory,

@@ -174,9 +174,7 @@ public class PropertiesController : ControllerBase
     [HttpPost]
     [Authorize]
     [EnableRateLimiting("PropertyCreationPolicy")]
-    [Consumes("multipart/form-data")]
-    public async Task<IActionResult> CreateProperty(
-   [FromForm] CreatePropertyMultipartDto request)
+    public async Task<IActionResult> CreateProperty(CreatePropertyMultipartDto request)
     {
         var userId = GetUserId();
 
@@ -190,76 +188,26 @@ public class PropertiesController : ControllerBase
             return BadRequest("Invalid square feet.");
 
         var documentDtos = new List<PropertyDocumentDto>();
+
         if (request.Documents != null)
         {
-            foreach (var doc in request.Documents)
+            documentDtos = request.Documents.Select(x => new PropertyDocumentDto
             {
-                if (doc.File == null || doc.File.Length == 0)
-                    continue; 
-                var docUrl = await _fileStorage.SaveAsync(
-                    doc.File.OpenReadStream(),
-                    doc.File.ContentType,
-                    doc.File.FileName,
-                    "properties/documents",
-                    HttpContext.RequestAborted);
-
-                var title = string.IsNullOrWhiteSpace(doc.Title)
-                    ? Path.GetFileNameWithoutExtension(doc.File.FileName)
-                    : doc.Title;
-
-                documentDtos.Add(new PropertyDocumentDto
-                {
-                    Title = title,
-                    FileName = doc.File.FileName,
-                    DocumentUrl = docUrl
-                });
-            }
+                Title = x.Title,
+                FileName = x.Title,
+                DocumentUrl = x.File
+            }).ToList();
         }
+
+        var imageDtos = new List<PropertyImageDto>();
+
         if (request.Images != null)
         {
-            foreach (var image in request.Images)
+            imageDtos = request.Images.Select(x => new PropertyImageDto
             {
-                var url = await _fileStorage.SaveAsync(
-                    image.OpenReadStream(),
-                    image.ContentType,
-                    image.FileName,
-                    "properties/images",
-                    HttpContext.RequestAborted);
-
-                documentDtos.Add(new PropertyDocumentDto
-                {
-                    Title = "Image",
-                    FileName = image.FileName,
-                    DocumentUrl = url
-                });
-            }
-        }
-
-        if (request.Documents != null)
-        {
-            foreach (var doc in request.Documents)
-            {
-                if (doc.File == null || doc.File.Length == 0)
-                    continue;
-
-                var docUrl = await _fileStorage.SaveAsync(
-                    doc.File.OpenReadStream(),
-                    doc.File.ContentType,
-                    doc.File.FileName,
-                    "properties/documents",
-                    HttpContext.RequestAborted);
-
-                var title = string.IsNullOrWhiteSpace(doc.Title)
-                    ? Path.GetFileNameWithoutExtension(doc.File.FileName)
-                    : doc.Title;
-
-                documentDtos.Add(new PropertyDocumentDto
-                {
-                    Title = title,
-                    FileName = doc.File.FileName,
-                    DocumentUrl = docUrl
-                });
-            }
+                FileName = x.Split('/')[^1],
+                ImageUrl = x
+            }).ToList();
         }
 
         var command = new CreatePropertyCommand
@@ -270,9 +218,10 @@ public class PropertiesController : ControllerBase
             PropertyType = request.PropertyType,
             TotalPropertyValueUsd = request.TotalPropertyValueUsd,
             SquareFeet = request.SquareFeet,
-           
+
             SellingPercentage = request.SellingPercentage,
             SharePerSquareFeet = request.SharePerSquareFeet,
+            Images = imageDtos,
             Documents = documentDtos
         };
 
@@ -280,6 +229,8 @@ public class PropertiesController : ControllerBase
 
         return Ok(new { PropertyId = propertyId });
     }
+
+
 
     private Guid GetUserId()
     {

@@ -9,7 +9,9 @@ public class MyPropertyDto
     public string Name { get; set; } = default!;
     public string Location { get; set; } = default!;
     public string PropertyType { get; set; } = default!;
-    public List<string> Images { get; set; } = new();
+    public List<string> ImageUrls { get; set; } = new();
+    
+
     public PropertyStatus Status { get; set; }
 
     public decimal ApprovedValuation { get; set; }
