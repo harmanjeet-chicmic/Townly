@@ -1,14 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\RealEstateInvesting.Application\RealEstateInvesting.Application.csproj" />
     <ProjectReference Include="..\RealEstateInvesting.Domain\RealEstateInvesting.Domain.csproj" />
   </ItemGroup>
