@@ -31,7 +31,7 @@ public class PropertyRegistrationApiClient : IPropertyRegistrationApiClient
     /// <inheritdoc />
     public async Task<PropertyRegisterResponseDto> RegisterPropertyAsync(PropertyRegisterRequestDto request, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PostAsJsonAsync(_path ?? "https://1a86-112-196-113-3.ngrok-free.app/v1/property-register", request, cancellationToken);
+        var response = await _httpClient.PostAsJsonAsync(_path ?? "https://e356-112-196-113-3.ngrok-free.app/v1/property-register", request, cancellationToken);
 
         // Try to deserialize the response body even for non-2xx responses.
         PropertyRegisterResponseDto? result = null;
