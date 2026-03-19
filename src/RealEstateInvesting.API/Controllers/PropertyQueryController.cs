@@ -3,6 +3,7 @@ using RealEstateInvesting.Application.Properties;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using RealEstateInvesting.Domain.Enums;
+using RealEstateInvesting.Application.Properties.Dtos;
 
 namespace RealEstateInvesting.Api.Controllers;
 
@@ -17,43 +18,33 @@ public class PropertyQueryController : ControllerBase
         _service = service;
     }
 
-    [HttpGet("marketplace")]
-    public async Task<IActionResult> GetMarketplace(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 9,
-        [FromQuery] string? search = null,
-        [FromQuery] string? propertyType = null)
+    [HttpPost("marketplace")]
+    public async Task<IActionResult> GetMarketplace([FromBody] MarketplaceSearchRequest request)
     {
-        // var userId = Guid.Parse(
-        //     User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         Guid? currentUserId = null;
 
         if (User.Identity?.IsAuthenticated == true)
         {
             currentUserId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!); 
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
         var result = await _service.GetMarketplaceAsync(
-           currentUserId, page, pageSize, search, propertyType);
+           currentUserId, request.Page, request.PageSize, request.Search, request.PropertyType, request.Status);
 
         return Ok(result);
     }
-    [HttpGet("marketplace/cursor")]
-    public async Task<IActionResult> GetMarketplaceCursor(
-    [FromQuery] int limit = 9,
-    [FromQuery] string? cursor = null,
-    [FromQuery] string? search = null,
-    [FromQuery] string? propertyType = null)
-    {
-        var result = await _service.GetMarketplaceCursorAsync(
-            limit, cursor, search, propertyType);
+    // [HttpPost("marketplace/cursor")]
+    // public async Task<IActionResult> GetMarketplaceCursor([FromBody] MarketplaceSearchRequest request)
+    // {
+    //     var result = await _service.GetMarketplaceCursorAsync(
+    //         request.PageSize, request.Cursor, request.Search, request.PropertyType,request.Status);
 
-        return Ok(result);
-    }
+    //     return Ok(result);
+    // }
 
     [HttpGet("{propertyId}")]
     public async Task<IActionResult> GetPropertyDetails(Guid propertyId)
-    {     
+    {
         Guid? currentUserId = null;
 
         if (User.Identity?.IsAuthenticated == true)
@@ -61,22 +52,22 @@ public class PropertyQueryController : ControllerBase
             currentUserId = Guid.Parse(
                 User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
-        var result =    await _service.GetDetailsAsync( currentUserId , propertyId);
+        var result = await _service.GetDetailsAsync(currentUserId, propertyId);
         return Ok(result);
     }
-    [HttpGet("featured")]
-    public async Task<IActionResult> GetFeatured()
-    {   
-         Guid? currentUserId = null;
+    // [HttpGet("featured")]
+    // public async Task<IActionResult> GetFeatured()
+    // {   
+    //      Guid? currentUserId = null;
 
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            currentUserId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        }
-        var result = await _service.GetFeaturedAsync(currentUserId);
-        return Ok(result);
-    }
+    //     if (User.Identity?.IsAuthenticated == true)
+    //     {
+    //         currentUserId = Guid.Parse(
+    //             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    //     }
+    //     var result = await _service.GetFeaturedAsync(currentUserId);
+    //     return Ok(result);
+    // }
 
 
     [HttpGet("me")]
@@ -91,7 +82,7 @@ public class PropertyQueryController : ControllerBase
             User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var result = await _service.GetMyPropertiesAsync(
-            userId, page, pageSize, status , search);
+            userId, page, pageSize, status, search);
 
         return Ok(result);
     }

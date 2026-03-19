@@ -299,6 +299,9 @@ public class Property : BaseEntity
 
     public bool IsHiddenFromOwner { get; private set; }
 
+    public virtual ICollection<PropertyImage> PropertyImages { get; private set; } = new List<PropertyImage>();
+    public virtual ICollection<PropertyDocument> PropertyDocuments { get; private set; } = new List<PropertyDocument>();
+
     private Property() { }
 
     public static Property CreateDraft(

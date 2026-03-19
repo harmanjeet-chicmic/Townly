@@ -47,10 +47,20 @@ public class PropertyRepository : IPropertyRepository
          int page,
          int pageSize,
          string? search,
-         string? propertyType)
+         string? propertyType,
+         List<PropertyStatus>? status)
     {
         var query = _context.Properties
-            .Where(p => p.Status == PropertyStatus.Active && p.OwnerUserId != currentUserId);
+    .Where(p => p.OwnerUserId != currentUserId);
+
+        if (status != null && status.Any())
+        {
+            query = query.Where(p => status.Contains(p.Status));
+        }
+        else
+        {
+            query = query.Where(p => p.Status == PropertyStatus.Active);
+        }
         Console.WriteLine("=============================seach=======================" + search + "-------------------------");
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -86,7 +96,7 @@ public class PropertyRepository : IPropertyRepository
                 ApprovedValuation = p.ApprovedValuation,
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
-
+                Status = p.Status,
                 SoldUnits = _context.Investments
                     .Where(i => i.PropertyId == p.Id)
                     .Sum(i => (int?)i.SharesPurchased) ?? 0
@@ -137,10 +147,19 @@ public class PropertyRepository : IPropertyRepository
     int limit,
     string? cursor,
     string? search,
-    string? propertyType)
+    string? propertyType,
+    List<PropertyStatus>? status)
     {
-        var query = _context.Properties
-            .Where(p => p.Status == PropertyStatus.Active);
+        var query = _context.Properties.AsQueryable();
+
+        if (status != null && status.Any())
+        {
+            query = query.Where(p => status.Contains(p.Status));
+        }
+        else
+        {
+            query = query.Where(p => p.Status == PropertyStatus.Active);
+        }
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -194,7 +213,7 @@ public class PropertyRepository : IPropertyRepository
     public async Task<IEnumerable<Property>> GetFeaturedAsync(int limit, Guid? CurrentUserId)
     {
         return await _context.Properties
-            .Where(p => p.Status == PropertyStatus.Active && p.OwnerUserId != CurrentUserId)
+            .Where(p => p.OwnerUserId != CurrentUserId)
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit)
             .ToListAsync();
@@ -241,6 +260,11 @@ public class PropertyRepository : IPropertyRepository
         await _context.SaveChangesAsync();
     }
 
-
+    public async Task<List<PropertyDocument>> GetDocumentsByPropertyIdsAsync(IEnumerable<Guid> propertyIds)
+    {
+        return await _context.PropertyDocuments
+            .Where(d => propertyIds.Contains(d.PropertyId) && !d.IsDeleted)
+            .ToListAsync();
+    }
 }
 

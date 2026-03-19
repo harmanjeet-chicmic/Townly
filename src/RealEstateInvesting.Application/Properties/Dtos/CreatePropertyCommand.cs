@@ -33,5 +33,6 @@ public class CreatePropertyCommand
     public decimal SellingPercentage { get; set; }
     public decimal SharePerSquareFeet { get; set; }
 
+    public List<PropertyImageDto> Images { get; set; } = new();
     public List<PropertyDocumentDto> Documents { get; set; } = new();
 }

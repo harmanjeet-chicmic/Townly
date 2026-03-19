@@ -8,7 +8,7 @@ public class MyPropertyDetailsDto
     public string Description { get; set; } = null!;
     public string Location { get; set; } = null!;
     public string PropertyType { get; set; } = null!;
-    public string? ImageUrl { get; set; }
+    public List<string> ImageUrls { get; set; } = new();
 
     public PropertyStatus Status { get; set; }
     public string? RejectionReason { get; set; }

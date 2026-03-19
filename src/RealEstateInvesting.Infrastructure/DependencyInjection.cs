@@ -81,6 +81,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminPropertyRepository, AdminPropertyRepository>();
         services.AddScoped<IAdminPropertyService, AdminPropertyService>();
         services.AddScoped<IPropertyDocumentRepository, PropertyDocumentRepository>();
+        services.AddScoped<IPropertyImageRepository, PropertyImageRepository>();
         services.AddScoped<IPropertyUpdateRequestRepository, PropertyUpdateRequestRepository>();
         services.AddScoped<IAnalyticsSnapshotRepository, AnalyticsSnapshotRepository>();
         services.AddScoped<IAdminUserRepository, AdminUserRepository>();

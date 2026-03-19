@@ -9,7 +9,7 @@ public class MyPropertyDto
     public string Name { get; set; } = default!;
     public string Location { get; set; } = default!;
     public string PropertyType { get; set; } = default!;
-    public string? ImageUrl { get; set; }
+    public List<string> ImageUrls { get; set; } = new();
     
 
     public PropertyStatus Status { get; set; }

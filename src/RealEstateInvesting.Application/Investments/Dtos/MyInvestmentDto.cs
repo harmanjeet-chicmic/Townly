@@ -4,7 +4,7 @@ public class MyInvestmentDto
 {
     public Guid PropertyId { get; set; }
     public string PropertyName { get; set; } = default!;
-    public string PropertyImageUrl { get; set; } = default!;
+    public List<string> PropertyImageUrls { get; set; } = new();
     public string Location { get; set; } = default!;
     public string PropertyType { get; set; } = default!;
 

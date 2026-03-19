@@ -16,12 +16,16 @@ GetMarketplaceAsync(
     int page,
     int pageSize,
     string? search,
-    string? propertyType);
+    string? propertyType,
+    List<PropertyStatus>? status);
     Task<List<MarketplacePropertyReadModel>> GetMarketplaceCursorAsync(
     int limit,
     string? cursor,
     string? search,
-    string? propertyType);
+    string? propertyType,
+    List<PropertyStatus>? status);
+
+    Task<List<PropertyDocument>> GetDocumentsByPropertyIdsAsync(IEnumerable<Guid> propertyIds);
 
     Task<(IEnumerable<Property> Items, int TotalCount)>
  GetByOwnerIdPagedAsync(

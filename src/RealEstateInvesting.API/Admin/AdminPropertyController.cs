@@ -29,12 +29,12 @@ public class AdminPropertyController : ControllerBase
     //     var result = await _service.GetPendingAsync();
     //     return Ok(result);
     // }
-    [HttpGet("pending")]
-    public async Task<IActionResult> GetPending([FromQuery] AdminPropertyQuery query)
-    {
-        var result = await _service.GetPendingAsync(query);
-        return Ok(result);
-    }
+    // [HttpGet("pending")]
+    // public async Task<IActionResult> GetPending([FromQuery] AdminPropertyQuery query)
+    // {
+    //     var result = await _service.GetPendingAsync(query);
+    //     return Ok(result);
+    // }
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] AdminPropertyQuery query)
     {
