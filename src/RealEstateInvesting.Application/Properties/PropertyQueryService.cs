@@ -98,7 +98,8 @@ public class PropertyQueryService
                 AvailableUnits = p.TotalUnits - p.SoldUnits,
 
                 PricePerUnitEth = pricePerUnitEth,
-                RiskScore = snapshot?.RiskScore ?? 5
+                RiskScore = snapshot?.RiskScore ?? 5,
+                TransactionHash = null,
             };
         });
 
