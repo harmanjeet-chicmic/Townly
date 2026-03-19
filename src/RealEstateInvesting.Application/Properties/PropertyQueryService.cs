@@ -49,7 +49,6 @@ public class PropertyQueryService
     string? propertyType,
     List<PropertyStatus>? status)
     {
-        // 🔥 1. Get ETH price ONCE
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
         var (items, totalCount) =
@@ -57,12 +56,9 @@ public class PropertyQueryService
                 currentUserId, page, pageSize, search, propertyType, status);
 
         var propertyIds = items.Select(p => p.Id).ToList();
-
-        // 🔥 2. Bulk analytics fetch (SAFE)
         var snapshots =
             await _analyticsSnapshotRepository
                 .GetLatestPropertySnapshotsAsync(propertyIds);
-
         var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
 
         // 🔥 Bulk fetch images
@@ -94,10 +90,7 @@ public class PropertyQueryService
                 TotalUnits = p.TotalUnits,
                 AvailableUnits = p.TotalUnits - p.SoldUnits,
 
-                // 🔥 ETH display
                 PricePerUnitEth = pricePerUnitEth,
-
-                // 🔥 Analytics
                 RiskScore = snapshot?.RiskScore ?? 5
             };
         });
@@ -165,8 +158,6 @@ public class PropertyQueryService
                 RiskScore = snapshot?.RiskScore ?? 5
             };
         }).ToList();
-
-        // 🔑 Generate next cursor
         var last = items.LastOrDefault();
         var nextCursor = last == null
             ? null
@@ -258,8 +249,6 @@ public class PropertyQueryService
             return Enumerable.Empty<MarketplacePropertyDto>();
 
         var propertyIds = properties.Select(p => p.Id).ToList();
-
-        // 🔥 Get sold units in bulk
         var soldUnitsMap =
             await _investmentRepository
                 .GetSoldUnitsForPropertiesAsync(propertyIds);
@@ -302,8 +291,6 @@ public class PropertyQueryService
         });
     }
 
-
-
     public async Task<object> GetMyPropertiesAsync(
         Guid userId,
         int page,
@@ -330,13 +317,23 @@ public class PropertyQueryService
         }
 
         var propertyIds = properties.Select(p => p.Id).ToList();
+
+       
+        var documents =
+            await _propertyDocumentRepository.GetByPropertyIdsAsync(propertyIds);
+
+        var documentMap = documents
+            .GroupBy(d => d.PropertyId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         var pendingUpdatePropertyIds =
-    await _updateRepository.GetPendingPropertyIdsAsync(propertyIds);
+            await _updateRepository.GetPendingPropertyIdsAsync(propertyIds);
 
         var pendingUpdateSet = pendingUpdatePropertyIds.ToHashSet();
+
         var soldUnitsMap =
-      await _investmentRepository
-          .GetSoldUnitsForPropertiesAsync(propertyIds);
+            await _investmentRepository
+                .GetSoldUnitsForPropertiesAsync(propertyIds);
 
         var snapshots =
             await _analyticsSnapshotRepository
@@ -345,23 +342,31 @@ public class PropertyQueryService
         var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
 
         var items = properties.Select(p =>
- {
-     snapshotMap.TryGetValue(p.Id, out var snapshot);
-     soldUnitsMap.TryGetValue(p.Id, out var soldUnits);
+        {
+            snapshotMap.TryGetValue(p.Id, out var snapshot);
+            soldUnitsMap.TryGetValue(p.Id, out var soldUnits);
 
-     var availableUnits = p.TotalUnits - soldUnits;
+            // 🔥 Images extraction
+            documentMap.TryGetValue(p.Id, out var docs);
 
-     var progressPercent =
-         p.TotalUnits == 0 ? 0 :
-         Math.Round((decimal)soldUnits / p.TotalUnits * 100, 2);
+            var images = docs?
+                .Where(d => d.Title == "Image")
+                .Select(d => d.DocumentUrl)
+                .ToList() ?? new List<string>();
 
-     var pricePerUnitUsd =
-         p.TotalUnits == 0 ? 0 :
-         p.ApprovedValuation / p.TotalUnits;
+            var availableUnits = p.TotalUnits - soldUnits;
 
-     var pricePerUnitEth =
-         ethUsdRate == 0 ? 0 :
-         decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
+            var progressPercent =
+                p.TotalUnits == 0 ? 0 :
+                Math.Round((decimal)soldUnits / p.TotalUnits * 100, 2);
+
+            var pricePerUnitUsd =
+                p.TotalUnits == 0 ? 0 :
+                p.ApprovedValuation / p.TotalUnits;
+
+            var pricePerUnitEth =
+                ethUsdRate == 0 ? 0 :
+                decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
 
      return new MyPropertyDto
      {
@@ -371,14 +376,14 @@ public class PropertyQueryService
          PropertyType = p.PropertyType,
          ImageUrls = _propertyImageRepository.GetByPropertyIdAsync(p.Id).Result.Select(x => x.ImageUrl).ToList(),
 
-         Status = p.Status,
-         ApprovedValuation = p.ApprovedValuation,
-         TotalUnits = p.TotalUnits,
-         AnnualYieldPercent = p.AnnualYieldPercent,
+                Status = p.Status,
+                ApprovedValuation = p.ApprovedValuation,
+                TotalUnits = p.TotalUnits,
+                AnnualYieldPercent = p.AnnualYieldPercent,
 
-         SoldUnits = soldUnits,
-         AvailableUnits = availableUnits,
-         InvestmentProgressPercent = progressPercent,
+                SoldUnits = soldUnits,
+                AvailableUnits = availableUnits,
+                InvestmentProgressPercent = progressPercent,
 
          PricePerUnitEth = pricePerUnitEth,
          RiskScore = snapshot?.RiskScore ?? 5,
@@ -396,10 +401,9 @@ public class PropertyQueryService
             Items = items
         };
     }
-
     public async Task<MyPropertyDetailsDto> GetMyPropertyDetailsAsync(
-     Guid userId,
-     Guid propertyId)
+         Guid userId,
+         Guid propertyId)
     {
         var property = await _propertyRepository.GetByIdAsync(propertyId)
             ?? throw new NotFoundException("Property not found.");

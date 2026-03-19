@@ -141,44 +141,55 @@ public class AnalyticsBackgroundService : BackgroundService
                 Math.Round(baseDemand * decayFactor, 2);
 
             // -------------------------------
-            // 🔥 Risk Factor v1 (UNCHANGED)
+            // 🔥 Risk Factor v1
             // -------------------------------
-            var fundingRatio =
-                property.TotalUnits == 0
-                    ? 0
-                    : (decimal)sharesSold / property.TotalUnits;
+            var latestSnapshot = await snapshotRepo.GetLatestPropertySnapshotAsync(property.Id);
 
-            var fundingRisk =
-                fundingRatio < 0.20m ? 8 :
-                fundingRatio < 0.40m ? 6 :
-                fundingRatio < 0.60m ? 4 :
-                fundingRatio < 0.80m ? 2 : 1;
+            decimal riskScore;
+            if (latestSnapshot != null)
+            {
+                // Preserve the existing RiskScore settled during activation/admin updates
+                riskScore = latestSnapshot.RiskScore;
+            }
+            else
+            {
+                var fundingRatio =
+                    property.TotalUnits == 0
+                        ? 0
+                        : (decimal)sharesSold / property.TotalUnits;
 
-            var investorRisk =
-                uniqueInvestors <= 2  ? 8 :
-                uniqueInvestors <= 5  ? 6 :
-                uniqueInvestors <= 10 ? 4 :
-                uniqueInvestors <= 20 ? 2 : 1;
+                var fundingRisk =
+                    fundingRatio < 0.20m ? 8 :
+                    fundingRatio < 0.40m ? 6 :
+                    fundingRatio < 0.60m ? 4 :
+                    fundingRatio < 0.80m ? 2 : 1;
 
-            var ageDays =
-                property.ApprovedAt.HasValue
-                    ? (snapshotTime - property.ApprovedAt.Value).TotalDays
-                    : 0;
+                var investorRisk =
+                    uniqueInvestors <= 2 ? 8 :
+                    uniqueInvestors <= 5 ? 6 :
+                    uniqueInvestors <= 10 ? 4 :
+                    uniqueInvestors <= 20 ? 2 : 1;
 
-            var ageRisk =
-                ageDays < 30  ? 7 :
-                ageDays < 90  ? 5 :
-                ageDays < 180 ? 3 : 1;
+                var ageDays =
+                    property.ApprovedAt.HasValue
+                        ? (snapshotTime - property.ApprovedAt.Value).TotalDays
+                        : 0;
 
-            var yieldRisk =
-                property.AnnualYieldPercent > 0.15m ? 7 :
-                property.AnnualYieldPercent > 0.12m ? 5 :
-                property.AnnualYieldPercent > 0.08m ? 3 : 1;
+                var ageRisk =
+                    ageDays < 30 ? 7 :
+                    ageDays < 90 ? 5 :
+                    ageDays < 180 ? 3 : 1;
 
-            var riskScore =
-                Math.Round(
-                    (fundingRisk + investorRisk + ageRisk + yieldRisk) / 4m,
-                    1);
+                var yieldRisk =
+                    property.AnnualYieldPercent > 0.15m ? 7 :
+                    property.AnnualYieldPercent > 0.12m ? 5 :
+                    property.AnnualYieldPercent > 0.08m ? 3 : 1;
+
+                riskScore =
+                    Math.Round(
+                        (fundingRisk + investorRisk + ageRisk + yieldRisk) / 4m,
+                        1);
+            }
 
             // -------------------------------
             // Pricing

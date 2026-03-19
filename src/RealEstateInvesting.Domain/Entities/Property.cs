@@ -268,29 +268,29 @@ namespace RealEstateInvesting.Domain.Entities;
 
 public class Property : BaseEntity
 {
-   
+
     public Guid OwnerUserId { get; private set; }
 
     public string Name { get; private set; } = default!;
     public string Description { get; private set; } = default!;
     public string Location { get; private set; } = default!;
     public string PropertyType { get; private set; } = default!;
-    public string? ImageUrl { get; private set; }  
+    public string? ImageUrl { get; private set; }
 
 
     public decimal InitialValuation { get; private set; }
-    public decimal ApprovedValuation { get; private set; }  
-    public int TotalUnits { get; private set; }             
-     public decimal AnnualYieldPercent { get; private set; } 
-    public decimal RentalIncomeHistory { get; private set; } 
+    public decimal ApprovedValuation { get; private set; }
+    public int TotalUnits { get; private set; }
+    public decimal AnnualYieldPercent { get; private set; }
+    public decimal RentalIncomeHistory { get; private set; }
+    public Guid? OrganizationId { get; private set; }
 
-    
+
     public decimal SquareFeet { get; private set; }
     public decimal SellingPercentage { get; private set; }
     public decimal SharePerSquareFeet { get; private set; }
 
     public PropertyStatus Status { get; private set; } = PropertyStatus.Draft;
-
 
     public DateTime? ApprovedAt { get; private set; }
     public Guid? ReviewedBy { get; private set; }
@@ -342,7 +342,7 @@ public class Property : BaseEntity
 
             InitialValuation = initialValuation,
             ApprovedValuation = initialValuation,
-            TotalUnits = 1, 
+            TotalUnits = 1,
             AnnualYieldPercent = 0,
             RentalIncomeHistory = 0,
 
@@ -373,12 +373,14 @@ public class Property : BaseEntity
 
         MarkUpdated();
     }
-    public void AssignToOrganization()
+    public void AssignToOrganization(Guid organizationId)
     {
         if (Status != PropertyStatus.AdminApproved)
             throw new InvalidOperationException("Only admin approved properties can be assigned.");
 
+        OrganizationId = organizationId; 
         Status = PropertyStatus.OrganizationAssigned;
+
         MarkUpdated();
     }
 
@@ -453,6 +455,27 @@ public class Property : BaseEntity
         ReviewedBy = null;
         ReviewedAt = null;
         RejectionReason = null;
+
+        MarkUpdated();
+    }
+    public void FinalizeTokenization(
+    int totalUnits,
+    decimal rentalIncome,
+    decimal annualYieldPercent)
+    {
+        if (Status != PropertyStatus.OrganizationAssigned)
+            throw new InvalidOperationException("Property must be assigned to organization.");
+
+        if (totalUnits <= 0)
+            throw new InvalidOperationException("Total units must be greater than zero.");
+
+        if (annualYieldPercent < 0 || annualYieldPercent > 50)
+            throw new InvalidOperationException("Invalid yield percent.");
+
+        TotalUnits = totalUnits;
+        RentalIncomeHistory = rentalIncome;
+        AnnualYieldPercent = annualYieldPercent;
+       
 
         MarkUpdated();
     }

@@ -40,4 +40,10 @@ public class PropertyDocumentRepository : IPropertyDocumentRepository
 
         await _context.SaveChangesAsync();
     }
+    public async Task<List<PropertyDocument>> GetByPropertyIdsAsync(List<Guid> propertyIds)
+    {
+        return await _context.PropertyDocuments
+            .Where(d => propertyIds.Contains(d.PropertyId))
+            .ToListAsync();
+    }
 }

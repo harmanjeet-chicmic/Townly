@@ -21,6 +21,7 @@ public sealed class KycStatusReadService : IGetMyKycStatusReadService
         var kyc = await _context.KycRecords
             .AsNoTracking()
             .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
             .Select(x => new
             {
                 x.Status,

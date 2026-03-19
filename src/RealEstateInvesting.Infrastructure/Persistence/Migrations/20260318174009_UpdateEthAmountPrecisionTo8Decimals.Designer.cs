@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RealEstateInvesting.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using RealEstateInvesting.Infrastructure.Persistence;
 namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260318174009_UpdateEthAmountPrecisionTo8Decimals")]
+    partial class UpdateEthAmountPrecisionTo8Decimals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -833,51 +836,7 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PropertyId");
-
                     b.ToTable("PropertyDocuments", (string)null);
-                });
-
-            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.PropertyImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("PropertyId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PropertyId");
-
-                    b.ToTable("PropertyImages");
                 });
 
             modelBuilder.Entity("RealEstateInvesting.Domain.Entities.PropertyUpdateRequest", b =>
@@ -1286,31 +1245,6 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
                     b.HasIndex("WalletAddress");
 
                     b.ToTable("WalletNonces", (string)null);
-                });
-
-            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.PropertyDocument", b =>
-                {
-                    b.HasOne("RealEstateInvesting.Domain.Entities.Property", null)
-                        .WithMany("PropertyDocuments")
-                        .HasForeignKey("PropertyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.PropertyImage", b =>
-                {
-                    b.HasOne("RealEstateInvesting.Domain.Entities.Property", null)
-                        .WithMany("PropertyImages")
-                        .HasForeignKey("PropertyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.Property", b =>
-                {
-                    b.Navigation("PropertyDocuments");
-
-                    b.Navigation("PropertyImages");
                 });
 #pragma warning restore 612, 618
         }

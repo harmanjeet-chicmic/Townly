@@ -1,0 +1,12 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  RealEstateInvesting.Domain -> C:\Users\HARMANJEET SINGH\OneDrive\Desktop\Townly\src\RealEstateInvesting.Domain\bin\Debug\net10.0\RealEstateInvesting.Domain.dll
+  RealEstateInvesting.Application -> C:\Users\HARMANJEET SINGH\OneDrive\Desktop\Townly\src\RealEstateInvesting.Application\bin\Debug\net10.0\RealEstateInvesting.Application.dll
+  RealEstateInvesting.Infrastructure -> C:\Users\HARMANJEET SINGH\OneDrive\Desktop\Townly\src\RealEstateInvesting.Infrastructure\bin\Debug\net10.0\RealEstateInvesting.Infrastructure.dll
+  RealEstateInvesting.API -> C:\Users\HARMANJEET SINGH\OneDrive\Desktop\Townly\src\RealEstateInvesting.API\bin\Debug\net10.0\RealEstateInvesting.API.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.13

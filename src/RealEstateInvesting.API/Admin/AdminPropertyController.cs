@@ -101,6 +101,19 @@ public class AdminPropertyController : ControllerBase
 
         return Ok();
     }
+    [HttpPost("{propertyId:guid}/assign")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AssignProperty(
+    Guid propertyId,
+    [FromBody] AssignPropertyDto request)
+    {
+        await _service.AssignToOrganizationAsync(propertyId, request.OrganizationId);
+
+        return Ok(new
+        {
+            Message = "Property assigned to organization successfully"
+        });
+    }
 
     [HttpGet("Details")]
     public async Task<IActionResult> GetDetails()

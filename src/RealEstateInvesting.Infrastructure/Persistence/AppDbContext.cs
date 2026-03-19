@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
         : base(options) { }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Organization> Organizations { get; set; }
     public DbSet<KycRecord> KycRecords => Set<KycRecord>();
     public DbSet<Property> Properties => Set<Property>();
     public DbSet<Investment> Investments => Set<Investment>();

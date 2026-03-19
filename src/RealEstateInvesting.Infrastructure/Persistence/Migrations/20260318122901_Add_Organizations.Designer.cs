@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RealEstateInvesting.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using RealEstateInvesting.Infrastructure.Persistence;
 namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260318122901_Add_Organizations")]
+    partial class Add_Organizations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,12 +78,10 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("EthAmountAtExecution")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("decimal(18,8)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("EthUsdRateAtExecution")
-                        .HasPrecision(18, 8)
-                        .HasColumnType("decimal(18,8)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -693,9 +694,6 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid?>("OrganizationId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("OwnerUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -833,51 +831,7 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PropertyId");
-
                     b.ToTable("PropertyDocuments", (string)null);
-                });
-
-            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.PropertyImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("PropertyId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PropertyId");
-
-                    b.ToTable("PropertyImages");
                 });
 
             modelBuilder.Entity("RealEstateInvesting.Domain.Entities.PropertyUpdateRequest", b =>
@@ -1286,31 +1240,6 @@ namespace RealEstateInvesting.Infrastructure.Persistence.Migrations
                     b.HasIndex("WalletAddress");
 
                     b.ToTable("WalletNonces", (string)null);
-                });
-
-            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.PropertyDocument", b =>
-                {
-                    b.HasOne("RealEstateInvesting.Domain.Entities.Property", null)
-                        .WithMany("PropertyDocuments")
-                        .HasForeignKey("PropertyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.PropertyImage", b =>
-                {
-                    b.HasOne("RealEstateInvesting.Domain.Entities.Property", null)
-                        .WithMany("PropertyImages")
-                        .HasForeignKey("PropertyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("RealEstateInvesting.Domain.Entities.Property", b =>
-                {
-                    b.Navigation("PropertyDocuments");
-
-                    b.Navigation("PropertyImages");
                 });
 #pragma warning restore 612, 618
         }
