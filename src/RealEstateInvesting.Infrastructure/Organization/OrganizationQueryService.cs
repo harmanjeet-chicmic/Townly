@@ -1,19 +1,26 @@
 using Microsoft.EntityFrameworkCore;
 using RealEstateInvesting.Application.Properties.Dtos;
+using RealEstateInvesting.Application.Properties.PropertyRegistrationApi;
 using RealEstateInvesting.Infrastructure.Persistence;
 using RealEstateInvesting.Application.Common.Dtos;
 using RealEstateInvesting.Admin.Application.Organizations;
 using RealEstateInvesting.Application.Organizations.Dtos;
 using RealEstateInvesting.Domain.Entities;
+using RealEstateInvesting.Domain.Enums;
+
 namespace RealEstateInvesting.Infrastructure.Organizations;
 
 public class OrganizationQueryService
 {
     private readonly AppDbContext _context;
+    private readonly IPropertyRegistrationApiClient _propertyRegistrationApi;
 
-    public OrganizationQueryService(AppDbContext context)
+    public OrganizationQueryService(
+        AppDbContext context,
+        IPropertyRegistrationApiClient propertyRegistrationApi)
     {
         _context = context;
+        _propertyRegistrationApi = propertyRegistrationApi;
     }
 
     public async Task<PagedResult<OrganizationRowDto>> GetAllAsync(
@@ -71,16 +78,15 @@ public class OrganizationQueryService
             Items = items
         };
     }
-    public async Task<PagedResult<OrganizationPropertyDto>> GetPropertiesByOrganizationAsync(
-    Guid organizationId,
-    OrganizationQuery query,
+    public async Task<PagedResult<OrganizationPropertyDto>> GetPropertiesByOrganizationAsync( Guid organizationId, OrganizationQuery query,
     CancellationToken ct = default)
     {
-        // ✅ safety defaults
+        // safety defaults
         query.Page = query.Page <= 0 ? 1 : query.Page;
         query.PageSize = query.PageSize <= 0 ? 10 : query.PageSize;
 
         var baseQuery = _context.Properties
+            .Include(p => p.PropertyImages)
             .Where(p => p.OrganizationId == organizationId);
 
         var totalCount = await baseQuery.CountAsync(ct);
@@ -90,6 +96,11 @@ public class OrganizationQueryService
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(ct);
+
+        var ownerIds = properties.Select(p => p.OwnerUserId).Distinct().ToList();
+        var owners = await _context.Users
+            .Where(u => ownerIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.WalletAddress, ct);
 
         var items = properties.Select(property => new OrganizationPropertyDto
         {
@@ -101,7 +112,9 @@ public class OrganizationQueryService
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
 
-            Status = (int)property.Status
+            Status = (int)property.Status,
+            Image = property.ImageUrl ?? property.PropertyImages.FirstOrDefault()?.ImageUrl,
+            OwnerWalletAddress = owners.TryGetValue(property.OwnerUserId, out var wallet) ? wallet : null
         }).ToList();
 
         return new PagedResult<OrganizationPropertyDto>
@@ -113,47 +126,68 @@ public class OrganizationQueryService
             Items = items
         };
     }
-    public async Task ActivatePropertyAsync(
-    Guid organizationId,
-    Guid propertyId,
-    ActivatePropertyDto dto,
-    Guid adminUserId,
-    CancellationToken ct = default)
+    /// <summary>
+    /// Activates a property: calls external T-REX property-register API, then finalizes tokenization, activates, and creates analytics snapshot.
+    /// </summary>
+    public async Task<PropertyRegisterResponseDto> ActivatePropertyAsync(Guid organizationId, Guid propertyId, ActivatePropertyDto dto,
+        Guid adminUserId, CancellationToken ct = default)
     {
-        var property = await _context.Properties
-            .FirstOrDefaultAsync(p => p.Id == propertyId, ct);
+        var property = await _context.Properties.FirstOrDefaultAsync(p => p.Id == propertyId, ct);
 
         if (property == null)
             throw new Exception("Property not found");
 
-        // 🔥 CRITICAL CHECK
         if (property.OrganizationId != organizationId)
             throw new Exception("Property does not belong to this organization");
 
-        // ✅ finalize tokenization
-        property.FinalizeTokenization(
-            dto.TotalUnits,
-            dto.RentalIncome,
-            dto.AnnualYieldPercent
-          
-        );
+        if (string.IsNullOrWhiteSpace(dto.OwnerAddress))
+            throw new ArgumentException("OwnerAddress is required for on-chain property registration.", nameof(dto));
 
-        // ✅ activate
-        property.Activate();
+        var totalUnits = dto.TotalUnits;
+        var pricePerShare = totalUnits > 0 ? property.ApprovedValuation / totalUnits : 0m;
 
-        // ✅ create initial analytics snapshot with the risk score
-        var snapshot = PropertyAnalyticsSnapshot.Create(
-            propertyId: property.Id,
-            snapshotAt: DateTime.UtcNow,
-            sharesSold: 0,
-            totalInvested: 0m,
-            demandScore: 0m,
-            riskScore: dto.RiskScore,
-            pricePerShare: property.ApprovedValuation / dto.TotalUnits,
-            valuation: property.ApprovedValuation
+        var registerRequest = new PropertyRegisterRequestDto
+        {
+            PropertyId = propertyId.ToString(),
+            OwnerAddress = dto.OwnerAddress.Trim(),
+            PricePerShare = ((int)pricePerShare).ToString(),
+            MintAmount = totalUnits.ToString(),
+            IpfsUri = !string.IsNullOrWhiteSpace(dto.IpfsUri) ? dto.IpfsUri : (property.ImageUrl ?? "string"),
+            PropertyName = property.Name ?? "string",
+            Description = property.Description ?? "string",
+            Location = property.Location ?? "string",
+            PropertyType = property.PropertyType ?? "string"
+        };
+
+        var apiResponse = await _propertyRegistrationApi.RegisterPropertyAsync(registerRequest, ct);
+
+        property.FinalizeTokenization(dto.TotalUnits, dto.RentalIncome, dto.AnnualYieldPercent);
+
+        var job = PropertyActivationRecord.Create(jobId: apiResponse.Data.JobId,
+                                                  propertyId: apiResponse.Data.PropertyId,
+                                                  status: apiResponse.Data.Status,
+                                                  trexDeployTxHash: apiResponse.Data.TrexDeployTxHash,
+                                                  createdBy: adminUserId);
+        _context.PropertyActivationRecords.Add(job);
+
+        // Update Property table status from API response (e.g. PENDING_TREX, TREX_DEPLOYING, or Active when COMPLETED)
+        var mappedStatus = MapTrexStatus(apiResponse.Data.Status);
+        property.SetRegistrationJobStatus(mappedStatus);
+
+
+        var snapshot = PropertyAnalyticsSnapshot.Create(propertyId: property.Id,
+                                                        snapshotAt: DateTime.UtcNow,
+                                                        sharesSold: 0,
+                                                        totalInvested: 0m,
+                                                        demandScore: 0m,
+                                                        riskScore: dto.RiskScore,
+                                                        pricePerShare: pricePerShare,
+                                                        valuation: property.ApprovedValuation
         );
         _context.PropertyAnalyticsSnapshots.Add(snapshot);
-
         await _context.SaveChangesAsync(ct);
+        return apiResponse;
     }
+
+    public static PropertyStatus MapTrexStatus(int trexStatusCode) => TrexStatusMapper.MapToPropertyStatus(trexStatusCode);
 }

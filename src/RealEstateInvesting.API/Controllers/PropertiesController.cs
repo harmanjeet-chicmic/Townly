@@ -189,25 +189,65 @@ public class PropertiesController : ControllerBase
 
         var documentDtos = new List<PropertyDocumentDto>();
 
-        if (request.Documents != null)
+        if(request.Documents != null)
         {
-            documentDtos = request.Documents.Select(x => new PropertyDocumentDto
+
+            var folder = "document" ;
+            foreach(var doc in request.Documents)
             {
-                Title = x.Title,
-                FileName = x.Title,
-                DocumentUrl = x.File
-            }).ToList();
+                var url = await _fileStorage.SaveAsync(
+                doc.File.OpenReadStream(),
+                doc.File.ContentType,
+                doc.File.FileName,
+                folder,
+                HttpContext.RequestAborted);
+                documentDtos.Add(new PropertyDocumentDto
+                {
+                    Title = doc.Title,
+                    FileName = doc.File.FileName,
+                    DocumentUrl = url
+                });
+
+            }
+            
         }
+
+        // if (request.Documents != null)
+        // {
+        //     documentDtos = request.Documents.Select(x => new PropertyDocumentDto
+        //     {
+        //         Title = x.Title,
+        //         FileName = x.Title,
+        //         DocumentUrl = x.File
+        //     }).ToList();
+        // }
 
         var imageDtos = new List<PropertyImageDto>();
 
         if (request.Images != null)
         {
-            imageDtos = request.Images.Select(x => new PropertyImageDto
+            var folder = "images" ;
+            foreach(var image in request.Images)
             {
-                FileName = x.Split('/')[^1],
-                ImageUrl = x
-            }).ToList();
+                var url = await _fileStorage.SaveAsync(
+                image.OpenReadStream(),
+                image.ContentType,
+                image.FileName,
+                folder,
+                HttpContext.RequestAborted);
+                imageDtos.Add(new PropertyImageDto
+                {
+                    FileName = image.FileName,
+                    ImageUrl = url
+                });
+
+            }
+
+            // imageDtos = request.Images.Select(x => new PropertyImageDto
+            // {
+            //     FileName = x.Split('/')[^1],
+            //     ImageUrl = x
+            // }).ToList();
         }
 
         var command = new CreatePropertyCommand

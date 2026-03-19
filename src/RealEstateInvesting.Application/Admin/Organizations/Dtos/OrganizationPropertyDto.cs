@@ -12,4 +12,7 @@ public class OrganizationPropertyDto
    
 
     public int Status { get; set; }
+
+    public string? Image { get; set; }
+    public string? OwnerWalletAddress { get; set; }
 }
