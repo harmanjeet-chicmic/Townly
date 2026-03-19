@@ -197,6 +197,13 @@ builder.Services.AddAuthentication(options =>
 });
 builder.Services.AddCors(options =>
 {
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+
     options.AddPolicy("DevCorsPolicy", policy =>
     {
         policy
@@ -204,9 +211,9 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .SetIsOriginAllowed(origin =>
             {
-                // Allow local dev
-                if (origin == "http://127.0.0.1:5500" ||
-                    origin == "http://localhost:5500")
+                // Allow local dev and common ports
+                if (origin.StartsWith("http://localhost:") || 
+                    origin.StartsWith("http://127.0.0.1:"))
                     return true;
 
                 // Allow any ngrok HTTPS domain
@@ -269,7 +276,7 @@ app.UseSwaggerUI();
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();
-app.UseCors("DevCorsPolicy");
+// app.UseCors("DevCorsPolicy"); // Removed redundant and misordered call
 app.UseMiddleware<RequestDebugMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
