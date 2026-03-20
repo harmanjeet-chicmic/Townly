@@ -256,7 +256,10 @@ public class PropertyQueryService
             TokensOwned = tokensOwned,
 
             AnnualYieldPercent = property.AnnualYieldPercent,
-            AvailableUnits = property.TotalUnits - property.SoldUnits,
+            //AvailableUnits = property.TotalUnits - property.SoldUnits,
+             AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
+                    ? (int)registrationJob.MintAmount.Value - property.SoldUnits 
+                    : property.TotalUnits - property.SoldUnits,
 
             RiskScore = snapshot?.RiskScore ?? 5,
             DemandScore = snapshot?.DemandScore,
@@ -286,6 +289,8 @@ public class PropertyQueryService
             await _investmentRepository
                 .GetSoldUnitsForPropertiesAsync(propertyIds);
 
+        var registrationJobsMap = await _propertyRegistrationJobRepository.GetLatestByPropertyIdsAsync(propertyIds);
+
         var snapshots =
             await _analyticsSnapshotRepository
                 .GetLatestPropertySnapshotsAsync(propertyIds);
@@ -302,8 +307,11 @@ public class PropertyQueryService
             snapshotMap.TryGetValue(p.Id, out var snapshot);
             soldUnitsMap.TryGetValue(p.Id, out var soldUnits);
             imageMap.TryGetValue(p.Id, out var images);
+            registrationJobsMap.TryGetValue(p.Id, out var registrationJob);
 
-            var availableUnits = p.TotalUnits - soldUnits;
+            var availableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
+                ? (int)registrationJob.MintAmount.Value - soldUnits 
+                : p.TotalUnits - soldUnits;
 
             var pricePerUnitUsd =
                 p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
@@ -381,6 +389,7 @@ public class PropertyQueryService
         var pendingUpdatePropertyIds = await _updateRepository.GetPendingPropertyIdsAsync(propertyIds);
         var pendingUpdateSet = pendingUpdatePropertyIds.ToHashSet();
         var soldUnitsMap = await _investmentRepository.GetSoldUnitsForPropertiesAsync(propertyIds);
+        var registrationJobsMap = await _propertyRegistrationJobRepository.GetLatestByPropertyIdsAsync(propertyIds);
         var snapshots = await _analyticsSnapshotRepository.GetLatestPropertySnapshotsAsync(propertyIds);
         var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);
         
@@ -393,6 +402,7 @@ public class PropertyQueryService
             snapshotMap.TryGetValue(p.Id, out var snapshot);
             soldUnitsMap.TryGetValue(p.Id, out var soldUnits);
             imageMap.TryGetValue(p.Id, out var images);
+            registrationJobsMap.TryGetValue(p.Id, out var registrationJob);
 
             // 🔥 Documents extraction
             documentMap.TryGetValue(p.Id, out var docs);
@@ -402,7 +412,9 @@ public class PropertyQueryService
                 .Select(d => d.DocumentUrl)
                 .ToList() ?? new List<string>();
 
-            var availableUnits = p.TotalUnits - soldUnits;
+            var availableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
+                ? (int)registrationJob.MintAmount.Value - soldUnits 
+                : p.TotalUnits - soldUnits;
             var progressPercent =
                 p.TotalUnits == 0 ? 0 :
                 Math.Round((decimal)soldUnits / p.TotalUnits * 100, 2);
@@ -463,6 +475,9 @@ public class PropertyQueryService
         if (property.OwnerUserId != userId)
             throw new UnauthorizedAccessException(
                 "This property does not belong to you.");
+
+        var registrationJobsMap = await _propertyRegistrationJobRepository.GetLatestByPropertyIdsAsync(new[] { propertyId });
+        registrationJobsMap.TryGetValue(propertyId, out var registrationJob);
 
         var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
 
@@ -549,7 +564,9 @@ public class PropertyQueryService
             PricePerUnit = pricePerUnitUsd,
             PricePerUnitEth = pricePerUnitEth,
             AnnualYieldPercent = property.AnnualYieldPercent,
-            AvailableUnits = property.TotalUnits - soldUnits,
+            AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
+                   ? (int)registrationJob.MintAmount.Value - soldUnits 
+                   : property.TotalUnits - soldUnits,
 
             RiskScore = snapshot?.RiskScore ?? 5,
             DemandScore = snapshot?.DemandScore,

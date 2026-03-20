@@ -1,5 +1,6 @@
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Portfolio.Dtos;
+using RealEstateInvesting.Domain.Entities;
 
 namespace RealEstateInvesting.Application.Portfolio;
 
@@ -10,19 +11,25 @@ public class PortfolioQueryService
     private readonly IAnalyticsSnapshotRepository _snapshotRepo;
     private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
     private readonly IEthPriceService _ethPriceService;
+    private readonly IUserRepository _userRepository;
+    private readonly ITokenPurchaseRepository _tokenPurchaseRepository;
 
     public PortfolioQueryService(
         IAnalyticsSnapshotRepository snapshotRepo,
         IEthPriceService ethPriceService,
         IInvestmentRepository investmentRepository,
         IPropertyRepository propertyRepository,
-        IAnalyticsSnapshotRepository analyticsSnapshotRepository)
+        IAnalyticsSnapshotRepository analyticsSnapshotRepository,
+        IUserRepository userRepository,
+        ITokenPurchaseRepository tokenPurchaseRepository)
     {
         _investmentRepository = investmentRepository;
         _propertyRepository = propertyRepository;
         _snapshotRepo = snapshotRepo;
         _ethPriceService = ethPriceService;
         _analyticsSnapshotRepository = analyticsSnapshotRepository;
+        _userRepository = userRepository;
+        _tokenPurchaseRepository = tokenPurchaseRepository;
     }
 
     public async Task<PortfolioOverviewDto> GetOverviewAsync(Guid userId)
@@ -40,17 +47,31 @@ public class PortfolioQueryService
         var investments =
             await _investmentRepository.GetByUserIdAsync(userId);
 
-        if (!investments.Any())
+        // 🆕 Get Token Purchases
+        var user = await _userRepository.GetByIdAsync(userId);
+        List<TokenPurchase> tokenPurchases = new();
+        if (user?.WalletAddress != null)
+        {
+            tokenPurchases = await _tokenPurchaseRepository.GetAllByWalletAsync(user.WalletAddress);
+        }
+
+        var tokenPurchaseAmount = tokenPurchases
+            .Where(tp => tp.Status == 2 && 
+                         tp.BuyerAddress != null && 
+                         tp.BuyerAddress.Equals(user!.WalletAddress, StringComparison.OrdinalIgnoreCase))
+            .Sum(tp => tp.Amount ?? 0);
+
+        if (!investments.Any() && tokenPurchaseAmount == 0)
             return new PortfolioOverviewDto();
 
         var ethUsd = await _ethPriceService.GetEthUsdPriceAsync();
 
         // 🔥 REAL ETH invested (historical truth)
         var totalInvestedEth =
-            investments.Sum(i => i.EthAmountAtExecution);
+            investments.Sum(i => i.EthAmountAtExecution) + tokenPurchaseAmount;
 
         // ✅ Declare once (fix for CS0136)
-        decimal currentValueEth = 0;
+        decimal currentValueEth = tokenPurchaseAmount;
         decimal monthlyIncomeEth = 0;
 
         // =========================================
@@ -92,7 +113,7 @@ public class PortfolioQueryService
         // =========================================
         else
         {
-            currentValueEth =
+            currentValueEth +=
                 ethUsd == 0 ? 0 : snapshot.PortfolioValue / ethUsd;
 
             monthlyIncomeEth =

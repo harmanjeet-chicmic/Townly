@@ -32,4 +32,15 @@ public class TokenPurchaseRepository : ITokenPurchaseRepository
             .Take(pageSize)
             .ToListAsync(ct);
     }
+
+    public async Task<List<TokenPurchase>> GetAllByWalletAsync(
+        string walletAddress,
+        CancellationToken ct = default)
+    {
+        return await _context.TokenPurchases
+            .Where(x => x.BuyerAddress == walletAddress
+                     || x.SellerAddress == walletAddress)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(ct);
+    }
 }
