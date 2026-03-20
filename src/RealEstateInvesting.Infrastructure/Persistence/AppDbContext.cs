@@ -44,6 +44,8 @@ public class AppDbContext : DbContext
     public DbSet<PropertyRegistrationJob> PropertyRegistrationJobs => Set<PropertyRegistrationJob>();
     public DbSet<TokenPurchase> TokenPurchases => Set<TokenPurchase>();
 
+    public DbSet<TokenPurchase> TokenPurchases => Set<TokenPurchase>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
