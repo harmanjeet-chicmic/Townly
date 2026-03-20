@@ -19,7 +19,8 @@ public class PropertyDetailsDto
     public int? TokensOwned { get; set; }
     public decimal? InvestedEth { get; set; }
 
-
+   public string? RegistrationJobId { get; set; }
+    public string? TokenAddress { get; set; }
     public decimal TotalValue { get; set; }
     public int TotalUnits { get; set; }
     public decimal PricePerUnit { get; set; }

@@ -95,9 +95,9 @@ public class PropertyRepository : IPropertyRepository
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
                 Status = p.Status,
-                SoldUnits = _context.Investments
-                    .Where(i => i.PropertyId == p.Id)
-                    .Sum(i => (int?)i.SharesPurchased) ?? 0
+                SoldUnits = _context.TokenPurchases
+                    .Where(t => t.PropertyId == p.Id && t.Status == 2)
+                    .Sum(t => (int?)t.Shares) ?? 0
             })
             .ToListAsync();
 
@@ -196,9 +196,9 @@ public class PropertyRepository : IPropertyRepository
                 TotalUnits = p.TotalUnits,
                 Status = p.Status,
 
-                SoldUnits = _context.Investments
-                    .Where(i => i.PropertyId == p.Id)
-                    .Sum(i => (int?)i.SharesPurchased) ?? 0
+                SoldUnits = _context.TokenPurchases
+                    .Where(t => t.PropertyId == p.Id && t.Status == 2)
+                    .Sum(t => (int?)t.Shares) ?? 0
             })
             .ToListAsync();
     }
@@ -262,6 +262,15 @@ public class PropertyRepository : IPropertyRepository
         return await _context.PropertyDocuments
             .Where(d => propertyIds.Contains(d.PropertyId) && !d.IsDeleted)
             .ToListAsync();
+    }
+
+    public async Task<PropertyRegistrationJob?> GetLatestByPropertyIdAsync(Guid propertyId)
+    {
+        var propertyIdStr = propertyId.ToString();
+        return await _context.PropertyRegistrationJobs
+            .Where(j => j.PropertyId == propertyIdStr)
+            .OrderByDescending(j => j.UpdatedAt ?? j.CreatedAt)
+            .FirstOrDefaultAsync();
     }
 }
 

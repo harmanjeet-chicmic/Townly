@@ -42,6 +42,7 @@ public class AppDbContext : DbContext
     public DbSet<OnChainVaultSupply> OnChainVaultSupplies => Set<OnChainVaultSupply>();
     public DbSet<PropertyActivationRecord> PropertyActivationRecords => Set<PropertyActivationRecord>();
     public DbSet<PropertyRegistrationJob> PropertyRegistrationJobs => Set<PropertyRegistrationJob>();
+    public DbSet<TokenPurchase> TokenPurchases => Set<TokenPurchase>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
