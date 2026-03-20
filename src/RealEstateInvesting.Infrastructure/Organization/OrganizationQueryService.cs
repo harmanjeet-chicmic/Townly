@@ -150,7 +150,7 @@ public class OrganizationQueryService
         await _context.SaveChangesAsync(ct);
 
         var totalUnits = dto.TotalUnits;
-        var pricePerShare = totalUnits > 0 ? property.ApprovedValuation / totalUnits : 0m;
+        var pricePerShare = totalUnits > 0 ? (property.ApprovedValuation / totalUnits) * 1000000 : 0m;
 
         var registerRequest = new PropertyRegisterRequestDto
         {
