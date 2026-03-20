@@ -95,7 +95,9 @@ public class PropertyQueryService
                 ApprovedValuation = p.ApprovedValuation,
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
-                AvailableUnits = p.TotalUnits - p.SoldUnits,
+                AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
+                    ? (int)registrationJob.MintAmount.Value - p.SoldUnits 
+                    : p.TotalUnits - p.SoldUnits,
 
                 PricePerUnitEth = pricePerUnitEth,
                 RiskScore = snapshot?.RiskScore ?? 5,
@@ -129,6 +131,7 @@ public class PropertyQueryService
             limit, cursor, search, propertyType, status);
 
         var propertyIds = items.Select(p => p.Id).ToList();
+        var registrationJobsMap = await _propertyRegistrationJobRepository.GetLatestByPropertyIdsAsync(propertyIds);
         var snapshots =
             await _analyticsSnapshotRepository
                 .GetLatestPropertySnapshotsAsync(propertyIds);
@@ -144,6 +147,7 @@ public class PropertyQueryService
         {
             snapshotMap.TryGetValue(p.Id, out var snapshot);
             imageMap.TryGetValue(p.Id, out var propertyImages);
+            registrationJobsMap.TryGetValue(p.Id, out var registrationJob);
 
             var pricePerUnitUsd =
                 p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
@@ -162,7 +166,9 @@ public class PropertyQueryService
                 ApprovedValuation = p.ApprovedValuation,
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
-                AvailableUnits = p.TotalUnits - p.SoldUnits,
+                AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
+                    ? (int)registrationJob.MintAmount.Value - p.SoldUnits 
+                    : p.TotalUnits - p.SoldUnits,
 
                 Status = p.Status,
                 PricePerUnitEth = pricePerUnitEth,
@@ -193,6 +199,11 @@ public class PropertyQueryService
         var snapshot =
             await _analyticsSnapshotRepository
                 .GetLatestPropertySnapshotAsync(propertyId);
+
+        var registrationJobsMap = await _propertyRegistrationJobRepository.GetLatestByPropertyIdsAsync(new[] { propertyId });
+        registrationJobsMap.TryGetValue(propertyId, out var registrationJob);
+        
+        
 
         var pricePerUnitUsd =
             property.TotalUnits == 0 ? 0 : property.ApprovedValuation / property.TotalUnits;
@@ -250,7 +261,12 @@ public class PropertyQueryService
             RiskScore = snapshot?.RiskScore ?? 5,
             DemandScore = snapshot?.DemandScore,
             UserInvestmentAmount = userInvestmentAmount,
-            UserInvestedAmountEth = userInvestmentAmountEth
+            UserInvestedAmountEth = userInvestmentAmountEth,
+
+            RegistrationJobId = registrationJob?.Id,
+            TokenAddress = registrationJob?.TokenAddress,
+            PriceInUSD = registrationJob?.PricePerShare,
+            TotalUnitMint = registrationJob?.MintAmount
         };
     }
 

@@ -1,4 +1,4 @@
-﻿namespace RealEstateInvesting.Application.Transactions.Dtos;
+namespace RealEstateInvesting.Application.Transactions.Dtos;
 
 public class TokenPurchaseDto
 {

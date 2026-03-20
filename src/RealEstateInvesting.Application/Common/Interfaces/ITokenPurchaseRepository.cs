@@ -1,4 +1,4 @@
-﻿using RealEstateInvesting.Domain.Entities;
+using RealEstateInvesting.Domain.Entities;
 
 namespace RealEstateInvesting.Application.Common.Interfaces;
 

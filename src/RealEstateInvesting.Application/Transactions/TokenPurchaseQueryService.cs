@@ -1,4 +1,4 @@
-﻿using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Transactions.Dtos;
 
 namespace RealEstateInvesting.Application.Transactions;

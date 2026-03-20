@@ -24,6 +24,7 @@ GetMarketplaceAsync(
     string? search,
     string? propertyType,
     List<PropertyStatus>? status);
+    Task<PropertyRegistrationJob?> GetLatestByPropertyIdAsync(Guid propertyId);
 
     Task<List<PropertyDocument>> GetDocumentsByPropertyIdsAsync(IEnumerable<Guid> propertyIds);
 

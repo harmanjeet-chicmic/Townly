@@ -36,4 +36,5 @@ public class PropertyRegistrationJobRepository : IPropertyRegistrationJobReposit
             .GroupBy(x => Guid.Parse(x.PropertyId))
             .ToDictionary(g => g.Key, g => g.First());
     }
+    
 }
