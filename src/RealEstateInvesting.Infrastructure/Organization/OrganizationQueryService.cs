@@ -156,7 +156,7 @@ public class OrganizationQueryService
         {
             PropertyId = propertyId.ToString(),
             OwnerAddress = dto.OwnerAddress.Trim(),
-            PricePerShare = ((int)pricePerShare).ToString(),
+            PricePerShare = ((long)pricePerShare).ToString(),
             MintAmount = totalUnits.ToString(),
             IpfsUri = !string.IsNullOrWhiteSpace(dto.IpfsUri) ? dto.IpfsUri : (property.ImageUrl ?? "string"),
             PropertyName = property.Name ?? "string",
