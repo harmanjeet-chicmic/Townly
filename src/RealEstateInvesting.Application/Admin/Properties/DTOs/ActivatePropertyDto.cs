@@ -16,4 +16,6 @@ public class ActivatePropertyDto
     /// Optional IPFS or image URI for the property. If not set, the property's ImageUrl is used.
     /// </summary>
     public string? IpfsUri { get; set; }
+
+    public decimal? ApprovedValuation { get; set; }
 }

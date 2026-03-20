@@ -129,8 +129,9 @@ public class OrganizationQueryService
     /// <summary>
     /// Activates a property: calls external T-REX property-register API, then finalizes tokenization, activates, and creates analytics snapshot.
     /// </summary>
-    public async Task<PropertyRegisterResponseDto> ActivatePropertyAsync(Guid organizationId, Guid propertyId, ActivatePropertyDto dto,
-        Guid adminUserId, CancellationToken ct = default)
+    public async Task<PropertyRegisterResponseDto> ActivatePropertyAsync(Guid organizationId, Guid propertyId,
+                                                                         ActivatePropertyDto dto, Guid adminUserId,
+                                                                         CancellationToken ct = default)
     {
         var property = await _context.Properties.FirstOrDefaultAsync(p => p.Id == propertyId, ct);
 
@@ -143,8 +144,13 @@ public class OrganizationQueryService
         if (string.IsNullOrWhiteSpace(dto.OwnerAddress))
             throw new ArgumentException("OwnerAddress is required for on-chain property registration.", nameof(dto));
 
+        // If STO sends a revised approved valuation, persist it on the property first.
+        if (dto.ApprovedValuation.HasValue)
+            property.SetApprovedValuation(dto.ApprovedValuation.Value);
+        await _context.SaveChangesAsync(ct);
+
         var totalUnits = dto.TotalUnits;
-        var pricePerShare = totalUnits > 0 ? property.ApprovedValuation / totalUnits : 0m;
+        var pricePerShare = totalUnits > 0 ? (property.ApprovedValuation / totalUnits) * 1000000 : 0m;
 
         var registerRequest = new PropertyRegisterRequestDto
         {

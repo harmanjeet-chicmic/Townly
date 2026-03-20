@@ -504,6 +504,18 @@ public class Property : BaseEntity
         MarkUpdated();
     }
 
+    /// <summary>
+    /// Updates approved valuation before tokenization starts.
+    /// </summary>
+    public void SetApprovedValuation(decimal approvedValuation)
+    {
+        if (approvedValuation <= 0)
+            throw new InvalidOperationException("Approved valuation must be positive.");
+
+        ApprovedValuation = approvedValuation;
+        MarkUpdated();
+    }
+
     public void HideFromOwner()
     {
         if (Status != PropertyStatus.SoldOut)
