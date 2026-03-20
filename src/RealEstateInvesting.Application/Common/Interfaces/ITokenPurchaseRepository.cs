@@ -9,4 +9,8 @@ public interface ITokenPurchaseRepository
         int page,
         int pageSize,
         CancellationToken ct = default);
+
+    Task<List<TokenPurchase>> GetAllByWalletAsync(
+        string walletAddress,
+        CancellationToken ct = default);
 }

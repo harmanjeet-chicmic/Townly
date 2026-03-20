@@ -242,9 +242,9 @@ public class PropertyRepository : IPropertyRepository
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 Status = p.Status,
 
-                SoldUnits = _context.Investments
-                    .Where(i => i.PropertyId == p.Id)
-                    .Sum(i => (int?)i.SharesPurchased) ?? 0,
+                SoldUnits = _context.TokenPurchases
+                    .Where(t => t.PropertyId == p.Id && t.Status == 2)
+                    .Sum(t => (int?)t.Shares) ?? 0,
                 SquareFeet = p.SquareFeet,
                 SellingPercentage = p.SellingPercentage
             })

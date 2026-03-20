@@ -64,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IInvestmentRepository, InvestmentRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<ITokenPurchaseRepository, TokenPurchaseRepository>();
 
         // KYC System
         services.AddScoped<IKycRecordRepository, KycRecordRepository>();
