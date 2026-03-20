@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<InvestmentService>();
         services.AddScoped<InvestmentQueryService>();
         services.AddScoped<TransactionQueryService>();
+        services.AddScoped<TokenPurchaseQueryService>();
 
         // -------------------------------
         // Analytics / Portfolio
