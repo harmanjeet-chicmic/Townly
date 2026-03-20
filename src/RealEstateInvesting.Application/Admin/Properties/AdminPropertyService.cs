@@ -292,6 +292,7 @@ public class AdminPropertyService : IAdminPropertyService
                 ImageUrls = _propertyImageRepository.GetByPropertyIdAsync(property.Id).Result.Select(x => x.ImageUrl).ToList(),
                 Status = property.Status,
                 RejectionReason = property.RejectionReason,
+                ApprovedReason = property.ApprovedReason,
                 RentalIncomeHistory = property.RentalIncomeHistory,
                 AdminDocuments = documentDtos
                     .Where(d => d.Type == PropertyDocumentType.Approved || d.Type == PropertyDocumentType.Rejected)
@@ -334,7 +335,7 @@ public class AdminPropertyService : IAdminPropertyService
         var property = await _propertyRepo.GetByIdAsync(propertyId)
             ?? throw new NotFoundException("Property not found.");
 
-        property.MarkAdminApproved(adminId);
+        property.MarkAdminApproved(adminId,request.Reason);
 
         if (request.Documents != null && request.Documents.Any())
         {
@@ -533,6 +534,7 @@ public class AdminPropertyService : IAdminPropertyService
                 ImageUrls = _propertyImageRepository.GetByPropertyIdAsync(property.Id).Result.Select(x => x.ImageUrl).ToList(),
                 Status = property.Status,
                 RejectionReason = property.RejectionReason,
+                ApprovedReason = property.ApprovedReason,
                 RentalIncomeHistory = property.RentalIncomeHistory,
                 AdminDocuments = documentDtos
                     .Where(d => d.Type == PropertyDocumentType.Approved || d.Type == PropertyDocumentType.Rejected)

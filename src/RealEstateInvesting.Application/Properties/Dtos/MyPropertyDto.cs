@@ -13,6 +13,8 @@ public class MyPropertyDto
     
 
     public PropertyStatus Status { get; set; }
+    public string? RejectionReason { get; set; }
+    public string? ApprovedReason { get; set; }
 
     public decimal ApprovedValuation { get; set; }
     public int TotalUnits { get; set; }
