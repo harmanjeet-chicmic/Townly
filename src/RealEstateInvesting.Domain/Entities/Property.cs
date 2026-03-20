@@ -296,7 +296,8 @@ public class Property : BaseEntity
     public Guid? ReviewedBy { get; private set; }
     public DateTime? ReviewedAt { get; private set; }
     public string? RejectionReason { get; private set; }
-
+    public string? ApprovedReason { get; private set; }
+    
     public bool IsHiddenFromOwner { get; private set; }
 
     public virtual ICollection<PropertyImage> PropertyImages { get; private set; } = new List<PropertyImage>();
@@ -362,7 +363,7 @@ public class Property : BaseEntity
         Status = PropertyStatus.PendingApproval;
         MarkUpdated();
     }
-    public void MarkAdminApproved(Guid adminUserId)
+    public void MarkAdminApproved(Guid adminUserId, string? reason)
     {
         if (Status != PropertyStatus.PendingApproval)
             throw new InvalidOperationException("Only pending properties can be approved.");
@@ -370,7 +371,9 @@ public class Property : BaseEntity
         Status = PropertyStatus.AdminApproved;
         ReviewedBy = adminUserId;
         ReviewedAt = DateTime.UtcNow;
-
+        ApprovedReason = reason;
+        RejectionReason = null;
+        
         MarkUpdated();
     }
     public void AssignToOrganization(Guid organizationId)
@@ -429,6 +432,7 @@ public class Property : BaseEntity
         ReviewedBy = adminUserId;
         ReviewedAt = DateTime.UtcNow;
         RejectionReason = reason;
+        ApprovedReason = null;
 
         MarkUpdated();
     }
@@ -442,6 +446,7 @@ public class Property : BaseEntity
         ReviewedBy = adminUserId;
         ReviewedAt = DateTime.UtcNow;
         RejectionReason = reason;
+        ApprovedReason = null;
 
         MarkUpdated();
     }
@@ -479,6 +484,7 @@ public class Property : BaseEntity
         ReviewedBy = null;
         ReviewedAt = null;
         RejectionReason = null;
+        ApprovedReason = null;
 
         MarkUpdated();
     }

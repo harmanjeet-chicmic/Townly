@@ -248,6 +248,7 @@ public class PropertyQueryService
             Status = property.Status,
             PropertySize = property.SquareFeet,
             ListedPercentage = property.SellingPercentage,
+            ApprovedReason = property.ApprovedReason,
 
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
@@ -434,6 +435,8 @@ public class PropertyQueryService
           ImageUrls = images ?? new List<string>(),
 
                  Status = p.Status,
+                 RejectionReason = p.RejectionReason,
+                 ApprovedReason = p.ApprovedReason,
                 ApprovedValuation = p.ApprovedValuation,
                 TotalUnits = p.TotalUnits,
                 AnnualYieldPercent = p.AnnualYieldPercent,
@@ -557,6 +560,7 @@ public class PropertyQueryService
             //         ? property.RejectionReason
             //         : null,
             RejectionReason = property.RejectionReason,
+            ApprovedReason = property.ApprovedReason,
             RentalIncomeHistory = property.RentalIncomeHistory,
 
             TotalValue = property.ApprovedValuation,
