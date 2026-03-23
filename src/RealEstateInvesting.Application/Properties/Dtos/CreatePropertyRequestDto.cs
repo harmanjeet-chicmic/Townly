@@ -9,7 +9,7 @@ public class CreatePropertyRequestDto
     public string? ImageUrl { get; set; }
 
     public decimal InitialValuation { get; set; }
-    public int TotalUnits { get; set; }
+    public long TotalUnits { get; set; }
     public decimal AnnualYieldPercent { get; set; }
 
     public List<PropertyDocumentDto> Documents { get; set; } = new();

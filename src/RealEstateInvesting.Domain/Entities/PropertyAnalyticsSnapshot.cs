@@ -6,7 +6,7 @@ public class PropertyAnalyticsSnapshot : BaseEntity
 {
     public Guid PropertyId { get; private set; }
     public DateTime SnapshotAt { get; private set; }
-    public int SharesSold { get; private set; }
+    public long SharesSold { get; private set; }
     public decimal TotalInvested { get; private set; }
 
     public decimal DemandScore { get; private set; }
@@ -19,7 +19,7 @@ public class PropertyAnalyticsSnapshot : BaseEntity
     public static PropertyAnalyticsSnapshot Create(
         Guid propertyId,
         DateTime snapshotAt,
-        int sharesSold,
+        long sharesSold,
         decimal totalInvested,
         decimal demandScore,
         decimal riskScore,

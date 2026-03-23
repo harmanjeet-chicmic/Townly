@@ -14,8 +14,8 @@ public class MarketplacePropertyDto
     public decimal ApprovedValuation { get; set; }
     public decimal AnnualYieldPercent { get; set; }
 
-    public int TotalUnits { get; set; }
-    public int AvailableUnits { get; set; }
+    public long TotalUnits { get; set; }
+    public long AvailableUnits { get; set; }
     public decimal? RiskScore { get; set; }
     public decimal PricePerUnitEth { get; set; }
 

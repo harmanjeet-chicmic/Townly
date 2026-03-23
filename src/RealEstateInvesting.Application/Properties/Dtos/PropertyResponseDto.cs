@@ -11,7 +11,7 @@ public class PropertyResponseDto
     public string PropertyType { get; set; } = null!;
 
     public decimal ApprovedValuation { get; set; }
-    public int TotalUnits { get; set; }
+    public long TotalUnits { get; set; }
     public decimal AnnualYieldPercent { get; set; }
 
     public PropertyStatus Status { get; set; }

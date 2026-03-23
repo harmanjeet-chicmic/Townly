@@ -96,7 +96,7 @@ public class PropertyQueryService
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
                 AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
-                    ? (int)registrationJob.MintAmount.Value - p.SoldUnits 
+                    ? (long)registrationJob.MintAmount.Value - p.SoldUnits 
                     : p.TotalUnits - p.SoldUnits,
 
                 PricePerUnitEth = pricePerUnitEth,
@@ -167,7 +167,7 @@ public class PropertyQueryService
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
                 AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
-                    ? (int)registrationJob.MintAmount.Value - p.SoldUnits 
+                    ? (long)registrationJob.MintAmount.Value - p.SoldUnits 
                     : p.TotalUnits - p.SoldUnits,
 
                 Status = p.Status,
@@ -211,7 +211,7 @@ public class PropertyQueryService
         var pricePerUnitEth =
             ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
         decimal? userInvestmentAmount = null;
-        int? tokensOwned = null;
+        long? tokensOwned = null;
         if (userId.HasValue)
         {
             tokensOwned =
@@ -259,7 +259,7 @@ public class PropertyQueryService
             AnnualYieldPercent = property.AnnualYieldPercent,
             //AvailableUnits = property.TotalUnits - property.SoldUnits,
              AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
-                    ? (int)registrationJob.MintAmount.Value - property.SoldUnits 
+                    ? (long)registrationJob.MintAmount.Value - property.SoldUnits 
                     : property.TotalUnits - property.SoldUnits,
 
             RiskScore = snapshot?.RiskScore ?? 5,
@@ -311,7 +311,7 @@ public class PropertyQueryService
             registrationJobsMap.TryGetValue(p.Id, out var registrationJob);
 
             var availableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
-                ? (int)registrationJob.MintAmount.Value - soldUnits 
+                ? (long)registrationJob.MintAmount.Value - soldUnits 
                 : p.TotalUnits - soldUnits;
 
             var pricePerUnitUsd =
@@ -414,7 +414,7 @@ public class PropertyQueryService
                 .ToList() ?? new List<string>();
 
             var availableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
-                ? (int)registrationJob.MintAmount.Value - soldUnits 
+                ? (long)registrationJob.MintAmount.Value - soldUnits 
                 : p.TotalUnits - soldUnits;
             var progressPercent =
                 p.TotalUnits == 0 ? 0 :
@@ -569,7 +569,7 @@ public class PropertyQueryService
             PricePerUnitEth = pricePerUnitEth,
             AnnualYieldPercent = property.AnnualYieldPercent,
             AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
-                   ? (int)registrationJob.MintAmount.Value - soldUnits 
+                   ? (long)registrationJob.MintAmount.Value - soldUnits 
                    : property.TotalUnits - soldUnits,
 
             RiskScore = snapshot?.RiskScore ?? 5,

@@ -18,7 +18,7 @@
 //     // Valuation & Yield
 //     public decimal InitialValuation { get; private set; }
 //     public decimal ApprovedValuation { get; private set; }
-//     public int TotalUnits { get; private set; }
+//     public long TotalUnits { get; private set; }
 //     public decimal AnnualYieldPercent { get; private set; }
 //     public decimal RentalIncomeHistory { get; private set; }
 
@@ -280,7 +280,7 @@ public class Property : BaseEntity
 
     public decimal InitialValuation { get; private set; }
     public decimal ApprovedValuation { get; private set; }
-    public int TotalUnits { get; private set; }
+    public long TotalUnits { get; private set; }
     public decimal AnnualYieldPercent { get; private set; }
     public decimal RentalIncomeHistory { get; private set; }
     public Guid? OrganizationId { get; private set; }
@@ -489,7 +489,7 @@ public class Property : BaseEntity
         MarkUpdated();
     }
     public void FinalizeTokenization(
-    int totalUnits,
+    long totalUnits,
     decimal rentalIncome,
     decimal annualYieldPercent)
     {

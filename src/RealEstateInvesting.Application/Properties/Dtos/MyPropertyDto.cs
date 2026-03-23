@@ -17,11 +17,11 @@ public class MyPropertyDto
     public string? ApprovedReason { get; set; }
 
     public decimal ApprovedValuation { get; set; }
-    public int TotalUnits { get; set; }
+    public long TotalUnits { get; set; }
     public decimal AnnualYieldPercent { get; set; }
 
-    public int SoldUnits { get; set; }
-    public int AvailableUnits { get; set; }
+    public long SoldUnits { get; set; }
+    public long AvailableUnits { get; set; }
     public decimal InvestmentProgressPercent { get; set; }
     public decimal TotalAmountInvestedUsd { get; set; }
     public decimal? RiskScore { get; set; }

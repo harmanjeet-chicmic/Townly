@@ -21,11 +21,11 @@ public class InvestmentRepository : IInvestmentRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<int> GetTotalSharesInvestedAsync(Guid propertyId)
+    public async Task<long> GetTotalSharesInvestedAsync(Guid propertyId)
     {
         return await _context.Investments
             .Where(i => i.PropertyId == propertyId)
-            .SumAsync(i => i.SharesPurchased);
+            .SumAsync(i => (long)i.SharesPurchased);
     }
 
     public async Task<decimal> GetTotalAmountInvestedAsync(Guid propertyId)
@@ -110,7 +110,7 @@ public class InvestmentRepository : IInvestmentRepository
 
 
 
-    public async Task<int> GetSharesInvestedInLastDaysAsync(
+    public async Task<long> GetSharesInvestedInLastDaysAsync(
         Guid propertyId,
         int days)
     {
@@ -120,7 +120,7 @@ public class InvestmentRepository : IInvestmentRepository
             .Where(i =>
                 i.PropertyId == propertyId &&
                 i.CreatedAt >= fromDate)
-            .SumAsync(i => i.SharesPurchased);
+            .SumAsync(i => (long)i.SharesPurchased);
     }
 
     public async Task<int> GetUniqueInvestorCountAsync(Guid propertyId)
@@ -140,7 +140,7 @@ public class InvestmentRepository : IInvestmentRepository
             .Select(i => (DateTime?)i.CreatedAt)
             .FirstOrDefaultAsync();
     }
-    public async Task<Dictionary<Guid, int>>
+    public async Task<Dictionary<Guid, long>>
 GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
     {
         return await _context.Investments
@@ -149,12 +149,12 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
             .Select(g => new
             {
                 PropertyId = g.Key,
-                SoldUnits = g.Sum(x => x.SharesPurchased)
+                SoldUnits = g.Sum(x => (long)x.SharesPurchased)
             })
             .ToDictionaryAsync(x => x.PropertyId, x => x.SoldUnits);
     }
 
-    public async Task<int> GetSharesInvestedInLastHoursAsync(
+    public async Task<long> GetSharesInvestedInLastHoursAsync(
     Guid propertyId,
     int hours)
     {
@@ -165,7 +165,7 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
                 !i.IsDeleted &&
                 i.PropertyId == propertyId &&
                 i.CreatedAt >= fromTime)
-            .SumAsync(i => i.SharesPurchased);
+            .SumAsync(i => (long)i.SharesPurchased);
     }
     public async Task<decimal?> GetUserInvestmentAmountAsync(Guid userId, Guid propertyId)
     {
@@ -179,7 +179,7 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
 
         return total;
     }
-    public async Task<int> GetUserTokensOwnedAsync(
+    public async Task<long> GetUserTokensOwnedAsync(
     Guid userId,
     Guid propertyId)
 {
@@ -188,7 +188,7 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
             !i.IsDeleted &&
             i.UserId == userId &&
             i.PropertyId == propertyId)
-        .SumAsync(i => i.SharesPurchased);
+        .SumAsync(i => (long)i.SharesPurchased);
 }
 
     public async Task<int> GetTotalInvestorsCountAsync()
@@ -199,10 +199,10 @@ GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds)
             .CountAsync();
     }
 
-    public async Task<int> GetTotalTokensIssuedAsync()
+    public async Task<long> GetTotalTokensIssuedAsync()
     {
         return await _context.Investments
-            .SumAsync(i => i.SharesPurchased);
+            .SumAsync(i => (long)i.SharesPurchased);
     }
 
 }

@@ -12,11 +12,11 @@ public class PropertyWithSoldUnits
     public string? ImageUrl { get; set; }
 
     public decimal ApprovedValuation { get; set; }
-    public int TotalUnits { get; set; }
+    public long TotalUnits { get; set; }
     public decimal AnnualYieldPercent { get; set; }
     public PropertyStatus Status { get; set; }
 
-    public int SoldUnits { get; set; }
+    public long SoldUnits { get; set; }
     public decimal SquareFeet { get; set; }
     public decimal SellingPercentage { get; set; }
 }
