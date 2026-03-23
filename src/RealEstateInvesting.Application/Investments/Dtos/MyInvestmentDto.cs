@@ -8,7 +8,7 @@ public class MyInvestmentDto
     public string Location { get; set; } = default!;
     public string PropertyType { get; set; } = default!;
 
-    public int SharesPurchased { get; set; }
+    public long SharesPurchased { get; set; }
 
     // USD
     public decimal TotalAmountUsd { get; set; }

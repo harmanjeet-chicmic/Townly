@@ -8,7 +8,7 @@ public class Investment : BaseEntity
     public Guid PropertyId { get; private set; }
 
     // Investment snapshot (USD-based)
-    public int SharesPurchased { get; private set; }
+    public long SharesPurchased { get; private set; }
     public decimal PricePerShareAtPurchase { get; private set; }
     public decimal TotalAmount { get; private set; }
     public decimal EthUsdRateAtExecution { get; private set; }
@@ -19,7 +19,7 @@ public class Investment : BaseEntity
     public static Investment Create(
     Guid userId,
     Guid propertyId,
-    int sharesPurchased,
+    long sharesPurchased,
     decimal pricePerShareUsd,
     decimal ethUsdRate,
     decimal ethAmount)

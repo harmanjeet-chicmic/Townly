@@ -8,7 +8,7 @@ public class PortfolioPropertyDto
     public string Location { get; set; } = default!;
 
     // Ownership
-    public int TokensOwned { get; set; }
+    public long TokensOwned { get; set; }
 
     // ETH-based values
     public decimal InvestedEth { get; set; }

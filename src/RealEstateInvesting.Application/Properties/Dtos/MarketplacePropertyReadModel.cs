@@ -13,6 +13,6 @@ public class MarketplacePropertyReadModel
     public decimal ApprovedValuation { get; set; }
     public decimal AnnualYieldPercent { get; set; }
 
-    public int TotalUnits { get; set; }
-    public int SoldUnits { get; set; }
+    public long TotalUnits { get; set; }
+    public long SoldUnits { get; set; }
 }

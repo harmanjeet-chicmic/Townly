@@ -97,7 +97,7 @@ public class PropertyRepository : IPropertyRepository
                 Status = p.Status,
                 SoldUnits = _context.TokenPurchases
                     .Where(t => t.PropertyId == p.Id && t.Status == 2)
-                    .Sum(t => (int?)t.Shares) ?? 0
+                    .Sum(t => (long?)t.Shares) ?? 0
             })
             .ToListAsync();
 
@@ -198,7 +198,7 @@ public class PropertyRepository : IPropertyRepository
 
                 SoldUnits = _context.TokenPurchases
                     .Where(t => t.PropertyId == p.Id && t.Status == 2)
-                    .Sum(t => (int?)t.Shares) ?? 0
+                    .Sum(t => (long?)t.Shares) ?? 0
             })
             .ToListAsync();
     }
@@ -244,7 +244,7 @@ public class PropertyRepository : IPropertyRepository
 
                 SoldUnits = _context.TokenPurchases
                     .Where(t => t.PropertyId == p.Id && t.Status == 2)
-                    .Sum(t => (int?)t.Shares) ?? 0,
+                    .Sum(t => (long?)t.Shares) ?? 0,
                 SquareFeet = p.SquareFeet,
                 SellingPercentage = p.SellingPercentage
             })

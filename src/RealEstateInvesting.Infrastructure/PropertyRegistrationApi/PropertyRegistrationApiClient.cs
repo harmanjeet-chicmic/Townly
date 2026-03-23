@@ -31,7 +31,10 @@ public class PropertyRegistrationApiClient : IPropertyRegistrationApiClient
     /// <inheritdoc />
     public async Task<PropertyRegisterResponseDto> RegisterPropertyAsync(PropertyRegisterRequestDto request, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PostAsJsonAsync(_path ?? "https://rwa-blockchain-service.projectlabs.in/v1/property-register", request, cancellationToken);
+        var url = _httpClient.BaseAddress == null 
+            ? "https://rwa-blockchain-service.projectlabs.in/v1/property-register" 
+            : _path;
+        var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
 
         // Try to deserialize the response body even for non-2xx responses.
         PropertyRegisterResponseDto? result = null;
@@ -80,8 +83,16 @@ public class PropertyRegistrationApiClient : IPropertyRegistrationApiClient
     /// <inheritdoc />
     public async Task<PropertyRegisterJobStatusResponseDto?> GetJobStatusAsync(Guid jobId, CancellationToken cancellationToken = default)
     {
-        var statusPath = _path?.TrimEnd('/') + "/status";
-        var url = string.IsNullOrEmpty(statusPath) ? $"v1/property-register/status?jobId={jobId}" : $"{statusPath}?jobId={jobId}";
+        string url;
+        if (_httpClient.BaseAddress == null)
+        {
+            url = $"https://rwa-blockchain-service.projectlabs.in/v1/property-register/status?jobId={jobId}";
+        }
+        else
+        {
+            var statusPath = _path?.TrimEnd('/') + "/status";
+            url = string.IsNullOrEmpty(statusPath) ? $"v1/property-register/status?jobId={jobId}" : $"{statusPath}?jobId={jobId}";
+        }
         try
         {
             var response = await _httpClient.GetAsync(url, cancellationToken);

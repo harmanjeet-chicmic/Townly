@@ -38,10 +38,10 @@ public class AnalyticsBackgroundService : BackgroundService
         // ------------------------------------
         var properties = await propertyRepo.GetByStatusAsync(PropertyStatus.Active);
 
-        int maxMomentum = 0;
+        long maxMomentum = 0;
         int maxUniqueInvestors = 0;
 
-        var momentumMap = new Dictionary<Guid, int>();
+        var momentumMap = new Dictionary<Guid, long>();
         var investorsMap = new Dictionary<Guid, int>();
         var lastInvestmentMap = new Dictionary<Guid, DateTime?>();
 

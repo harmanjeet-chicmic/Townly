@@ -17,16 +17,16 @@ public class PropertyDetailsDto
     public decimal PropertySize { get; set; }
     public decimal ListedPercentage { get; set; }
 
-    public int? TokensOwned { get; set; }
+    public long? TokensOwned { get; set; }
     public decimal? InvestedEth { get; set; }
 
    public string? RegistrationJobId { get; set; }
     public string? TokenAddress { get; set; }
     public decimal TotalValue { get; set; }
-    public int TotalUnits { get; set; }
+    public long TotalUnits { get; set; }
     public decimal PricePerUnit { get; set; }
     public decimal AnnualYieldPercent { get; set; }
-    public int AvailableUnits { get; set; }
+    public long AvailableUnits { get; set; }
     public decimal? RiskScore { get; set; }
     public decimal? DemandScore { get; set; }
     public decimal PricePerUnitEth { get; set; }

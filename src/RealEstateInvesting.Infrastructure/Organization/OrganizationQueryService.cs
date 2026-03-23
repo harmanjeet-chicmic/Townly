@@ -238,5 +238,5 @@ public class OrganizationQueryService
         return apiResponse;
     }
 
-    public static PropertyStatus MapTrexStatus(int trexStatusCode) => TrexStatusMapper.MapToPropertyStatus(trexStatusCode);
+    public static PropertyStatus  MapTrexStatus(int trexStatusCode) => TrexStatusMapper.MapToPropertyStatus(trexStatusCode);
 }

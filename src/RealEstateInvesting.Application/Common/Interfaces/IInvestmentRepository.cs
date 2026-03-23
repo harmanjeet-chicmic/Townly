@@ -6,13 +6,13 @@ public interface IInvestmentRepository
 {
     Task AddAsync(Investment investment);
 
-    Task<int> GetTotalSharesInvestedAsync(Guid propertyId);
+    Task<long> GetTotalSharesInvestedAsync(Guid propertyId);
 
     Task<IEnumerable<Investment>> GetByUserIdAsync(Guid userId);
-    Task<int> GetUserTokensOwnedAsync(Guid userId, Guid propertyId);
+    Task<long> GetUserTokensOwnedAsync(Guid userId, Guid propertyId);
     Task<decimal> GetTotalAmountInvestedAsync(Guid propertyId);
     Task<IEnumerable<Investment>> GetAllUserInvestmentsAsync();
-    Task<int> GetSharesInvestedInLastDaysAsync(
+    Task<long> GetSharesInvestedInLastDaysAsync(
    Guid propertyId,
    int days);
     Task<(IEnumerable<Investment> Items, int TotalCount)>
@@ -26,12 +26,12 @@ GetByUserIdPagedAsync(
 
     Task<int> GetUniqueInvestorCountAsync(Guid propertyId);
     Task<int> GetTotalInvestorsCountAsync();
-    Task<int> GetTotalTokensIssuedAsync();
-    Task<Dictionary<Guid, int>>
+    Task<long> GetTotalTokensIssuedAsync();
+    Task<Dictionary<Guid, long>>
 GetSoldUnitsForPropertiesAsync(List<Guid> propertyIds);
 
     Task<DateTime?> GetLastInvestmentAtAsync(Guid propertyId);
-    Task<int> GetSharesInvestedInLastHoursAsync(
+    Task<long> GetSharesInvestedInLastHoursAsync(
      Guid propertyId,
      int hours);
     Task<decimal?> GetUserInvestmentAmountAsync(Guid userId, Guid propertyId);

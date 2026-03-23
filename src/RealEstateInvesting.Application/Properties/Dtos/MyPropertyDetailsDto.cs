@@ -18,8 +18,8 @@ public class MyPropertyDetailsDto
     public decimal ListedPercentage { get; set; }
 
     public decimal TotalValue { get; set; }
-    public int TotalUnits { get; set; }
-    public int AvailableUnits { get; set; }
+    public long TotalUnits { get; set; }
+    public long AvailableUnits { get; set; }
 
     public decimal PricePerUnit { get; set; }
     public decimal PricePerUnitEth { get; set; }

@@ -8,7 +8,7 @@ public class OrganizationPropertyDto
     public string PropertyType { get; set; } = default!;
 
     public decimal TotalValue { get; set; }
-    public int TotalUnits { get; set; }
+    public long TotalUnits { get; set; }
    
 
     public int Status { get; set; }
