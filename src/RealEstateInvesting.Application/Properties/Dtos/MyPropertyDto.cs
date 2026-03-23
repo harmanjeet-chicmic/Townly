@@ -25,7 +25,7 @@ public class MyPropertyDto
     public decimal InvestmentProgressPercent { get; set; }
     public decimal TotalAmountInvestedUsd { get; set; }
     public decimal? RiskScore { get; set; }
-    public decimal PricePerUnitEth { get; set; }
+    public decimal? PricePerShare { get; set; }
     public bool HasPendingUpdateRequest { get; set; }
     public List<PropertyDocumentDto> AdminDocuments { get; set; } = new();
 }

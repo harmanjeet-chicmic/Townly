@@ -158,7 +158,7 @@ public sealed class TREXFactoryContractService : ITREXFactoryContractService
         foreach (var log in receipt.Logs)
         {
             if (log.Topics == null || log.Topics.Length < 2) continue;
-            var tokenHex = log.Topics[1].ToString();
+            var tokenHex = log.Topics[1]?.ToString() ?? "";
             if (tokenHex.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) tokenHex = tokenHex[2..];
             tokenHex = tokenHex.TrimStart('0').PadLeft(40, '0');
             var tokenAddress = "0x" + tokenHex.ToLowerInvariant();

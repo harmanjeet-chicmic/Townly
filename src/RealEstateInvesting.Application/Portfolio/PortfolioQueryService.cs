@@ -9,7 +9,6 @@ public class PortfolioQueryService
     private readonly IInvestmentRepository _investmentRepository;
     private readonly IPropertyRepository _propertyRepository;
     private readonly IAnalyticsSnapshotRepository _snapshotRepo;
-    private readonly IAnalyticsSnapshotRepository _analyticsSnapshotRepository;
     private readonly IEthPriceService _ethPriceService;
     private readonly IUserRepository _userRepository;
     private readonly ITokenPurchaseRepository _tokenPurchaseRepository;
@@ -19,7 +18,6 @@ public class PortfolioQueryService
         IEthPriceService ethPriceService,
         IInvestmentRepository investmentRepository,
         IPropertyRepository propertyRepository,
-        IAnalyticsSnapshotRepository analyticsSnapshotRepository,
         IUserRepository userRepository,
         ITokenPurchaseRepository tokenPurchaseRepository)
     {
@@ -27,7 +25,6 @@ public class PortfolioQueryService
         _propertyRepository = propertyRepository;
         _snapshotRepo = snapshotRepo;
         _ethPriceService = ethPriceService;
-        _analyticsSnapshotRepository = analyticsSnapshotRepository;
         _userRepository = userRepository;
         _tokenPurchaseRepository = tokenPurchaseRepository;
     }
@@ -59,7 +56,7 @@ public class PortfolioQueryService
             .Where(tp => tp.Status == 2 && 
                          tp.BuyerAddress != null && 
                          tp.BuyerAddress.Equals(user!.WalletAddress, StringComparison.OrdinalIgnoreCase))
-            .Sum(tp => tp.Amount ?? 0);
+            .Sum(tp => tp.PricePerShare ?? 0);
 
         if (!investments.Any() && tokenPurchaseAmount == 0)
             return new PortfolioOverviewDto();
@@ -157,7 +154,7 @@ public class PortfolioQueryService
         var propertyMap = properties.ToDictionary(p => p.Id);
 
         var snapshots =
-            await _analyticsSnapshotRepository
+            await _snapshotRepo
                 .GetLatestPropertySnapshotsAsync(propertyIds);
 
         var snapshotMap = snapshots.ToDictionary(s => s.PropertyId);

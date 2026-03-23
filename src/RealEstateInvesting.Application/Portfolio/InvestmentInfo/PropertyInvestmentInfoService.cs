@@ -1,5 +1,6 @@
 using RealEstateInvesting.Application.Common.Exceptions;
 using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.Portfolio.Dtos;
 using RealEstateInvesting.Domain.Entities;
 
 namespace RealEstateInvesting.Application.Properties.InvestmentInfo;
@@ -8,13 +9,16 @@ public class PropertyInvestmentInfoService
 {
     private readonly IPropertyRepository _propertyRepository;
     private readonly IEthPriceService _ethPriceService;
+    private readonly IPropertyRegistrationJobRepository _propertyRegistrationJobRepository;
 
     public PropertyInvestmentInfoService(
         IPropertyRepository propertyRepository,
-        IEthPriceService ethPriceService)
+        IEthPriceService ethPriceService,
+        IPropertyRegistrationJobRepository propertyRegistrationJobRepository)
     {
         _propertyRepository = propertyRepository;
         _ethPriceService = ethPriceService;
+        _propertyRegistrationJobRepository = propertyRegistrationJobRepository;
     }
 
     public async Task<PropertyInvestmentInfoDto> GetAsync(Guid propertyId)
@@ -26,15 +30,8 @@ public class PropertyInvestmentInfoService
         if (property.TotalUnits <= 0)
             throw new InvalidOperationException("Invalid property units.");
 
-        var ethUsdRate = await _ethPriceService.GetEthUsdPriceAsync();
-        if (ethUsdRate <= 0)
-            throw new InvalidOperationException("Invalid ETH price.");
-
-        var pricePerShareUsd =
-            decimal.Round(property.ApprovedValuation / property.TotalUnits, 2);
-
-        var pricePerShareEth =
-            decimal.Round(pricePerShareUsd / ethUsdRate, 8);
+        var registrationJobsMap = await _propertyRegistrationJobRepository.GetLatestByPropertyIdsAsync(new[] { propertyId });
+        registrationJobsMap.TryGetValue(propertyId, out var registrationJob);
 
         return new PropertyInvestmentInfoDto
         {
@@ -47,8 +44,7 @@ public class PropertyInvestmentInfoService
             // Property-specific
             PropertyOwnerUserId = property.OwnerUserId,
             ExpectedAnnualReturnPercent = property.AnnualYieldPercent,
-            PricePerShareUsd = pricePerShareUsd,
-            PricePerShareEth = pricePerShareEth
+            PricePerShare = registrationJob?.PricePerShare ?? (property.TotalUnits == 0 ? 0 : property.ApprovedValuation / property.TotalUnits)
         };
     }
 }

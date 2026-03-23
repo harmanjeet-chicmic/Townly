@@ -29,10 +29,9 @@ public class PropertyDetailsDto
     public long AvailableUnits { get; set; }
     public decimal? RiskScore { get; set; }
     public decimal? DemandScore { get; set; }
-    public decimal PricePerUnitEth { get; set; }
+    public decimal? PricePerShare { get; set; }
     public decimal? UserInvestmentAmount { get; set; }
     public decimal? UserInvestedAmountEth { get; set; }
-    public decimal? PriceInUSD { get; set; }
 
     /// <summary>Total units minted from PropertyRegistrationJob.MintAmount.</summary>
     public decimal? TotalUnitMint { get; set; }

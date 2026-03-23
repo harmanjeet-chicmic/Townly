@@ -23,6 +23,7 @@ public class AnalyticsBackgroundService : BackgroundService
             await Task.Delay(TimeSpan.FromMinutes(60), stoppingToken);
         }
     }
+
     private async Task RunAnalyticsAsync()
     {
         using var scope = _scopeFactory.CreateScope();
@@ -30,6 +31,8 @@ public class AnalyticsBackgroundService : BackgroundService
         var propertyRepo = scope.ServiceProvider.GetRequiredService<IPropertyRepository>();
         var investmentRepo = scope.ServiceProvider.GetRequiredService<IInvestmentRepository>();
         var snapshotRepo = scope.ServiceProvider.GetRequiredService<IAnalyticsSnapshotRepository>();
+        var tokenPurchaseRepo = scope.ServiceProvider.GetRequiredService<ITokenPurchaseRepository>();
+        var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
         var snapshotTime = DateTime.UtcNow;
 
@@ -64,212 +67,115 @@ public class AnalyticsBackgroundService : BackgroundService
             if (investors > maxUniqueInvestors)
                 maxUniqueInvestors = investors;
 
-            lastInvestmentMap[property.Id] =
-                await investmentRepo.GetLastInvestmentAtAsync(property.Id);
+            lastInvestmentAt_Map_Update(property.Id, await investmentRepo.GetLastInvestmentAtAsync(property.Id));
         }
+
+        void lastInvestmentAt_Map_Update(Guid id, DateTime? val) => lastInvestmentMap[id] = val;
 
         // -------- Per property calculation --------
         foreach (var property in properties)
         {
-            var sharesSold =
-                await investmentRepo.GetTotalSharesInvestedAsync(property.Id);
-
-            var totalInvested =
-                await investmentRepo.GetTotalAmountInvestedAsync(property.Id);
+            var sharesSold = await investmentRepo.GetTotalSharesInvestedAsync(property.Id);
+            var totalInvested = await investmentRepo.GetTotalAmountInvestedAsync(property.Id);
 
             // ---------- Funding Score ----------
-            var fundingScore =
-                property.TotalUnits == 0
-                    ? 0
-                    : (int)Math.Round(
-                        (decimal)sharesSold / property.TotalUnits * 100
-                      );
+            var fundingScore = property.TotalUnits == 0 ? 0 : (int)Math.Round((decimal)sharesSold / property.TotalUnits * 100);
 
             // ---------- Momentum Score ----------
             var momentumRaw = momentumMap[property.Id];
-
-            var momentumScore =
-                maxMomentum == 0
-                    ? 0
-                    : (int)Math.Round(
-                        (decimal)momentumRaw / maxMomentum * 100
-                      );
+            var momentumScore = maxMomentum == 0 ? 0 : (int)Math.Round((decimal)momentumRaw / maxMomentum * 100);
 
             // ---------- Diversity Score ----------
             var uniqueInvestors = investorsMap[property.Id];
-
-            var diversityScore =
-                maxUniqueInvestors == 0
-                    ? 0
-                    : (int)Math.Round(
-                        (decimal)uniqueInvestors / maxUniqueInvestors * 100
-                      );
+            var diversityScore = maxUniqueInvestors == 0 ? 0 : (int)Math.Round((decimal)uniqueInvestors / maxUniqueInvestors * 100);
 
             // ---------- Recency + Decay ----------
             var lastInvestmentAt = lastInvestmentMap[property.Id];
-
             int recencyScore = 0;
             decimal decayFactor = 0.15m;
 
             if (lastInvestmentAt.HasValue)
             {
-                var hoursAgo =
-                    (snapshotTime - lastInvestmentAt.Value).TotalHours;
-
-                recencyScore =
-                    hoursAgo <= 1  ? 100 :
-                    hoursAgo <= 3  ? 85  :
-                    hoursAgo <= 6  ? 70  :
-                    hoursAgo <= 12 ? 50  :
-                    hoursAgo <= 24 ? 30  : 10;
-
-                decayFactor =
-                    hoursAgo <= 1  ? 1.00m :
-                    hoursAgo <= 3  ? 0.90m :
-                    hoursAgo <= 6  ? 0.75m :
-                    hoursAgo <= 12 ? 0.55m :
-                    hoursAgo <= 24 ? 0.35m : 0.15m;
+                var hoursAgo = (snapshotTime - lastInvestmentAt.Value).TotalHours;
+                recencyScore = hoursAgo <= 1  ? 100 : hoursAgo <= 3  ? 85  : hoursAgo <= 6  ? 70  : hoursAgo <= 12 ? 50  : hoursAgo <= 24 ? 30  : 10;
+                decayFactor = hoursAgo <= 1  ? 1.00m : hoursAgo <= 3  ? 0.90m : hoursAgo <= 6  ? 0.75m : hoursAgo <= 12 ? 0.55m : hoursAgo <= 24 ? 0.35m : 0.15m;
             }
 
-            var baseDemand =
-                (momentumScore  * 0.40m) +
-                (fundingScore   * 0.25m) +
-                (diversityScore * 0.20m) +
-                (recencyScore   * 0.15m);
-
-            var demandScore =
-                Math.Round(baseDemand * decayFactor, 2);
+            var baseDemand = (momentumScore * 0.40m) + (fundingScore * 0.25m) + (diversityScore * 0.20m) + (recencyScore * 0.15m);
+            var demandScore = Math.Round(baseDemand * decayFactor, 2);
 
             // -------------------------------
-            // 🔥 Risk Factor v1
+            // Risk Factor
             // -------------------------------
             var latestSnapshot = await snapshotRepo.GetLatestPropertySnapshotAsync(property.Id);
-
-            decimal riskScore;
-            if (latestSnapshot != null)
-            {
-                // Preserve the existing RiskScore settled during activation/admin updates
-                riskScore = latestSnapshot.RiskScore;
-            }
-            else
-            {
-                var fundingRatio =
-                    property.TotalUnits == 0
-                        ? 0
-                        : (decimal)sharesSold / property.TotalUnits;
-
-                var fundingRisk =
-                    fundingRatio < 0.20m ? 8 :
-                    fundingRatio < 0.40m ? 6 :
-                    fundingRatio < 0.60m ? 4 :
-                    fundingRatio < 0.80m ? 2 : 1;
-
-                var investorRisk =
-                    uniqueInvestors <= 2 ? 8 :
-                    uniqueInvestors <= 5 ? 6 :
-                    uniqueInvestors <= 10 ? 4 :
-                    uniqueInvestors <= 20 ? 2 : 1;
-
-                var ageDays =
-                    property.ApprovedAt.HasValue
-                        ? (snapshotTime - property.ApprovedAt.Value).TotalDays
-                        : 0;
-
-                var ageRisk =
-                    ageDays < 30 ? 7 :
-                    ageDays < 90 ? 5 :
-                    ageDays < 180 ? 3 : 1;
-
-                var yieldRisk =
-                    property.AnnualYieldPercent > 0.15m ? 7 :
-                    property.AnnualYieldPercent > 0.12m ? 5 :
-                    property.AnnualYieldPercent > 0.08m ? 3 : 1;
-
-                riskScore =
-                    Math.Round(
-                        (fundingRisk + investorRisk + ageRisk + yieldRisk) / 4m,
-                        1);
-            }
+            decimal riskScore = latestSnapshot?.RiskScore ?? 5; // Default or preserve
 
             // -------------------------------
             // Pricing
             // -------------------------------
-            var basePricePerShare =
-                property.InitialValuation / property.TotalUnits; 
-
-            var pricePerShare =
-                basePricePerShare * (1 + (demandScore / 100m) * 0.05m);
-
-            var valuation =
-                pricePerShare * property.TotalUnits;
+            var basePricePerShare = property.TotalUnits == 0 ? 0 : property.InitialValuation / property.TotalUnits; 
+            var pricePerShare = basePricePerShare * (1 + (demandScore / 100m) * 0.05m);
+            var valuation = pricePerShare * property.TotalUnits;
 
             var snapshot = PropertyAnalyticsSnapshot.Create(
-                property.Id,
-                snapshotTime,
-                sharesSold,
-                totalInvested,
-                demandScore,
-                riskScore,
-                pricePerShare,
-                valuation
+                property.Id, snapshotTime, sharesSold, totalInvested, demandScore, riskScore, pricePerShare, valuation
             );
-
             await snapshotRepo.AddPropertySnapshotAsync(snapshot);
         }
 
         // ------------------------------------
-        // 2️⃣ USER PORTFOLIO ANALYTICS (UNCHANGED)
+        // 2️⃣ USER PORTFOLIO ANALYTICS (Refactored)
         // ------------------------------------
-        var userInvestments =
-            await investmentRepo.GetAllUserInvestmentsAsync();
+        var allInvestments = await investmentRepo.GetAllUserInvestmentsAsync();
+        var allTokenPurchases = await tokenPurchaseRepo.GetAllByStatusAsync(1); // 1 = Success
+        var users = await userRepo.GetAllWithWalletsAsync();
+        var walletToUser = users.Where(u => u.WalletAddress != null).ToDictionary(u => u.WalletAddress!.ToLower(), u => u.Id);
 
-        var groupedByUser = userInvestments.GroupBy(i => i.UserId);
+        var userToPropertyShares = new Dictionary<Guid, Dictionary<Guid, decimal>>();
+        var userToTotalInvested = new Dictionary<Guid, decimal>();
 
-        foreach (var userGroup in groupedByUser)
+        foreach (var inv in allInvestments)
         {
-            var userId = userGroup.Key;
+            if (!userToPropertyShares.ContainsKey(inv.UserId)) userToPropertyShares[inv.UserId] = new Dictionary<Guid, decimal>();
+            var propertyShares = userToPropertyShares[inv.UserId];
+            propertyShares[inv.PropertyId] = propertyShares.GetValueOrDefault(inv.PropertyId) + inv.SharesPurchased;
+            userToTotalInvested[inv.UserId] = userToTotalInvested.GetValueOrDefault(inv.UserId) + inv.TotalAmount;
+        }
 
-            var totalInvested =
-                userGroup.Sum(i => i.TotalAmount);
+        foreach (var tp in allTokenPurchases)
+        {
+            if (tp.BuyerAddress == null || !walletToUser.TryGetValue(tp.BuyerAddress.ToLower(), out var userId)) continue;
+            if (!userToPropertyShares.ContainsKey(userId)) userToPropertyShares[userId] = new Dictionary<Guid, decimal>();
+            var propertyShares = userToPropertyShares[userId];
+            propertyShares[tp.PropertyId] = propertyShares.GetValueOrDefault(tp.PropertyId) + (tp.Shares ?? 0);
+            userToTotalInvested[userId] = userToTotalInvested.GetValueOrDefault(userId) + ((tp.Shares ?? 0) * (tp.PricePerShare ?? 0));
+        }
 
+        foreach (var userId in userToPropertyShares.Keys)
+        {
+            var propertyShares = userToPropertyShares[userId];
+            var totalInvested = userToTotalInvested.GetValueOrDefault(userId);
             decimal portfolioValue = 0;
             decimal monthlyIncome = 0;
 
-            var propertyIds =
-                userGroup.Select(i => i.PropertyId).Distinct();
+            var propertyIds = propertyShares.Keys.ToList();
+            var propertiesMap = (await propertyRepo.GetByIdsAsync(propertyIds)).ToDictionary(p => p.Id);
 
-            var propertiesMap =
-                (await propertyRepo.GetByIdsAsync(propertyIds))
-                .ToDictionary(p => p.Id);
-
-            foreach (var inv in userGroup)
+            foreach (var propEntry in propertyShares)
             {
-                var latestSnapshot =
-                    await snapshotRepo.GetLatestPropertySnapshotAsync(inv.PropertyId);
+                var propId = propEntry.Key;
+                var shares = propEntry.Value;
+                var latestSnapshot = await snapshotRepo.GetLatestPropertySnapshotAsync(propId);
+                if (latestSnapshot == null) continue;
 
-                if (latestSnapshot == null)
-                    continue;
-
-                portfolioValue +=
-                    inv.SharesPurchased * latestSnapshot.PricePerShare;
-
-                if (propertiesMap.TryGetValue(inv.PropertyId, out var property))
+                portfolioValue += shares * latestSnapshot.PricePerShare;
+                if (propertiesMap.TryGetValue(propId, out var property))
                 {
-                    monthlyIncome +=
-                        inv.SharesPurchased *
-                        latestSnapshot.PricePerShare *
-                        property.AnnualYieldPercent / 12m;
+                    monthlyIncome += shares * latestSnapshot.PricePerShare * property.AnnualYieldPercent / 12m;
                 }
             }
 
-            var userSnapshot = UserPortfolioSnapshot.Create(
-                userId,
-                snapshotTime,
-                totalInvested,
-                portfolioValue,
-                monthlyIncome
-            );
-
+            var userSnapshot = UserPortfolioSnapshot.Create(userId, snapshotTime, totalInvested, portfolioValue, monthlyIncome);
             await snapshotRepo.AddUserPortfolioSnapshotAsync(userSnapshot);
         }
     }

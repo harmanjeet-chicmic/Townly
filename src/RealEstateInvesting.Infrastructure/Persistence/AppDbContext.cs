@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using RealEstateInvesting.Domain.Common;
 using RealEstateInvesting.Domain.Entities;
 using System.Reflection;

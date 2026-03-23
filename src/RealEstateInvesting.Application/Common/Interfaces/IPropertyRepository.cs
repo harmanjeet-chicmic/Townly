@@ -1,6 +1,8 @@
-using RealEstateInvesting.Domain.Entities;
-using RealEstateInvesting.Domain.Enums;
 using RealEstateInvesting.Application.Properties.Dtos;
+using RealEstateInvesting.Domain.Entities;
+
+namespace RealEstateInvesting.Application.Common.Interfaces;
+
 public interface IPropertyRepository
 {
     Task AddAsync(Property property);

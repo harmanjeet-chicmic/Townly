@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RealEstateInvesting.Infrastructure.Organizations;
 using RealEstateInvesting.Application.Common.Dtos;
 using RealEstateInvesting.Admin.Application.Organizations;
+using RealEstateInvesting.Application.Admin.Properties.DTOs;
 using System.Security.Claims;
 using RealEstateInvesting.Application.Properties.Dtos;
 using RealEstateInvesting.Domain.Enums;

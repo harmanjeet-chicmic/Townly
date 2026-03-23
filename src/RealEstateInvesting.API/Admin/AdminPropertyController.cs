@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RealEstateInvesting.API.Contracts;
 using RealEstateInvesting.Application.Admin.Properties.DTOs;
 using RealEstateInvesting.Application.Admin.Properties.Interfaces;
 using RealEstateInvesting.Application.Common.Interfaces;
+using RealEstateInvesting.Application.Common.DTOs;
 using System.Security.Claims;
 
-namespace RealEstateInvesting.Api.Controllers.Admin;
+namespace RealEstateInvesting.Api.Controllers;
 
 /// <summary>
 /// Admin endpoints for property lifecycle (approve, reject, etc.). For full on-chain property creation use api/property-suite/create.

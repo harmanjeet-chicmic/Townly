@@ -11,6 +11,5 @@ public class PropertyInvestmentInfoDto
     // Property-specific
     public Guid PropertyOwnerUserId { get; set; }
     public decimal ExpectedAnnualReturnPercent { get; set; }
-    public decimal PricePerShareUsd { get; set; }
-    public decimal PricePerShareEth { get; set; }
+    public decimal? PricePerShare { get; set; }
 }

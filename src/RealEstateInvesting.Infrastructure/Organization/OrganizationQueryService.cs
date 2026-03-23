@@ -51,7 +51,7 @@ public class OrganizationQueryService
             .GroupBy(p => p.OrganizationId)
             .Select(g => new
             {
-                OrganizationId = g.Key,
+                OrganizationId = g.Key!.Value,
                 Count = g.Count()
             })
             .ToDictionaryAsync(x => x.OrganizationId, x => x.Count, ct);

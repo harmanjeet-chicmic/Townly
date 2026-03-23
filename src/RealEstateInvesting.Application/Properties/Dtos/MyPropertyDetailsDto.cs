@@ -17,12 +17,13 @@ public class MyPropertyDetailsDto
     public decimal PropertySize { get; set; }
     public decimal ListedPercentage { get; set; }
 
+    public decimal ApprovedValuation { get; set; }
     public decimal TotalValue { get; set; }
     public long TotalUnits { get; set; }
     public long AvailableUnits { get; set; }
 
     public decimal PricePerUnit { get; set; }
-    public decimal PricePerUnitEth { get; set; }
+    public decimal? PricePerShare { get; set; }
 
     public decimal AnnualYieldPercent { get; set; }
 
