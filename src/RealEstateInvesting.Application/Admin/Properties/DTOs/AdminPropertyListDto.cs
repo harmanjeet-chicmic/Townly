@@ -9,4 +9,6 @@ public class AdminPropertyListDto
     public string Location { get; set; } = default!;
     public PropertyStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
+    public decimal PricePerShare { get; set; }
+    public decimal MintAmount { get; set; }
 }

@@ -13,4 +13,7 @@ public interface ITokenPurchaseRepository
     Task<List<TokenPurchase>> GetAllByWalletAsync(
         string walletAddress,
         CancellationToken ct = default);
+
+    Task AddAsync(TokenPurchase entity, CancellationToken ct = default);
+    Task<List<TokenPurchase>> GetAllByStatusAsync(int status, CancellationToken ct = default);
 }

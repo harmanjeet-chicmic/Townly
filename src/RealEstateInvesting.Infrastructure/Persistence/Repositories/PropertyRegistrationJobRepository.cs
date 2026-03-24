@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Infrastructure.Persistence;

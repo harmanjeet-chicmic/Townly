@@ -17,10 +17,7 @@ public class MarketplacePropertyDto
     public long TotalUnits { get; set; }
     public long AvailableUnits { get; set; }
     public decimal? RiskScore { get; set; }
-    public decimal PricePerUnitEth { get; set; }
-
-    /// <summary>Price per share in USD from PropertyRegistrationJob.PricePerShare.</summary>
-    public decimal? PriceInUSD { get; set; }
+    public decimal? PricePerShare { get; set; }
 
     /// <summary>Total units minted from PropertyRegistrationJob.MintAmount.</summary>
     public decimal? TotalUnitMint { get; set; }

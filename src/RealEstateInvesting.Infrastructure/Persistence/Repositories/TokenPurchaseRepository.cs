@@ -16,6 +16,7 @@ public class TokenPurchaseRepository : ITokenPurchaseRepository
     public async Task AddAsync(TokenPurchase entity, CancellationToken ct = default)
     {
         await _context.TokenPurchases.AddAsync(entity, ct);
+        await _context.SaveChangesAsync(ct);
     }
 
     public async Task<List<TokenPurchase>> GetByWalletAsync(
@@ -41,6 +42,13 @@ public class TokenPurchaseRepository : ITokenPurchaseRepository
             .Where(x => x.BuyerAddress == walletAddress
                      || x.SellerAddress == walletAddress)
             .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<TokenPurchase>> GetAllByStatusAsync(int status, CancellationToken ct = default)
+    {
+        return await _context.TokenPurchases
+            .Where(x => (int)x.Status == status)
             .ToListAsync(ct);
     }
 }

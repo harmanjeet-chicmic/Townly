@@ -3,6 +3,7 @@ using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Domain.Entities;
 using RealEstateInvesting.Domain.Enums;
 using RealEstateInvesting.Application.Properties.Dtos;
+
 namespace RealEstateInvesting.Infrastructure.Persistence.Repositories;
 
 public class PropertyRepository : IPropertyRepository

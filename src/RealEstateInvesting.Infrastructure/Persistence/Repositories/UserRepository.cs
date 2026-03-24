@@ -40,4 +40,11 @@ public class UserRepository : IUserRepository
             .Where(u => userIds.Contains(u.Id))
             .ToListAsync();
     }
+
+    public async Task<List<User>> GetAllWithWalletsAsync(CancellationToken ct = default)
+    {
+        return await _context.Users
+            .Where(u => u.WalletAddress != null)
+            .ToListAsync(ct);
+    }
 }

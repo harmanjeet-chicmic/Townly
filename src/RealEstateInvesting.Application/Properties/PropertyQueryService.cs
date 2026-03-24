@@ -76,11 +76,6 @@ public class PropertyQueryService
             imageMap.TryGetValue(p.Id, out var propertyImages);
             registrationJobsMap.TryGetValue(p.Id, out var registrationJob);
 
-            var pricePerUnitUsd =
-                p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
-
-            var pricePerUnitEth =
-                ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
 
             return new MarketplacePropertyDto
             {
@@ -99,10 +94,8 @@ public class PropertyQueryService
                     ? (long)registrationJob.MintAmount.Value - p.SoldUnits 
                     : p.TotalUnits - p.SoldUnits,
 
-                PricePerUnitEth = pricePerUnitEth,
+                PricePerShare = registrationJob?.PricePerShare ?? (p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits),
                 RiskScore = snapshot?.RiskScore ?? 5,
-
-                PriceInUSD = registrationJob?.PricePerShare,
                 TotalUnitMint = registrationJob?.MintAmount
             };
         });
@@ -149,11 +142,6 @@ public class PropertyQueryService
             imageMap.TryGetValue(p.Id, out var propertyImages);
             registrationJobsMap.TryGetValue(p.Id, out var registrationJob);
 
-            var pricePerUnitUsd =
-                p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
-
-            var pricePerUnitEth =
-                ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
 
             return new MarketplacePropertyDto
             {
@@ -170,8 +158,7 @@ public class PropertyQueryService
                     ? (long)registrationJob.MintAmount.Value - p.SoldUnits 
                     : p.TotalUnits - p.SoldUnits,
 
-                Status = p.Status,
-                PricePerUnitEth = pricePerUnitEth,
+                PricePerShare = registrationJob?.PricePerShare ?? (p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits),
                 RiskScore = snapshot?.RiskScore ?? 5
             };
         }).ToList();
@@ -205,11 +192,6 @@ public class PropertyQueryService
         
         
 
-        var pricePerUnitUsd =
-            property.TotalUnits == 0 ? 0 : property.ApprovedValuation / property.TotalUnits;
-
-        var pricePerUnitEth =
-            ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
         decimal? userInvestmentAmount = null;
         long? tokensOwned = null;
         if (userId.HasValue)
@@ -251,16 +233,13 @@ public class PropertyQueryService
             ApprovedReason = property.ApprovedReason,
 
             TotalValue = property.ApprovedValuation,
-            TotalUnits = property.TotalUnits,
-            PricePerUnit = pricePerUnitUsd,
-            PricePerUnitEth = pricePerUnitEth,
-            TokensOwned = tokensOwned,
-
+            PricePerShare = registrationJob?.PricePerShare ?? (property.TotalUnits == 0 ? 0 : property.ApprovedValuation / property.TotalUnits),
             AnnualYieldPercent = property.AnnualYieldPercent,
             //AvailableUnits = property.TotalUnits - property.SoldUnits,
              AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
                     ? (long)registrationJob.MintAmount.Value - property.SoldUnits 
                     : property.TotalUnits - property.SoldUnits,
+            TotalUnitMint = registrationJob?.MintAmount,
 
             RiskScore = snapshot?.RiskScore ?? 5,
             DemandScore = snapshot?.DemandScore,
@@ -268,9 +247,7 @@ public class PropertyQueryService
             UserInvestedAmountEth = userInvestmentAmountEth,
 
             RegistrationJobId = registrationJob?.Id,
-            TokenAddress = registrationJob?.TokenAddress,
-            PriceInUSD = registrationJob?.PricePerShare,
-            TotalUnitMint = registrationJob?.MintAmount
+            TokenAddress = registrationJob?.TokenAddress
         };
     }
 
@@ -314,11 +291,6 @@ public class PropertyQueryService
                 ? (long)registrationJob.MintAmount.Value - soldUnits 
                 : p.TotalUnits - soldUnits;
 
-            var pricePerUnitUsd =
-                p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
-
-            var pricePerUnitEth =
-                ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
 
             return new MarketplacePropertyDto
             {
@@ -332,8 +304,7 @@ public class PropertyQueryService
                 AnnualYieldPercent = p.AnnualYieldPercent,
                 TotalUnits = p.TotalUnits,
                 AvailableUnits = availableUnits,
-
-                PricePerUnitEth = pricePerUnitEth,
+                PricePerShare = registrationJob?.PricePerShare ?? (p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits),
                 RiskScore = snapshot?.RiskScore ?? 5
             };
         });
@@ -419,12 +390,6 @@ public class PropertyQueryService
             var progressPercent =
                 p.TotalUnits == 0 ? 0 :
                 Math.Round((decimal)soldUnits / p.TotalUnits * 100, 2);
-            var pricePerUnitUsd =
-                p.TotalUnits == 0 ? 0 :
-                p.ApprovedValuation / p.TotalUnits;
-            var pricePerUnitEth =
-                ethUsdRate == 0 ? 0 :
-                decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
 
       return new MyPropertyDto
       {
@@ -443,7 +408,7 @@ public class PropertyQueryService
                  SoldUnits = soldUnits,
                  AvailableUnits = availableUnits,
                  InvestmentProgressPercent = progressPercent,
-                 PricePerUnitEth = pricePerUnitEth,
+                 PricePerShare = registrationJob?.PricePerShare ?? (p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits),
                  RiskScore = snapshot?.RiskScore ?? 5,
                  HasPendingUpdateRequest = pendingUpdateSet.Contains(p.Id),
                  AdminDocuments = docs?
@@ -501,13 +466,6 @@ public class PropertyQueryService
         var hasPendingUpdateRequest = pendingUpdate != null;
 
         // 🔥 Price calculations
-        var pricePerUnitUsd =
-            property.TotalUnits == 0 ? 0 :
-            property.ApprovedValuation / property.TotalUnits;
-
-        var pricePerUnitEth =
-            ethUsdRate == 0 ? 0 :
-            decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
 
         // 🔥 Documents
         var documents = await _propertyDocumentRepository
@@ -565,8 +523,7 @@ public class PropertyQueryService
 
             TotalValue = property.ApprovedValuation,
             TotalUnits = property.TotalUnits,
-            PricePerUnit = pricePerUnitUsd,
-            PricePerUnitEth = pricePerUnitEth,
+            PricePerShare = registrationJob?.PricePerShare ?? (property.TotalUnits == 0 ? 0 : property.ApprovedValuation / property.TotalUnits),
             AnnualYieldPercent = property.AnnualYieldPercent,
             AvailableUnits = registrationJob != null && registrationJob.MintAmount.HasValue 
                    ? (long)registrationJob.MintAmount.Value - soldUnits 
@@ -662,11 +619,6 @@ public class PropertyQueryService
                 snapshotMap.TryGetValue(p.Id, out var snapshot);
                 imageMap.TryGetValue(p.Id, out var images);
 
-                var pricePerUnitUsd =
-                    p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits;
-
-                var pricePerUnitEth =
-                    ethUsdRate == 0 ? 0 : decimal.Round(pricePerUnitUsd / ethUsdRate, 8);
 
 
                 return new MarketplacePropertyDto
@@ -683,7 +635,7 @@ public class PropertyQueryService
                     TotalUnits = p.TotalUnits,
                     AvailableUnits = p.TotalUnits, // sold units optional here
 
-                    PricePerUnitEth = pricePerUnitEth,
+                    PricePerShare = p.TotalUnits == 0 ? 0 : p.ApprovedValuation / p.TotalUnits,
                     RiskScore = snapshot?.RiskScore ?? 5
 
                 };

@@ -1,4 +1,4 @@
-﻿using RealEstateInvesting.Domain.Common;
+using RealEstateInvesting.Domain.Common;
 
 namespace RealEstateInvesting.Domain.Entities;
 
@@ -7,7 +7,6 @@ public class TokenPurchase
     public Guid Id { get; private set; }
 
     public int Status { get; private set; }
-    // public Guid UserId { get; private set; }
 
     // From FE
     public Guid PropertyId { get; private set; }
@@ -17,7 +16,7 @@ public class TokenPurchase
     public string? BuyerAddress { get; private set; }
     public string? SellerAddress { get; private set; }
     public decimal? Shares { get; private set; }
-    public decimal? Amount { get; private set; }
+    public decimal? PricePerShare { get; private set; }
 
     public string? ErrorMessage { get; private set; }
 
@@ -39,12 +38,12 @@ public class TokenPurchase
         };
     }
 
-    public void MarkCompleted(string buyer, string seller, decimal shares, decimal amount)
+    public void MarkCompleted(string buyer, string seller, decimal shares, decimal pricePerShare)
     {
         BuyerAddress = buyer;
         SellerAddress = seller;
         Shares = shares;
-        Amount = amount;
+        PricePerShare = pricePerShare;
         Status = 1; // SUCCESS
         UpdatedAt = DateTime.UtcNow;
     }

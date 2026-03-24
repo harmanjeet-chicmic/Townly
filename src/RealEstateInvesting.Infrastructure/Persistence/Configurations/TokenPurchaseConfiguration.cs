@@ -18,7 +18,7 @@ public class TokenPurchaseConfiguration : IEntityTypeConfiguration<TokenPurchase
         builder.Property(x => x.BuyerAddress).HasColumnName("buyer_address");
         builder.Property(x => x.SellerAddress).HasColumnName("seller_address");
         builder.Property(x => x.Shares).HasColumnName("shares");
-        builder.Property(x => x.Amount).HasColumnName("amount");
+        builder.Property(x => x.PricePerShare).HasColumnName("price_per_share");
         builder.Property(x => x.ErrorMessage).HasColumnName("error_message");
         builder.Property(x => x.CreatedAt)
             .HasColumnName("created_at")

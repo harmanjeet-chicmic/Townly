@@ -1,5 +1,6 @@
 using RealEstateInvesting.Application.Common.Interfaces;
 using RealEstateInvesting.Application.Transactions.Dtos;
+using RealEstateInvesting.Domain.Entities;
 
 namespace RealEstateInvesting.Application.Transactions;
 
@@ -29,7 +30,7 @@ public class TokenPurchaseQueryService
             BuyerAddress = x.BuyerAddress,
             SellerAddress = x.SellerAddress,
             Shares = x.Shares,
-            Amount = x.Amount,
+            PricePerShare = x.PricePerShare,
             ErrorMessage = x.ErrorMessage,
             CreatedAt = x.CreatedAt
         }).ToList();

@@ -46,4 +46,10 @@ public class PropertyDocumentRepository : IPropertyDocumentRepository
             .Where(d => propertyIds.Contains(d.PropertyId))
             .ToListAsync();
     }
+
+    public async Task AddAsync(PropertyDocument document)
+    {
+        _context.PropertyDocuments.Add(document);
+        await _context.SaveChangesAsync();
+    }
 }
